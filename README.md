@@ -1,12 +1,14 @@
 <p align="center">
-  <img alt="OsmedeusEngine" src="https://raw.githubusercontent.com/osmedeus/assets/main/logo-transparent.png" height="200" />
-  <p align="center">
-    This project was part of Osmedeus Engine. Check out how it was integrated at <a href="https://docs.osmedeus.org/workflow/">@OsmedeusEngine</a>
-  </p>
+  <img alt="Osmedeus" src="https://raw.githubusercontent.com/osmedeus/assets/main/logo-transparent.png" height="140" />
+  <br />
+  Osmedeus - A Workflow Engine for Offensive Security
 
-  <h3 align="center">
-    Please check out the Documentation at <a href="https://docs.osmedeus.org/workflow/">docs.osmedeus.org</a>
-  </h3>
+  <p align="center">
+  <a href="https://docs.osmedeus.org/"><img src="https://img.shields.io/badge/Documentation-0078D4?style=for-the-badge&logo=Google-Chrome&logoColor=39ff14&labelColor=black&color=black"></a>
+  <a href="https://docs.osmedeus.org/donation/"><img src="https://img.shields.io/badge/Sponsors-0078D4?style=for-the-badge&logo=GitHub-Sponsors&logoColor=39ff14&labelColor=black&color=black"></a>
+  <a href="https://twitter.com/OsmedeusEngine"><img src="https://img.shields.io/badge/%40OsmedeusEngine-0078D4?style=for-the-badge&logo=Twitter&logoColor=39ff14&labelColor=black&color=black"></a>
+  <a href="https://discord.gg/gy4SWhpaPU"><img src="https://img.shields.io/badge/Discord%20Server-0078D4?style=for-the-badge&logo=Discord&logoColor=39ff14&labelColor=black&color=black"></a>
+  </p>
 </p>
 
 ***

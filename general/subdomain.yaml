@@ -23,13 +23,11 @@ steps:
       - "{{.Binaries}}/amass"
       - "{{.Binaries}}/subfinder"
       - "{{.Binaries}}/assetfinder"
-      - "{{.Binaries}}/github-subdomains"
       - "{{.Binaries}}/findomain"
     commands:
-      - "timeout -k 1m {{.amassTimeout}} {{.Binaries}}/amass enum -config {{.Data}}/configs/amass.ini -d {{.Target}} -dir {{.Output}}/subdomain/amass-{{.Workspace}} -o {{.Output}}/subdomain/{{.Workspace}}-amass.txt > /dev/null 2>&1"
-      - "timeout -k 1m {{.ghTimeout}} {{.Binaries}}/github-subdomains -d {{.Target}} -q -o {{.Output}}/subdomain/{{.Workspace}}-github.txt > /dev/null 2>&1"
-  - commands:
+      - "timeout -k 1m {{.amassTimeout}} {{.Binaries}}/amass enum -config {{.Data}}/configs/amass.ini -d {{.Target}} -o {{.Output}}/subdomain/{{.Workspace}}-amass.txt > /dev/null 2>&1"
       - "{{.Binaries}}/assetfinder -subs-only {{.Target}} > {{.Output}}/subdomain/{{.Workspace}}-assetfinder.txt"
+  - commands:
       - "{{.Binaries}}/findomain -u {{.Output}}/subdomain/{{.Workspace}}-findomain.txt -t {{.Target}} > /dev/null 2>&1"
       - "{{.Binaries}}/subfinder -d {{.Target}} -t {{.subthreads}} -o {{.Output}}/subdomain/{{.Workspace}}-subfinder.txt > /dev/null 2>&1"
 
