@@ -15,7 +15,7 @@ report:
 
 params:
   - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
-  - sign: "~/.jaeles/base-signatures/products/.*"
+  - sign: "~/.jaeles/base-signatures/.*"
   - sign2: "~/.jaeles/base-signatures/sensitive/.*"
   - final: "sensitive"
   - lines: "500"
@@ -51,10 +51,10 @@ steps:
     required:
       - "{{.Binaries}}/jaeles"
     source: "{{.Output}}/vuln/raw/{{.Workspace}}-index"
-    parallel: 1
+    threads: '1'
     commands:
       - "{{.Binaries}}/jaeles scan -c {{.jaelesThreads}} -s '{{.sign}}' -U {{.line}} -o {{.Output}}/vuln/active/ {{.extra}}"
-      - "{{.Binaries}}/jaeles scan --fi -c {{.jaelesThreads}} -s '{{.sign2}}' -U {{.line}} -o {{.Output}}/vuln/sensitive/ {{.extra}}"
+      - "{{.Binaries}}/jaeles scan --fi -c {{.jaelesThreads}} -s '{{.sign2}}' -L 2 -U {{.line}} -o {{.Output}}/vuln/sensitive/ {{.extra}}"
     scripts:
       - Append("{{.Storages}}/vuln/{{.Workspace}}/sensitive-{{.Workspace}}.txt", "{{.Output}}/vuln/sensitive/jaeles-summary.txt")
       - Append("{{.Storages}}/vuln/{{.Workspace}}/activescan-{{.Workspace}}.txt", "{{.Output}}/vuln/active/jaeles-summary.txt")

@@ -12,7 +12,7 @@ report:
 
 params:
   - inputfile: "{{.Output}}/portscan/http-running.txt"
-  - wordlists: "{{.Data}}/wordlists/content/quick.txt"
+  - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - dirbThreads: '30' # threads for single site
   - threads: '15' # threads for running number of ffuf commands
   - limit: '35000'

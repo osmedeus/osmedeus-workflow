@@ -8,7 +8,7 @@ report:
 
 params:
   - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
-  - wordlists: "{{.Data}}/wordlists/content/fast.txt"
+  - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - lines: "20"
   - fthreads: '30' # threads for single site
   - dirbThreads: '15'

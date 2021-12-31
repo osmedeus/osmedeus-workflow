@@ -13,7 +13,7 @@ report:
 # osmedeus scan -m this_file.yaml -T list_existing_ws.txt -p 'sign="custom"'
 params:
   - inputfile: "{{.Output}}/probe/http-{{.Workspace}}.txt"
-  - sign: "~/.jaeles/base-signatures/products/.*"
+  - sign: "~/.jaeles/base-signatures/.*"
   - sign2: "~/.jaeles/base-signatures/sensitive/.*"
   - final: "sensitive"
   - threads: "50"
@@ -37,10 +37,10 @@ steps:
   - required:
       - "{{.Binaries}}/jaeles"
     source: "{{.Output}}/vuln/raw/{{.Workspace}}-index"
-    parallel: 1
+    threads: '1'
     commands:
       - "{{.Binaries}}/jaeles scan -c {{.threads}} -s '{{.sign}}' -U {{.line}} -o {{.Output}}/vuln/active/ {{.extra}}"
-      - "{{.Binaries}}/jaeles scan --fi -c {{.threads}} -s '{{.sign2}}' -U {{.line}} -o {{.Output}}/vuln/sensitive/ {{.extra}}"
+      - "{{.Binaries}}/jaeles scan --fi -c {{.jaelesThreads}} -s '{{.sign2}}' -L 2 -U {{.line}} -o {{.Output}}/vuln/sensitive/ {{.extra}}"
     scripts:
       # gen report
       - ExecCmd('{{.Binaries}}/jaeles report -o {{.Output}}/vuln/active/ -R {{.Output}}/vuln/active/{{.Workspace}}-report.html')
