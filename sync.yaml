@@ -1,0 +1,14 @@
+name: sync
+desc: Sync result based on git
+type: sync
+
+routines:
+  - modules:
+      - pull
+  - modules:
+      - sync
+  - modules:
+      - report
+      - storages
+  - modules:
+      - summary

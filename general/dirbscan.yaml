@@ -1,0 +1,72 @@
+name: dirbscan
+desc: Run Dirbscan
+
+report:
+  final:
+    - "{{.Output}}/directory/beautify-{{.Workspace}}.txt"
+    - "{{.Output}}/directory/paths-{{.Workspace}}.csv"
+
+params:
+  - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - wordlists: "{{.Data}}/wordlists/content/fast.txt"
+  - lines: "20"
+  - fthreads: '30' # threads for single site
+  - dirbThreads: '15'
+  - dlimit: '50000'
+  - recursion: '0'
+  - commitLength: '400'
+  - chan: '#mics'
+
+pre_run:
+  - CreateFolder("{{.Storages}}/paths/{{.Workspace}}")
+  - CreateFolder("{{.Output}}/directory")
+
+steps:
+  # check if the size is too big, We don't want tons of garbage here
+  - conditions:
+      - "FileLength('{{.inputfile}}') > {{.dlimit}}"
+    scripts:
+      - ErrPrintf("Filter", "Got input file greater than {{.dlimit}} line")
+      - Exit(1)
+
+  # # make a header for csv file
+  # - commands:
+  #     - echo 'url,status,length,words,lines,redirectlocation' > {{.Output}}/directory/beautify-{{.Workspace}}.csv
+
+  - required:
+      - "{{.Binaries}}/ffuf"
+      - "{{.inputfile}}"
+    source: "{{.inputfile}}"
+    threads: '{{.dirbThreads}}'
+    commands:
+      - "{{.Binaries}}/ffuf -t {{.fthreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-{{._id_}}.json -u '{{.line}}/FUZZ' -w {{.wordlists}}:FUZZ"
+    scripts:
+      # get result in csv
+      - ExecCmd("cat {{.Output}}/directory/raw-{{._id_}}.json | jq -r '.results[] | [.url,.status,.length,.words,.lines,.redirectlocation] | join(\",\")' > {{.Output}}/directory/raw-{{._id_}}-{{.Workspace}}.csv")
+      # join to final result
+      - ExecCmd("cat {{.Output}}/directory/raw-{{._id_}}-{{.Workspace}}.csv >> {{.Output}}/directory/beautify-{{.Workspace}}.csv")
+      # noti small file to telegram
+      - ExecCmd("cat {{.Output}}/directory/raw-{{._id_}}-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{._id_}}-{{.Workspace}}.txt")
+      - TeleMessByFile("{{.chan}}", "{{.Output}}/directory/beautify-{{._id_}}-{{.Workspace}}.txt")
+      # sorting & clean up
+      - SortU("{{.Output}}/directory/beautify-{{.Workspace}}.csv")
+      - ExecCmd("rm -rf {{.Output}}/directory/beautify-{{._id_}}-{{.Workspace}}.txt {{.Output}}/directory/raw-{{._id_}}-{{.Workspace}}.csv {{.Output}}/directory/raw-{{._id_}}.json {{.Output}}/directory/unique-{{._id_}}.json")
+    # generate final beautify every 400 domains has been scanned
+    pconditions:
+      - "({{._id_}} % {{.commitLength}}) == 0"
+    pscripts:
+      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.txt >> {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
+      - PushFolder("{{.Storages}}/paths/")
+
+  # clean up and notify to summary channel
+  - required:
+      - "{{.Output}}/directory/beautify-{{.Workspace}}.csv"
+    scripts:
+      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Storages}}/paths/{{.Workspace}}/paths-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
+      - TeleMessByFile("#dirb", "{{.Output}}/directory/beautify-{{.Workspace}}.txt")
+
+post_run:
+  - TotalDirb("{{.Output}}/directory/beautify-{{.Workspace}}.txt")
+  - PushFolder("{{.Storages}}/paths/")

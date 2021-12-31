@@ -1,0 +1,58 @@
+name: subdomain
+desc: Scanning for subdomain
+
+report:
+  final:
+    - "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
+    - "{{.Output}}/subdomain/more-{{.Workspace}}.txt"
+
+# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+pre_run:
+  - CreateFolder("{{.Storages}}/subdomain/{{.Workspace}}/")
+  - CreateFolder("{{.Storages}}/summary/{{.Workspace}}/")
+  - CreateFolder("{{.Output}}/subdomain/")
+  - CreateFolder("{{.Output}}/ipspace/")
+
+params:
+  - subthreads: "50"
+  - amassTimeout: "2h"
+  - ghTimeout: "1h"
+
+steps:
+  - required:
+      - "{{.Binaries}}/amass"
+      - "{{.Binaries}}/subfinder"
+      - "{{.Binaries}}/assetfinder"
+      - "{{.Binaries}}/github-subdomains"
+      - "{{.Binaries}}/findomain"
+    commands:
+      - "timeout -k 1m {{.amassTimeout}} {{.Binaries}}/amass enum -config {{.Data}}/configs/amass.ini -d {{.Target}} -dir {{.Output}}/subdomain/amass-{{.Workspace}} -o {{.Output}}/subdomain/{{.Workspace}}-amass.txt > /dev/null 2>&1"
+      - "timeout -k 1m {{.ghTimeout}} {{.Binaries}}/github-subdomains -d {{.Target}} -q -o {{.Output}}/subdomain/{{.Workspace}}-github.txt > /dev/null 2>&1"
+  - commands:
+      - "{{.Binaries}}/assetfinder -subs-only {{.Target}} > {{.Output}}/subdomain/{{.Workspace}}-assetfinder.txt"
+      - "{{.Binaries}}/findomain -u {{.Output}}/subdomain/{{.Workspace}}-findomain.txt -t {{.Target}} > /dev/null 2>&1"
+      - "{{.Binaries}}/subfinder -d {{.Target}} -t {{.subthreads}} -o {{.Output}}/subdomain/{{.Workspace}}-subfinder.txt > /dev/null 2>&1"
+
+  # get data from cdn
+  - scripts:
+      - GetFileFromCDN('{{.Workspace}}/subdomain-{{.Workspace}}.txt', '{{.Output}}/subdomain/{{.Workspace}}-cdn.txt')
+      # store IP range found to ipspace module
+      - SortU("{{.Output}}/subdomain/{{.Workspace}}-github.txt")
+
+  # cleaning some result
+  - scripts:
+      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-amass.txt")
+      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-subfinder.txt")
+      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-assetfinder.txt")
+      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-findomain.txt")
+      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-github.txt")
+      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-ourl.txt")
+      # remove junk subdomain and 1-2-3.subdomain.com format
+      - ExecCmd("cat {{.Output}}/subdomain/sum-{{.Workspace}}.txt | {{.Binaries}}/cleansub -t '{{.Target}}' > {{.Output}}/subdomain/final-{{.Workspace}}.txt")
+
+  - scripts:
+      - SortU("{{.Output}}/subdomain/final-{{.Workspace}}.txt")
+
+post_run:
+  # delete all files in workspaces folder except a file lists in report section
+  - Cleaning("{{.Output}}/subdomain/")

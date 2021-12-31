@@ -1,0 +1,79 @@
+name: vulnscan
+desc: Run common Jaeles Signature
+
+report:
+  final:
+    - "{{.Output}}/vuln/active/{{.Workspace}}-report.html"
+    - "{{.Output}}/vuln/sensitive/{{.Workspace}}-sensitive.html"
+    - "{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei.html"
+    - "{{.Output}}/vuln/active/jaeles-summary.txt"
+    - "{{.Output}}/vuln/active/"
+    - "{{.Storages}}/assets/{{.Workspace}}/activescan-{{.Workspace}}.txt"
+
+# osmedeus scan -m this_file.yaml -T list_existing_ws.txt -p 'sign="custom"'
+params:
+  - inputfile: "{{.Output}}/probe/http-{{.Workspace}}.txt"
+  - sign: "~/.jaeles/base-signatures/products/.*"
+  - sign2: "~/.jaeles/base-signatures/sensitive/.*"
+  - final: "sensitive"
+  - threads: "50"
+  - lines: "500"
+  - out: "{{.Output}}/vuln"
+  # in case we want to add -p 'dest=xx.burpcollab.net' or something
+  - extra: " "
+
+pre_run:
+  - CreateFolder("{{.Output}}/vuln")
+  - CreateFolder("{{.Output}}/vuln/raw")
+
+steps:
+  # prepare input for Jaeles
+  - required:
+      - "{{.inputfile}}"
+    scripts:
+      - SplitFile("{{.inputfile}}", "{{.Workspace}}-index", {{.lines}}, "{{.Output}}/vuln/raw")
+
+  # run jaeles with all products signatures each {{.line}} at a time
+  - required:
+      - "{{.Binaries}}/jaeles"
+    source: "{{.Output}}/vuln/raw/{{.Workspace}}-index"
+    parallel: 1
+    commands:
+      - "{{.Binaries}}/jaeles scan -c {{.threads}} -s '{{.sign}}' -U {{.line}} -o {{.Output}}/vuln/active/ {{.extra}}"
+      - "{{.Binaries}}/jaeles scan --fi -c {{.threads}} -s '{{.sign2}}' -U {{.line}} -o {{.Output}}/vuln/sensitive/ {{.extra}}"
+    scripts:
+      # gen report
+      - ExecCmd('{{.Binaries}}/jaeles report -o {{.Output}}/vuln/active/ -R {{.Output}}/vuln/active/{{.Workspace}}-report.html')
+      - ExecCmd('{{.Binaries}}/jaeles report -o {{.Output}}/vuln/sensitive/ -R {{.Output}}/vuln/sensitive/{{.Workspace}}-sensitive.html')
+
+  # prepare input for Jaeles
+  - required:
+      - "{{.Output}}/vuln/active/jaeles-summary.txt"
+    commands:
+      - "{{.Binaries}}/jaeles report -o {{.Output}}/vuln/active/ -R {{.Output}}/vuln/active/{{.Workspace}}-report.html"
+      - "{{.Binaries}}/jaeles report -o {{.Output}}/vuln/sensitive/ -R {{.Output}}/vuln/sensitive/{{.Workspace}}-sensitive.html"
+
+  # noti report to telegram
+  - required:
+      - "{{.Output}}/vuln/active/jaeles-summary.txt"
+    commands:
+      - cp {{.Output}}/vuln/active/jaeles-summary.txt {{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt
+    scripts:
+      - TeleMessByFile("#report", "{{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt")
+      - TotalVulnerability("{{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt")
+  - required:
+      - "{{.Output}}/vuln/sensitive/jaeles-summary.txt"
+    commands:
+      - cp {{.Output}}/vuln/sensitive/jaeles-summary.txt {{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt
+    scripts:
+      - TeleMessByFile("#sensitive", "{{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt")
+      - TotalVulnerability("{{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt")
+
+  # nuclei scan
+  - required:
+      - "{{.inputfile}}"
+      - "{{.Binaries}}/nuclei"
+    scripts:
+      - CreateFolder('{{.Output}}/vuln/nuclei')
+      - "ExecCmd(\"{{.Binaries}}/nuclei -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4581.0 Safari/537.36' -silent -c {{.threads}} -json -severity critical,high,medium,low -t ~/nuclei-templates/ -l {{.inputfile}} -irr -o {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
+      - GenNucleiReport('{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt', '{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei.html')

@@ -1,0 +1,39 @@
+name: spider
+desc: Finding Link in http site
+
+report:
+  final:
+    - "{{.Storages}}/http/{{.Workspace}}/links-json-{{.Workspace}}.txt"
+    - "{{.Output}}/linkfinding/links-{{.Workspace}}.txt"
+    - "{{.Output}}/linkfinding/reachable-{{.Workspace}}.txt"
+    - "{{.Output}}/linkfinding/links-{{.Workspace}}.txt"
+    - "{{.Storages}}/http/{{.Workspace}}/links-{{.Workspace}}.txt"
+
+params:
+  - inputfile: "{{.Output}}/probing/diffhttp-{{.Workspace}}.txt"
+  - spiderTimeout: "1h"
+  - threads: "5"
+
+# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+pre_run:
+  - CreateFolder("{{.Output}}/linkfinding")
+  - CreateFolder("{{.Storages}}/http/{{.Workspace}}")
+
+steps:
+  - required:
+      - "{{.Binaries}}/gospider"
+      - "{{.inputfile}}"
+    source: "{{.inputfile}}"
+    threads: '{{.threads}}'
+    commands:
+      - "timeout -k 1m {{.spiderTimeout}} {{.Binaries}}/gospider -B -s {{.line}} --depth 1 --no-redirect -t 5 --json >> {{.Output}}/linkfinding/links-json-{{.Workspace}}.txt"
+
+  - required:
+      - "{{.Output}}/linkfinding/links-json-{{.Workspace}}.txt"
+    commands:
+      - "cat {{.Output}}/linkfinding/links-json-{{.Workspace}}.txt >> {{.Storages}}/http/{{.Workspace}}/links-json-{{.Workspace}}.txt"
+    scripts:
+      - SortU("{{.Storages}}/http/{{.Workspace}}/links-json-{{.Workspace}}.txt")
+
+post_run:
+  - TotalLink('{{.Storages}}/http/{{.Workspace}}/links-json-{{.Workspace}}.txt')

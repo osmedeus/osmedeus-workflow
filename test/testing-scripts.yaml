@@ -1,0 +1,12 @@
+name: subdomain
+desc: Scanning for subdomain
+
+steps:
+  # copy result to workspace and storges
+  - scripts:
+      - CreateFolder("/tmp/ott/sub/")
+      - ExecCmd('seq 3 >> /tmp/ott/sub/sam')
+      - ExecCmd('seq 9 >> /tmp/ott/sub/2sam')
+      - Append("/tmp/ott/sub/final", "/tmp/ott/sub/sam")
+      - Append("/tmp/ott/sub/final", "/tmp/ott/sub/2sam")
+      - SortU("/tmp/ott/sub/final")

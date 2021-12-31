@@ -1,0 +1,7 @@
+name: validate
+desc: module with validate
+validator: cidr-file
+
+steps:
+  - commands:
+      - "cat '{{.Target}}' | eip -s 24"

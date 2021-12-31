@@ -1,0 +1,10 @@
+name: test
+desc: testing workflow
+type: test
+validator: domain
+
+routines:
+  - modules:
+      - sub-test
+  - modules:
+      - prob-test

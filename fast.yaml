@@ -1,0 +1,17 @@
+name: fast
+desc: run fast routine
+type: general
+validator: domain
+
+routines:
+  - modules:
+      - subdomain
+  - modules:
+      - probing
+  - modules:
+      - fingerprint
+  - modules:
+      - sto
+      - archive
+  - modules:
+      - summary

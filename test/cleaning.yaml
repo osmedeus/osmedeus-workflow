@@ -1,0 +1,31 @@
+name: dirbscan
+desc: Run Dirbscan
+
+report:
+  final:
+    - "{{.Output}}/directory/dirbscan-beautify/dirbscan-report-{{.Workspace}}.html"
+    - "{{.Output}}/directory/dirbscan-beautify"
+    - "{{.Output}}/directory/beautify-{{.Workspace}}.txt"
+    - "{{.Output}}/directory/summary-{{.Workspace}}.csv"
+
+params:
+  - inputfile: "{{.Target}}"
+  - lines: "20"
+  - threads: '80'
+  - limit: '10000'
+
+pre_run:
+  - CreateFolder("{{.Output}}/directory")
+  - StartNoti()
+
+steps:
+  - commands:
+      - "echo '123' >> {{.Output}}/directory/beautify-{{.Workspace}}.txt"
+      - "echo '123' >> {{.Output}}/directory/summary-{{.Workspace}}.csv"
+      - "mkdir -p {{.Output}}/directory/dirbscan-beautify/dirbscan-beautify"
+  - commands:
+      - "echo '123' >> {{.Output}}/directory/dirbscan-beautify/dirbscan-report-{{.Workspace}}.html"
+
+post_run:
+  - Cleaning("{{.Output}}/directory/")
+  - DoneNoti()

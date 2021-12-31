@@ -1,0 +1,14 @@
+name: pull
+desc: Pull latest result
+
+steps:
+  - scripts:
+    - "CreateFolder('{{.Output}}')"
+    - "CreateFolder('{{.Storages}}/summary/{{.Workspace}}')"
+    - "CreateFolder('{{.Storages}}/subdomain/{{.Workspace}}')"
+    - "CreateFolder('{{.Storages}}/assets/{{.Workspace}}')"
+    - "CreateFolder('{{.Storages}}/paths/{{.Workspace}}')"
+    - "PullResult('{{.Storages}}/summary')"
+    - "PullResult('{{.Storages}}/assets')"
+    - "PullResult('{{.Storages}}/ports')"
+    - "PullResult('{{.Storages}}/mics')"

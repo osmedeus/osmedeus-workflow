@@ -1,0 +1,48 @@
+name: fingerprint
+desc: fingerprint HTTP technology and response
+
+report:
+  final:
+    - "{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt"
+    - "{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt"
+    - "{{.Output}}/probing/diffhttp-{{.Workspace}}.txt"
+
+params:
+  - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - finThreads: '6'
+  - overviewThreads: '50'
+
+pre_run:
+  - CreateFolder("{{.Storages}}/http/{{.Workspace}}/")
+  - CreateFolder("{{.Output}}/fingerprint")
+
+steps:
+  - required:
+      - "{{.Binaries}}/httpx"
+      - "{{.inputfile}}"
+    commands:
+      - cat {{.inputfile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt
+    scripts:
+      - CleanJSONHttpx('{{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt', '{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt')
+
+  - required:
+      - "{{.inputfile}}"
+    commands:
+      - "cat {{.inputfile}} | {{.Binaries}}/goverview probe -N -c {{.overviewThreads}} --json > {{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt"
+
+  # get diff URL and clean up
+  - scripts:
+      - ExecCmd('cat '{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt | {{.Binaries}}/csvtk uniq -f 2 -I  | {{.Binaries}}/csvtk cut -f 1 -I > {{.Output}}/probing/diffhttp-{{.Workspace}}.txt')
+      - Sort("{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt")
+      - Sort("{{.Output}}/probing/diffhttp-{{.Workspace}}.txt")
+
+  # in case we mess up this module
+  - conditions:
+    - FileLength('{{.Output}}/probing/diffhttp-{{.Workspace}}.txt') <= 0
+    commands:
+      - "cp {{.inputfile}} {{.Output}}/probing/diffhttp-{{.Workspace}}.txt"
+
+post_run:
+  - Append("{{.Storages}}/summary/{{.Workspace}}/technologies-{{.Workspace}}.txt", "{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt")
+  - Sort("{{.Storages}}/summary/{{.Workspace}}/technologies-{{.Workspace}}.txt")
+  - TotalTech("{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt")

@@ -1,0 +1,51 @@
+name: portscan
+desc: portscan on 65k ports
+
+report:
+  final:
+    - "{{.Output}}/portscan/open-ports.txt"
+    - "{{.Output}}/portscan/http-running.txt"
+    - "{{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt"
+    - "{{.Output}}/portscan/{{.Workspace}}-aquatone/portscan-{{.Workspace}}.html"
+    - "{{.Output}}/portscan/detail-open-ports.txt"
+    - "{{.Output}}/portscan/ssl-info.txt"
+
+params:
+  - inputfile: "{{.Target}}"
+  - ports: "0-65535"
+  - threads: "3"
+  - nmthreads: "10"
+  - scrthreads: "5"
+  - slow: ""
+  - screen: "true"
+  - rate: "20000"
+  - pthreads: "150"
+
+pre_run:
+  - CreateFolder("{{.Storages}}/ports/{{.Workspace}}")
+  - CreateFolder("{{.Output}}/portscan")
+
+steps:
+  # do port scan first
+  - commands:
+      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rate}} --scripts None --range {{.ports}}  -a {{.inputfile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
+    scripts:
+      - CleanRustScan("{{.Output}}/portscan/raw-open-ports.txt", "{{.Output}}/portscan/open-ports.txt")
+
+  # detect http running on open ports and service
+  - required:
+      - "{{.Output}}/portscan/open-ports.txt"
+      - "{{.Output}}/portscan/raw-open-ports.txt"
+    commands:
+      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/cinfo -c 100 > {{.Output}}/portscan/ssl-info.txt"
+      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c 200 -t 7000 > {{.Output}}/portscan/http-running.txt"
+      - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c 10 -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
+    scripts:
+      - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
+      - Copy('{{.Output}}/portscan/http-running.txt', '{{.Storages}}/ports/{{.Workspace}}/httpport-{{.Workspace}}.txt')
+
+  # do some push
+  - scripts:
+      - Copy("{{.Output}}/portscan/open-ports.txt", "{{.Storages}}/ports/{{.Workspace}}/portscan-{{.Workspace}}.txt")
+      - Copy("{{.Output}}/portscan/http-running.txt", "{{.Storages}}/ports/{{.Workspace}}/http-port-{{.Workspace}}.txt")
+      - Copy("{{.Output}}/portscan/{{.Workspace}}-detail.txt", "{{.Storages}}/ports/{{.Workspace}}/{{.Workspace}}-detail.txt")

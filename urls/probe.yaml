@@ -1,0 +1,43 @@
+name: probe
+desc: probing for the URLs first
+
+report:
+  final:
+    - "{{.Output}}/probe/http-{{.Workspace}}.txt"
+    - "{{.Output}}/probe/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html"
+    - "{{.Output}}/screenshot/goverview/report.html"
+
+# osmedeus scan -m /path/to/this/pws.yaml -t list-urls.txt
+params:
+  - inputfile: "{{.Target}}"
+  - rate: "5000"
+  - threads: "5"
+  - screen: "true"
+  - httpFile: "{{.Output}}/probe/http-{{.Workspace}}.txt"
+
+pre_run:
+  - CreateFolder("{{.Output}}/probe")
+  - CreateFolder("{{.Output}}/screenshot")
+
+steps:
+  - required:
+      - "{{.inputfile}}"
+    commands:
+      - "cat {{.inputfile}} | sort -u | sed 's/\\/$//g' > {{.httpFile}}"
+      - "cat {{.inputfile}} | {{.Binaries}}/httprobe -c 200 >> {{.httpFile}}"
+    scripts:
+      - SortU("{{.httpFile}}")
+
+  # do screenshot
+  # run screenshot -p 'screen=true'
+  - conditions:
+      - '{{.screen}} == true'
+    required:
+      - "{{.Binaries}}/aquatone"
+      - "{{.httpFile}}"
+    commands: 
+      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.threads}} -out {{.Output}}/probe/{{.Workspace}}-aquatone"
+    scripts:
+      - ExecCmd("mv {{.Output}}/probe/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/probe/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html")
+      - ExecCmd("cat {{.httpFile}} | {{.Binaries}}/goverview screen -c {{.threads}} --json -o {{.Output}}/screenshot/")
+      - ExecCmd("{{.Binaries}}/goverview report -o {{.Output}}/screenshot/ --report report.html")

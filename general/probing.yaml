@@ -1,0 +1,89 @@
+name: probing
+desc: Probing HTTP Running and IP of target
+
+report:
+  final:
+    - "{{.Output}}/probing/dns-{{.Workspace}}.txt"
+    - "{{.Output}}/probing/http-{{.Workspace}}.txt"
+
+pre_run:
+  - CreateFolder("{{.Storages}}/summary/{{.Workspace}}/")
+  - CreateFolder("{{.Output}}/probing")
+  - CreateFolder("{{.Output}}/ipspace")
+  - StartNoti()
+
+params:
+  - inputfile: "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
+  - domainFile: "{{.Output}}/probing/subdomain-{{.Workspace}}.txt"
+  - rawFile: "{{.Output}}/probing/raw-{{.Workspace}}.txt"
+  - permWordlists: "{{.Data}}/wordlists/dns/altdns.txt"
+  - bruteWordlist: "{{.Data}}/wordlists/dns/shorts.txt"
+  - resolvers: "{{.Data}}/resolvers.txt"
+  - dnsThreads: "3000"
+  - httpThreads: "200"
+  - massdnsRateBrute: "3000"
+  - dnsJsonFile: "{{.Output}}/probing/dns-json-{{.Workspace}}.txt"
+  - dnsFile: "{{.Output}}/probing/dns-{{.Workspace}}.txt"
+
+steps:
+  # simple bruteforce with main domain
+  - required:
+      - "{{.Binaries}}/puredns"
+      - "{{.Binaries}}/massdns"
+    commands:
+      - '{{.Binaries}}/puredns bruteforce {{.bruteWordlist}} {{.Target}} -r {{.resolvers}} -n 50 -w {{.Output}}/probing/subbrute-{{.Workspace}}.txt --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns > /dev/null 2>&1'
+    scripts:
+      - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.inputfile}}")
+      - SortU("{{.inputfile}}")
+
+  # # generate Alt DNS
+  # - required:
+  #     - '{{.Binaries}}/gotator'
+  #   commands:
+  #     - '{{.Binaries}}/gotator -sub {{.inputfile}} -depth 1 -numbers 10 -md -perm {{.permWordlists}} > {{.domainFile}}'
+
+  # in case alt dns fail
+  - conditions:
+      - "FileLength('{{.domainFile}}') <= 0"
+    commands:
+      - cp {{.inputfile}} {{.domainFile}}
+
+  # resolve DNS
+  - required:
+      - "{{.Binaries}}/puredns"
+      - "{{.Binaries}}/massdns"
+    commands:
+      - "{{.Binaries}}/puredns resolve {{.domainFile}} -r {{.resolvers}} --write {{.Output}}/probing/nonwild-{{.Workspace}}.txt --write-massdns {{.dnsFile}} --write-wildcards {{.Output}}/probing/wildcards-{{.Workspace}}.txt --wildcard-tests 50 --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns > /dev/null 2>&1"
+    scripts:
+      - "SortU('{{.dnsFile}}')"
+
+  # probing for http
+  - required:
+      - "{{.Binaries}}/httprobe"
+    commands:
+      - "cat {{.inputfile}} | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.Output}}/probing/http-{{.Workspace}}.txt"
+  # join with old result
+  - required:
+      - "{{.Output}}/probing/http-{{.Workspace}}.txt"
+    commands:
+      - "cat {{.Output}}/probing/http-{{.Workspace}}.txt >> {{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt"
+    scripts:
+      - SortU("{{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt")
+
+  # unique with storage
+  - commands:
+      - "cat {{.dnsFile}} >> {{.Storages}}/summary/{{.Workspace}}/dns-{{.Workspace}}.txt"
+    scripts:
+      - SortU("{{.Storages}}/summary/{{.Workspace}}/dns-{{.Workspace}}.txt")
+
+  - required:
+      - '{{.dnsFile}}'
+    commands:
+      - cat '{{.dnsFile}}' | grep ' A ' | awk '{print $3}' | sort -u >> {{.Output}}/ipspace/{{.Workspace}}-ip.txt
+    scripts:
+      - SortU("{{.Output}}/ipspace/{{.Workspace}}-ip.txt")
+
+post_run:
+  - TotalSubdomain('{{.Output}}/probing/nonwild-{{.Workspace}}.txt')
+  - TotalDns('{{.dnsFile}}')
+  - Cleaning("{{.Output}}/probing/")

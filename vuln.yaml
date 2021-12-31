@@ -1,0 +1,22 @@
+name: vuln
+desc: run fast routine with vuln scan
+type: general
+validator: domain
+
+routines:
+  - modules:
+      - subdomain
+  - modules:
+      - probing
+  - modules:
+      - ssame
+      - sto
+  - modules:
+      - vulnscan
+  - modules:
+      - dirbscan
+#   - modules:
+#       - portscan
+  # push final result again
+  - modules:
+      - summary

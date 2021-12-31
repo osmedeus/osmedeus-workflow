@@ -1,0 +1,35 @@
+name: subdomain
+desc: Scanning for subdomain
+
+report:
+  final:
+    - "{{.Output}}/probing/dns-{{.Workspace}}.txt"
+    - "{{.Output}}/probing/"
+
+# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+pre_run:
+  - CreateFolder("{{.Output}}/probing/dns")
+  - StartNoti()
+
+params:
+  - subthreads: "50"
+  - amassTimeout: "2h"
+  - ghTimeout: "45m"
+
+steps:
+  - commands:
+      - "seq 1 500 | tee -a {{.Output}}/probing/dns-{{.Workspace}}.txt > /dev/null 2>&1"
+      - "seq 1 1000 | tee -a {{.Output}}/probing/dns-{{.Workspace}}.txt > /dev/null 2>&1"
+
+  - scripts:
+      - Sleep(5)
+
+  - scripts:
+      - "SortU('{{.Output}}/subdomain/final-{{.Workspace}}.txt')"
+      - "TotalDns('{{.Output}}/probing/dns-{{.Workspace}}.txt')"
+
+  # set new variable name
+  - scripts:
+      - "SetVar('new', FileLength('{{.Output}}/probing/dns-{{.Workspace}}.txt'))"
+      - "Printf('{{.new}}')"
+

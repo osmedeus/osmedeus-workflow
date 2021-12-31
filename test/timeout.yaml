@@ -1,0 +1,29 @@
+name: echo
+desc: echo testing
+
+params:
+  - time: '10s'
+  - out: '/tmp/ott'
+  - inp: 'http-xiaomi.com.txt'
+steps:
+
+  - timeout: '{{.time}}'
+    scripts:
+      - ExecCmd('sleep 2')
+      - ExecCmd('touch /tmp/scrr/111')
+
+  - timeout: '{{.time}}'
+    commands:
+      - sleep 2
+    scripts:
+      - ExecCmd('touch /tmp/scrr/222')
+      - ExecCmd('sleep 10')
+      - ExecCmd('touch /tmp/scrr/333')
+
+  - timeout: '{{.time}}'
+    commands:
+      - sleep 20
+    scripts:
+      - ExecCmd('sleep 10')
+      - ExecCmd('touch /tmp/scrr/4444')
+

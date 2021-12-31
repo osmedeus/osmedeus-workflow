@@ -1,0 +1,15 @@
+name: echo
+desc: echo testing
+
+params:
+  - limit: '10000'
+  - inputfile: '/tmp/dam/data'
+
+steps:
+  - conditions:
+      - "FileLength('{{.inputfile}}') > {{.limit}}"
+    scripts:
+      - ErrPrintf("Filter", "got input file greater than {{.limit}} line")
+      - Exit(1)
+  - commands:
+      - echo 'run dirb scan'
