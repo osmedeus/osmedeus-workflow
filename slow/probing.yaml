@@ -17,7 +17,7 @@ params:
   - domainFile: "{{.Output}}/probing/subdomain-{{.Workspace}}.txt"
   - rawFile: "{{.Output}}/probing/raw-{{.Workspace}}.txt"
   - permWordlists: "{{.Data}}/wordlists/dns/altdns.txt"
-  - bruteWordlist: "{{.Data}}/wordlists/dns/shorts.txt"
+  - bruteWordlist: "{{.Data}}/wordlists/dns/medium.txt"
   - resolvers: "{{.Data}}/resolvers.txt"
   - dnsThreads: "3000"
   - httpThreads: "200"
@@ -35,6 +35,7 @@ steps:
     scripts:
       - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.inputfile}}")
       - SortU("{{.inputfile}}")
+
 
   # in case alt dns fail
   - conditions:

@@ -1,0 +1,21 @@
+name: vuln-and-dirb
+desc: directly run on vuln scan and directory scan on list of domains
+type: general
+validator: domain-file
+
+routines:
+  - flow: 'custom' # override the type: general to look for module in folder custom/skip-subdomain.yaml
+    modules:
+      - skip-subdomain
+  - modules:
+      - probing
+  - modules:
+      - vulnscan
+  - modules:
+      - dirbscan
+
+  - modules:
+      - portscan
+  # push final result again
+  - modules:
+      - summary

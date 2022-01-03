@@ -8,35 +8,27 @@ validator: domain
 routines:
   - modules:
       - subdomain
-
   - flow: 'slow'
     modules:
       - probing
-
   - modules:
       - screenshot
   - modules:
       - sto
       - fingerprint
-  - flow: 'slow'
-    modules:
+  - modules:
       - spider
       - archive
-  - modules:
-      - googledorks
       - ipspace
   - modules:
       - vulnscan
-  - modules:
-      - vhostscan
 
   - flow: 'slow'
     modules:
       - portscan
   - flow: 'slow'
     modules:
-      - pdirbscan
-
+      - pvulnscan
   - flow: 'slow'
     modules:
       - dirbscan

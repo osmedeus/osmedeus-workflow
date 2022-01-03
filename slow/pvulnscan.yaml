@@ -1,0 +1,97 @@
+name: pdirbscan
+desc: Run VulnSan & Dirbscan on Portscan result
+
+report:
+  final:
+    - "{{.Output}}/pdirectory/beautify-{{.Workspace}}.txt"
+    - "{{.Output}}/vportscan/vuln/jaeles-report.html"
+    - "{{.Output}}/vportscan/vuln/jaeles-summary.txt"
+    - "{{.Output}}/vportscan/nuclei/{{.Workspace}}-nuclei.html"
+    - "{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt"
+    - "{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei.html"
+
+params:
+  - inputfile: "{{.Output}}/portscan/{{.Workspace}}-http.txt"
+  - wordlists: "{{.Data}}/wordlists/content/fast.txt"
+  - sign: "~/.jaeles/base-signatures/.*"
+  - sign2: "~/.jaeles/base-signatures/sensitive/.*"
+  - lines: "20"
+  - fthreads: '30' # threads for single site
+  - threads: '15'
+  - vthreads: '100'
+  - limit: '40000'
+  - recursion: '0'
+  - commitLength: '200'
+  - chan: '#mics'
+  - nuclei: 'true'
+  - nucleiTimeout: '5h'
+  - nthreads: '200'
+
+pre_run:
+  - CreateFolder("{{.Output}}/pdirectory")
+  - CreateFolder("{{.Output}}/vportscan")
+  - CreateFolder("{{.Storages}}/paths/{{.Workspace}}")
+
+steps:
+  # Jaeles Scan
+  - required:
+      - "{{.Binaries}}/jaeles"
+      - "{{.inputfile}}"
+    commands:
+      - "{{.Binaries}}/jaeles scan -c {{.vthreads}} -s '{{.sign}}' -U {{.inputfile}} -o {{.Output}}/vportscan/vuln/ {{.extra}}"
+    pconditions:
+      - "FileLength('{{.Output}}/vportscan/vuln/jaeles-summary.txt') > 0"
+    scripts:
+      - TeleMessByFile("#report", "{{.Output}}/vportscan/vuln/jaeles-summary.txt")
+
+  # nuclei scan
+  - label: 'Run nuclei scan'
+    conditions:
+      - '"{{.nuclei}}" == "true"'
+    required:
+      - "{{.inputfile}}"
+      - "{{.Binaries}}/nuclei"
+    scripts:
+      - "CreateFolder('{{.Output}}/vportscan/vuln/nuclei')"
+      - "ExecCmd(\"timeout -k 1m {{.nucleiTimeout}} {{.Binaries}}/nuclei -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4581.0 Safari/537.36' -silent -c {{.nthreads}} -json -severity 'critical,high,medium,low' -t ~/nuclei-templates/ -l {{.inputfile}} -irr -o {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
+    pconditions:
+      - "FileLength('{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt') > 0"
+    pscripts:
+      - GenNucleiReport('{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt', '{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei.html')
+      # noti to telegram if anything found
+      - ExecCmd("cat {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.templateID,.matched] | join(\" - \")' > {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
+      - TeleMessByFile("#sensitive", "{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
+
+  - required:
+      - "{{.Binaries}}/ffuf"
+      - "{{.inputfile}}"
+    source: "{{.inputfile}}"
+    threads: '{{.dirbThreads}}'
+    commands:
+      - "{{.Binaries}}/ffuf -t {{.fthreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/pdirectory/raw-{{._id_}}.json -u '{{.line}}/FUZZ' -w {{.wordlists}}:FUZZ"
+    scripts:
+      # get result in csv
+      - ExecCmd("cat {{.Output}}/pdirectory/raw-{{._id_}}.json | jq -r '.results[] | [.url,.status,.length,.words,.lines,.redirectlocation] | join(\",\")' > {{.Output}}/pdirectory/raw-{{._id_}}-{{.Workspace}}.csv")
+      # join to final result
+      - ExecCmd("cat {{.Output}}/pdirectory/raw-{{._id_}}-{{.Workspace}}.csv >> {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv")
+      # noti small file to telegram
+      - ExecCmd("cat {{.Output}}/pdirectory/raw-{{._id_}}-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{._id_}}-{{.Workspace}}.txt")
+      - TeleMessByFile("{{.chan}}", "{{.Output}}/pdirectory/beautify-{{._id_}}-{{.Workspace}}.txt")
+      # sorting & clean up
+      - SortU("{{.Output}}/pdirectory/beautify-{{.Workspace}}.csv")
+      - ExecCmd("rm -rf {{.Output}}/pdirectory/beautify-{{._id_}}-{{.Workspace}}.txt {{.Output}}/pdirectory/raw-{{._id_}}-{{.Workspace}}.csv {{.Output}}/pdirectory/raw-{{._id_}}.json {{.Output}}/pdirectory/unique-{{._id_}}.json")
+    # generate final beautify every 400 domains has been scanned
+    pconditions:
+      - "({{._id_}} % {{.commitLength}}) == 0"
+    pscripts:
+      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt >> {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
+      - PushFolder("{{.Storages}}/paths/")
+
+  # clean up and notify to summary channel
+  - required:
+      - "{{.Output}}/pdirectory/beautify-{{.Workspace}}.csv"
+    scripts:
+      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Storages}}/paths/{{.Workspace}}/paths-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
+      - TeleMessByFile("#dirb", "{{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")

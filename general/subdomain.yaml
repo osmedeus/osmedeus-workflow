@@ -43,8 +43,6 @@ steps:
       - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-subfinder.txt")
       - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-assetfinder.txt")
       - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-findomain.txt")
-      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-github.txt")
-      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-ourl.txt")
       # remove junk subdomain and 1-2-3.subdomain.com format
       - ExecCmd("cat {{.Output}}/subdomain/sum-{{.Workspace}}.txt | {{.Binaries}}/cleansub -t '{{.Target}}' > {{.Output}}/subdomain/final-{{.Workspace}}.txt")
 
