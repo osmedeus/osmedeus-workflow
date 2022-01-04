@@ -66,12 +66,15 @@ steps:
       - cp {{.Output}}/vuln/active/jaeles-summary.txt {{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt
     scripts:
       - TeleMessByFile("#report", "{{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt")
+      - ExecCmd("cat {{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt")
+
   - required:
       - "{{.Output}}/vuln/sensitive/jaeles-summary.txt"
     commands:
       - cp {{.Output}}/vuln/sensitive/jaeles-summary.txt {{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt
     scripts:
       - TeleMessByFile("#sensitive", "{{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt")
+      - ExecCmd("cat {{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt")
 
   # nuclei scan
   - conditions:
@@ -86,3 +89,4 @@ steps:
       # noti to telegram if anything found
       - ExecCmd("cat {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\"] | join(\" - \")' > {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
       - TeleMessByFile("#sensitive", "{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
+      - ExecCmd("cat {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")

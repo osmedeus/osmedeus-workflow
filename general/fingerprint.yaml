@@ -26,6 +26,7 @@ steps:
     scripts:
       - CleanJSONHttpx('{{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt', '{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt')
       - ExecCmd('cat {{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt' | csvtk pretty -I -s ' | ' -W 75 > '{{.Output}}/fingerprint/beautify-{{.Workspace}}-technologies.txt')
+      - ExecCmd('cat {{.Output}}/fingerprint/beautify-{{.Workspace}}-technologies.txt')
 
   - required:
       - "{{.inputfile}}"

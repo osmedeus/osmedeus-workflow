@@ -12,9 +12,8 @@ report:
 
 params:
   - inputfile: "{{.Output}}/portscan/{{.Workspace}}-http.txt"
-  - wordlists: "{{.Data}}/wordlists/content/fast.txt"
+  - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - sign: "~/.jaeles/base-signatures/.*"
-  - sign2: "~/.jaeles/base-signatures/sensitive/.*"
   - lines: "20"
   - fthreads: '30' # threads for single site
   - threads: '15'
@@ -30,7 +29,6 @@ params:
 pre_run:
   - CreateFolder("{{.Output}}/pdirectory")
   - CreateFolder("{{.Output}}/vportscan")
-  - CreateFolder("{{.Storages}}/paths/{{.Workspace}}")
 
 steps:
   # Jaeles Scan
@@ -43,6 +41,7 @@ steps:
       - "FileLength('{{.Output}}/vportscan/vuln/jaeles-summary.txt') > 0"
     scripts:
       - TeleMessByFile("#report", "{{.Output}}/vportscan/vuln/jaeles-summary.txt")
+      - ExecCmd("cat {{.Output}}/vportscan/vuln/jaeles-summary.txt")
 
   # nuclei scan
   - label: 'Run nuclei scan'
@@ -61,6 +60,7 @@ steps:
       # noti to telegram if anything found
       - ExecCmd("cat {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.templateID,.matched] | join(\" - \")' > {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
       - TeleMessByFile("#sensitive", "{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
+      - ExecCmd("cat {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
 
   - required:
       - "{{.Binaries}}/ffuf"
@@ -85,13 +85,13 @@ steps:
       - "({{._id_}} % {{.commitLength}}) == 0"
     pscripts:
       - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
-      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt >> {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
-      - PushFolder("{{.Storages}}/paths/")
+      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.tx")
 
   # clean up and notify to summary channel
   - required:
       - "{{.Output}}/pdirectory/beautify-{{.Workspace}}.csv"
     scripts:
       - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
-      - ExecCmd("cat {{.Storages}}/paths/{{.Workspace}}/paths-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
+
