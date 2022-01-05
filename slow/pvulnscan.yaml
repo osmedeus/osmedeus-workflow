@@ -13,7 +13,8 @@ report:
 params:
   - inputfile: "{{.Output}}/portscan/{{.Workspace}}-http.txt"
   - wordlists: "{{.Data}}/wordlists/content/small.txt"
-  - sign: "~/.jaeles/base-signatures/.*"
+  - sign: "~/.jaeles/base-signatures/cves/.*"
+  - sign2: "~/.jaeles/base-signatures/common/.*"
   - lines: "20"
   - fthreads: '30' # threads for single site
   - threads: '15'
@@ -36,7 +37,7 @@ steps:
       - "{{.Binaries}}/jaeles"
       - "{{.inputfile}}"
     commands:
-      - "{{.Binaries}}/jaeles scan -c {{.vthreads}} -s '{{.sign}}' -U {{.inputfile}} -o {{.Output}}/vportscan/vuln/ {{.extra}}"
+      - "{{.Binaries}}/jaeles scan -c {{.vthreads}} -s '{{.sign}}' -s '{{.sign2}}' -U {{.inputfile}} -o {{.Output}}/vportscan/vuln/ {{.extra}}"
     pconditions:
       - "FileLength('{{.Output}}/vportscan/vuln/jaeles-summary.txt') > 0"
     scripts:
