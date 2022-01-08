@@ -60,4 +60,4 @@ steps:
 
 post_run:
   - TotalArchive('{{.Output}}/archive/{{.Workspace}}-archive.txt')
-  - PushFolder("{{.Storages}}/assets/")
+

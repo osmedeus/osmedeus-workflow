@@ -18,7 +18,6 @@ params:
   - chan: '#mics'
 
 pre_run:
-  - CreateFolder("{{.Storages}}/paths/{{.Workspace}}")
   - CreateFolder("{{.Output}}/directory")
 
 steps:
@@ -57,7 +56,6 @@ steps:
     pscripts:
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.txt >> {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
-      - PushFolder("{{.Storages}}/paths/")
 
   # clean up and notify to summary channel
   - required:
@@ -70,4 +68,4 @@ steps:
 
 post_run:
   - TotalDirb("{{.Output}}/directory/beautify-{{.Workspace}}.txt")
-  - PushFolder("{{.Storages}}/paths/")
+

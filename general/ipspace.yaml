@@ -51,4 +51,4 @@ steps:
       - "cp {{.ipFile}} {{.Output}}/ipspace/{{.Workspace}}-noncdn.txt"
 
 post_run:
-  - PushFolder("{{.Storages}}/summary/")
+

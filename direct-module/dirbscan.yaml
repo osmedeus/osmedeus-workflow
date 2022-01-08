@@ -7,27 +7,20 @@ report:
     - "{{.Output}}/directory/paths-{{.Workspace}}.csv"
 
 params:
-  - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - inputfile: "{{.Target}}"
   - wordlists: "{{.Data}}/wordlists/content/big.txt"
   - lines: "20"
   - fthreads: '20' # threads for single site
-  - dirbThreads: '10'
+  - dirbThreads: '5' # how many ffuf commands you want to run in at once
   - dlimit: '50000'
   - recursion: '0'
   - commitLength: '400'
   - chan: '#mics'
 
 pre_run:
-  - CreateFolder("{{.Storages}}/paths/{{.Workspace}}")
   - CreateFolder("{{.Output}}/directory")
 
 steps:
-  # check if the size is too big, We don't want tons of garbage here
-  - conditions:
-      - "FileLength('{{.inputfile}}') > {{.dlimit}}"
-    scripts:
-      - ErrPrintf("Filter", "Got input file greater than {{.dlimit}} line")
-      - Exit(1)
 
   # # make a header for csv file
   # - commands:
@@ -57,7 +50,6 @@ steps:
     pscripts:
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.txt >> {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
-
 
   # clean up and notify to summary channel
   - required:

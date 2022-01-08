@@ -4,7 +4,6 @@ desc: summary the things
 steps:
   # cleaning some result
   - scripts:
-      - PushFolder("{{.Storages}}/summary/")
-      - PushFolder("{{.Storages}}/subdomain/")
-      - PushFolder("{{.Storages}}/http/")
-      - PushFolder("{{.Storages}}/assets/")
+
+
+

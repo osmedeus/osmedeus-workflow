@@ -43,6 +43,9 @@ osmedeus scan -t sample.com
 ## Start a general scan but exclude some of the module
 osmedeus scan -t sample.com -x screenshot -x spider
 
+## Start a scan directly with a module with inputs as a list of http domains like this https://sub.example.com
+osmedeus scan -m ~/osmedeus-base/workflow/direct-module/dirbscan.yaml -t http-file.txt
+
 ## Start a simple scan with other flow
 osmedeus scan -f vuln -t sample.com
 

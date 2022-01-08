@@ -11,4 +11,4 @@ steps:
   - commands:
       - 'echo foo >> /tmp/sample-osm/tes-osm4/sam/data.txt'
     scripts:
-      - PushFolder('/tmp/sample-osm/tes-osm4/sam/')
+
