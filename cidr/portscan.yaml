@@ -43,10 +43,4 @@ steps:
       - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.nmthreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
     scripts:
       - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
-      - Copy('{{.Output}}/portscan/http-running.txt', '{{.Storages}}/ports/{{.Workspace}}/httpport-{{.Workspace}}.txt')
 
-  # do some push
-  - scripts:
-      - Copy("{{.Output}}/portscan/open-ports.txt", "{{.Storages}}/ports/{{.Workspace}}/portscan-{{.Workspace}}.txt")
-      - Copy("{{.Output}}/portscan/http-running.txt", "{{.Storages}}/ports/{{.Workspace}}/http-port-{{.Workspace}}.txt")
-      - Copy("{{.Output}}/portscan/{{.Workspace}}-detail.txt", "{{.Storages}}/ports/{{.Workspace}}/{{.Workspace}}-detail.txt")
