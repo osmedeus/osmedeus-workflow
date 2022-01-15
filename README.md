@@ -68,6 +68,8 @@ osmedeus scan -T list_of_targets.txt
 ## Get target from a stdin and start the scan with 2 concurrency
 cat list_of_targets.txt | osmedeus scan -c 2
 
+## Start the scan with your custom workflow folder
+osmedeus scan --wfFolder ~/custom-workflow/ -f your-custom-workflow -t sample.com
 ```
 
 
@@ -82,7 +84,7 @@ Join Our Discord server [here](https://discord.gg/gy4SWhpaPU)
 
 ## 💎 Donation
 
-Please check out [this page](https://docs.osmedeus.org/donation/) for couple donation methods here
+Check out for couple of **[donation methods here]((https://docs.osmedeus.org/donation/))** to get a **[premium package](https://docs.osmedeus.org/premium/)**
 
 ## License
 
