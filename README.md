@@ -4,10 +4,11 @@
   <strong>Osmedeus - A Workflow Engine for Offensive Security</strong>
 
   <p align="center">
-  <a href="https://docs.osmedeus.org/"><img src="https://img.shields.io/badge/Documentation-0078D4?style=for-the-badge&logo=Google-Chrome&logoColor=39ff14&labelColor=black&color=black"></a>
+  <a href="https://docs.osmedeus.org/"><img src="https://img.shields.io/badge/Documentation-0078D4?style=for-the-badge&logo=GitBook&logoColor=39ff14&labelColor=black&color=black"></a>
   <a href="https://docs.osmedeus.org/donation/"><img src="https://img.shields.io/badge/Sponsors-0078D4?style=for-the-badge&logo=GitHub-Sponsors&logoColor=39ff14&labelColor=black&color=black"></a>
   <a href="https://twitter.com/OsmedeusEngine"><img src="https://img.shields.io/badge/%40OsmedeusEngine-0078D4?style=for-the-badge&logo=Twitter&logoColor=39ff14&labelColor=black&color=black"></a>
   <a href="https://discord.gg/gy4SWhpaPU"><img src="https://img.shields.io/badge/Discord%20Server-0078D4?style=for-the-badge&logo=Discord&logoColor=39ff14&labelColor=black&color=black"></a>
+  <a href="https://discord.gg/gy4SWhpaPU"><img src="https://img.shields.io/github/release/j3ssie/osmedeus?style=for-the-badge&labelColor=black&color=2fc414&logo=Github"></a>
   </p>
 </p>
 
@@ -82,9 +83,10 @@ If you have found some valuable tool or suggest to use the tool in each module b
 
 Join Our Discord server [here](https://discord.gg/gy4SWhpaPU)
 
-## 💎 Donation
+## 💎 Donation & Sponsor
 
-Check out for couple of **[donation methods here]((https://docs.osmedeus.org/donation/))** to get a **[premium package](https://docs.osmedeus.org/premium/)**
+Check out for a couple of **[donation methods here]((https://docs.osmedeus.org/donation/))** to get a **[premium package](https://docs.osmedeus.org/premium/)**
+
 
 ## License
 
