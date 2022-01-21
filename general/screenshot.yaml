@@ -8,7 +8,7 @@ report:
 
 params:
   - inputfile: "{{.Output}}/probing/diffhttp-{{.Workspace}}.txt"
-  - threads: "8"
+  - screenThreads: "8"
   - limit: "50000"
 
 # {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
@@ -28,7 +28,7 @@ steps:
       - "{{.Binaries}}/aquatone"
       - "{{.inputfile}}"
     commands: 
-      - "cat {{.inputfile}} | {{.Binaries}}/aquatone -threads {{.threads}} -out {{.Output}}/screenshot/{{.Workspace}}-aquatone > /dev/null 2>&1"
+      - "cat {{.inputfile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/screenshot/{{.Workspace}}-aquatone > /dev/null 2>&1"
   # change html report name
   - commands:
       - "mv {{.Output}}/screenshot/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/screenshot/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html"
@@ -36,7 +36,7 @@ steps:
 
   # do screenshot with goverview
   - scripts:
-      - ExecCmd("cat {{.inputfile}} | {{.Binaries}}/goverview screen -c 5 --json -o {{.Output}}/screenshot/goverview/")
+      - ExecCmd("cat {{.inputfile}} | {{.Binaries}}/goverview screen -c {{.screenThreads}} --json -o {{.Output}}/screenshot/goverview/")
       - ExecCmd("{{.Binaries}}/goverview report -o {{.Output}}/screenshot/goverview/ --report report.html")
 
 post_run:

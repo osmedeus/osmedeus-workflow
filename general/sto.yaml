@@ -29,5 +29,5 @@ steps:
   - scripts:
       - TeleMessByFile("#sensitive", "{{.Output}}/sto/sto-{{.Workspace}}-content.txt")
       - TeleMessByFile("#sensitive", "{{.Output}}/sto/sto-{{.Workspace}}-dns.txt")
-      - ExecCmd("cat {{.Output}}/sto/sto-{{.Workspace}}-content.txt")
-      - ExecCmd("cat {{.Output}}/sto/sto-{{.Workspace}}-dns.txt")
+      - Cat("{{.Output}}/sto/sto-{{.Workspace}}-content.txt")
+      - Cat("{{.Output}}/sto/sto-{{.Workspace}}-dns.txt")

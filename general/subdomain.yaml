@@ -13,7 +13,7 @@ pre_run:
   - CreateFolder("{{.Output}}/subdomain/")
 
 params:
-  - subthreads: "50"
+  - subfinderThreads: "50"
   - amassTimeout: "3h"
 
 steps:
@@ -28,7 +28,7 @@ steps:
   # these two commands will run in parallels
   - commands:
       - "{{.Binaries}}/findomain -u {{.Output}}/subdomain/{{.Workspace}}-findomain.txt -t {{.Target}} > /dev/null 2>&1"
-      - "{{.Binaries}}/subfinder -d {{.Target}} -t {{.subthreads}} -o {{.Output}}/subdomain/{{.Workspace}}-subfinder.txt > /dev/null 2>&1"
+      - "{{.Binaries}}/subfinder -d {{.Target}} -t {{.subfinderThreads}} -o {{.Output}}/subdomain/{{.Workspace}}-subfinder.txt > /dev/null 2>&1"
 
   # cleaning some result
   - scripts:

@@ -4,18 +4,14 @@ desc: screenshot on open HTTP port
 report:
   final:
     - "{{.Output}}/portscan/{{.Workspace}}-aquatone/portscan-{{.Workspace}}.html"
-    - "{{.Output}}/portscan/{{.Workspace}}-http-overview.txt"
+    - "{{.Output}}/portscan/http-overview-{{.Workspace}}.txt"
     - "{{.Output}}/portscan/goverview/report.html"
 
 # osmedeus scan -m /path/to/this/pws.yaml -t ip-ranges.txt
 params:
   - inputfile: "{{.Output}}/portscan/http-running.txt"
-  - ports: "0-65535"
-  - threads: "3"
-  - nmthreads: "10"
-  - scrthreads: "5"
-  - slow: ""
-  - pthreads: "150"
+  - screenThreads: "8"
+  - overviewThreads: "5"
 
 pre_run:
   - CreateFolder("{{.Output}}/portscan")
@@ -26,13 +22,16 @@ steps:
       - "{{.Binaries}}/aquatone"
       - "{{.inputfile}}"
     commands: 
-      - "cat {{.inputfile}} | {{.Binaries}}/aquatone -threads {{.scrthreads}} -out {{.Output}}/portscan/{{.Workspace}}-aquatone"
-      - "cat {{.inputfile}} | {{.Binaries}}/goverview probe -N -c 50 --json > {{.Output}}/portscan/{{.Workspace}}-http-overview.txt"
+      - "cat {{.inputfile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-aquatone"
+      - cat {{.inputfile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent -favicon >> {{.Output}}/portscan/http-overview-{{.Workspace}}.txt
     # change html report name
     scripts:
       - ExecCmd("mv {{.Output}}/portscan/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/portscan/{{.Workspace}}-aquatone/portscan-{{.Workspace}}.html")
+      - CleanJSONHttpx('{{.Output}}/portscan/http-overview-{{.Workspace}}.txt', '{{.Output}}/portscan/{{.Workspace}}-technologies.txt')
+      - ExecCmd("cat {{.Output}}/portscan/http-overview-{{.Workspace}}.txt' | csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/portscan/beautify-{{.Workspace}}-technologies.txt")
+      - Cat('{{.Output}}/portscan/beautify-{{.Workspace}}-technologies.txt')
 
   # do screenshot with goverview
   - scripts:
-      - ExecCmd("cat {{.Output}}/portscan/http-running.txt | {{.Binaries}}/goverview screen -c 5 --json -o  {{.Output}}/portscan/goverview/")
+      - ExecCmd("cat {{.Output}}/portscan/http-running.txt | {{.Binaries}}/goverview screen -c {{.screenThreads}} --json -o  {{.Output}}/portscan/goverview/")
       - ExecCmd("{{.Binaries}}/goverview report -o  {{.Output}}/portscan/goverview/ --report report.html")

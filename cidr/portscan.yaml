@@ -12,13 +12,10 @@ report:
 params:
   - inputfile: "{{.Target}}"
   - ports: "0-65535"
-  - threads: "3"
-  - nmthreads: "30"
-  - scrthreads: "5"
-  - slow: ""
-  - screen: "true"
-  - rate: "20000"
-  - pthreads: "150"
+  - rateRustScan: "10000"
+  - nmapThreads: "20"
+  - httpThreads: "100"
+  - screenThreads: "8"
 
 pre_run:
   - CreateFolder("{{.Storages}}/ports/{{.Workspace}}")
@@ -29,7 +26,7 @@ steps:
   - required:
       - '{{.Binaries}}/rustscan'
     commands:
-      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rate}} --scripts None --range {{.ports}} -a {{.inputfile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
+      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --range {{.ports}} -a {{.inputfile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
     scripts:
       - CleanRustScan("{{.Output}}/portscan/raw-open-ports.txt", "{{.Output}}/portscan/open-ports.txt")
 
@@ -38,9 +35,9 @@ steps:
       - "{{.Output}}/portscan/open-ports.txt"
       - "{{.Output}}/portscan/raw-open-ports.txt"
     commands:
-      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/cinfo -c 100 > {{.Output}}/portscan/ssl-info.txt"
-      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c 200 -t 7000 > {{.Output}}/portscan/http-running.txt"
-      - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.nmthreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
+      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/cinfo -c {{.httpThreads}} > {{.Output}}/portscan/ssl-info.txt"
+      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c {{.httpThreads}} -t 7000 > {{.Output}}/portscan/http-running.txt"
+      - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.screenThreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
     scripts:
       - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
 

@@ -36,7 +36,6 @@ steps:
       - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.inputfile}}")
       - SortU("{{.inputfile}}")
 
-
   # in case alt dns fail
   - conditions:
       - "FileLength('{{.domainFile}}') <= 0"

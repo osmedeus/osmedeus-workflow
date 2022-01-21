@@ -14,7 +14,7 @@ report:
 
 params:
   - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
-  - maxtime: "1h"
+  - archiveTimeout: "1h"
   - alimit: "10000"
 
 # {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
@@ -33,12 +33,12 @@ steps:
       - "{{.Binaries}}/ourl"
       - "{{.Binaries}}/durl"
     commands:
-      - "timeout -k 1m {{.maxtime}} {{.Binaries}}/ourl -subs -p {{.Target}} | {{.Binaries}}/durl | shuf -n {{.alimit}} >> {{.Output}}/archive/{{.Workspace}}-archive.txt"
+      - "timeout -k 1m {{.archiveTimeout}} {{.Binaries}}/ourl -subs -p {{.Target}} | {{.Binaries}}/durl | shuf -n {{.alimit}} >> {{.Output}}/archive/{{.Workspace}}-archive.txt"
     scripts:
       - "SortU('{{.Output}}/archive/{{.Workspace}}-archive.txt')"
 
   # do get request to archive result
-  - timeout: "{{.maxtime}}"
+  - timeout: "{{.archiveTimeout}}"
     required:
       - "{{.Output}}/archive/{{.Workspace}}-archive.txt"
     commands:

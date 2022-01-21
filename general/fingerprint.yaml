@@ -11,7 +11,7 @@ report:
 params:
   - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
   - finThreads: '6'
-  - overviewThreads: '50'
+  - overviewThreads: '100'
 
 pre_run:
   - CreateFolder("{{.Storages}}/http/{{.Workspace}}/")
@@ -22,16 +22,16 @@ steps:
       - "{{.Binaries}}/httpx"
       - "{{.inputfile}}"
     commands:
-      - cat {{.inputfile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt
+      - cat {{.inputfile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent -favicon >> {{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt
     scripts:
       - CleanJSONHttpx('{{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt', '{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt')
-      - ExecCmd('cat {{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt' | csvtk pretty -I -s ' | ' -W 75 > '{{.Output}}/fingerprint/beautify-{{.Workspace}}-technologies.txt')
-      - ExecCmd('cat {{.Output}}/fingerprint/beautify-{{.Workspace}}-technologies.txt')
+      - ExecCmd("cat {{.Output}}/fingerprint/http-overview-{{.Workspace}}.txt' | csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/fingerprint/beautify-{{.Workspace}}-technologies.txt")
+      - Cat('{{.Output}}/fingerprint/beautify-{{.Workspace}}-technologies.txt')
 
-  - required:
-      - "{{.inputfile}}"
-    commands:
-      - "cat {{.inputfile}} | {{.Binaries}}/goverview probe -N -c {{.overviewThreads}} --json > {{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt"
+  # - required:
+  #     - "{{.inputfile}}"
+  #   commands:
+  #     - "cat {{.inputfile}} | {{.Binaries}}/goverview probe -N -c {{.overviewThreads}} --json > {{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt"
 
   # get diff URL and clean up
   - scripts:

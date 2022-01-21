@@ -1,4 +1,4 @@
-name: pdirbscan
+name: pvulnscan
 desc: Run VulnSan & Dirbscan on Portscan result
 
 report:
@@ -42,7 +42,7 @@ steps:
       - "FileLength('{{.Output}}/vportscan/vuln/jaeles-summary.txt') > 0"
     scripts:
       - TeleMessByFile("#report", "{{.Output}}/vportscan/vuln/jaeles-summary.txt")
-      - ExecCmd("cat {{.Output}}/vportscan/vuln/jaeles-summary.txt")
+      - Cat("{{.Output}}/vportscan/vuln/jaeles-summary.txt")
 
   # nuclei scan
   - label: 'Run nuclei scan'
@@ -61,7 +61,7 @@ steps:
       # noti to telegram if anything found
       - ExecCmd("cat {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.templateID,.matched] | join(\" - \")' > {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
       - TeleMessByFile("#sensitive", "{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
-      - ExecCmd("cat {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
+      - Cat("{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
 
   - required:
       - "{{.Binaries}}/ffuf"
@@ -86,7 +86,6 @@ steps:
       - "({{._id_}} % {{.commitLength}}) == 0"
     pscripts:
       - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
-      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.tx")
 
   # clean up and notify to summary channel
   - required:
@@ -94,5 +93,5 @@ steps:
     scripts:
       - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
-      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
+      - Cat("{{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
 

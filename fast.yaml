@@ -11,7 +11,4 @@ routines:
   - modules:
       - fingerprint
   - modules:
-      - sto
-      - archive
-  - modules:
       - summary

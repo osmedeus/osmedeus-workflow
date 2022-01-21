@@ -14,12 +14,11 @@ params:
   - inputfile: "{{.Output}}/portscan/http-running.txt"
   - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - dirbThreads: '30' # threads for single site
-  - threads: '15' # threads for running number of ffuf commands
+  - ffThreads: '15' # threads for running number of ffuf commands
   - limit: '35000'
   - recursion: '0'
   - chan: '#mics'
   - lines: "30"
-
 pre_run:
   - CreateFolder("{{.Storages}}/paths/{{.Workspace}}")
   - CreateFolder("{{.Output}}/directory")
@@ -39,7 +38,7 @@ steps:
     source: "{{.inputfile}}"
     threads: '{{.dirbThreads}}'
     commands:
-      - "{{.Binaries}}/ffuf -t {{.fthreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-{{._id_}}.json -u '{{.line}}/FUZZ' -w {{.wordlists}}:FUZZ"
+      - "{{.Binaries}}/ffuf -t {{.ffThreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-{{._id_}}.json -u '{{.line}}/FUZZ' -w {{.wordlists}}:FUZZ"
     scripts:
       # get result in csv
       - ExecCmd("cat {{.Output}}/directory/raw-{{._id_}}.json | jq -r '.results[] | [.url,.status,.length,.words,.lines,.redirectlocation] | join(\",\")' > {{.Output}}/directory/raw-{{._id_}}-{{.Workspace}}.csv")
@@ -66,8 +65,4 @@ steps:
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - ExecCmd("cat {{.Storages}}/paths/{{.Workspace}}/paths-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{.Output}}/directory/beautify-{{.Workspace}}.txt")
-      - ExecCmd('cat {{.Output}}/directory/beautify-{{.Workspace}}.txt')
-
-post_run:
-
-  - DoneNoti()
+      - Cat('{{.Output}}/directory/beautify-{{.Workspace}}.txt')

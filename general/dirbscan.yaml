@@ -10,7 +10,7 @@ params:
   - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
   - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - lines: "20"
-  - fthreads: '20' # threads for single site
+  - ffThreads: '20' # threads for single site
   - dirbThreads: '10'
   - dlimit: '50000'
   - recursion: '0'
@@ -38,7 +38,7 @@ steps:
     source: "{{.inputfile}}"
     threads: '{{.dirbThreads}}'
     commands:
-      - "{{.Binaries}}/ffuf -t {{.fthreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-{{._id_}}.json -u '{{.line}}/FUZZ' -w {{.wordlists}}:FUZZ"
+      - "{{.Binaries}}/ffuf -t {{.ffThreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-{{._id_}}.json -u '{{.line}}/FUZZ' -w {{.wordlists}}:FUZZ"
     scripts:
       # get result in csv
       - ExecCmd("cat {{.Output}}/directory/raw-{{._id_}}.json | jq -r '.results[] | [.url,.status,.length,.words,.lines,.redirectlocation] | join(\",\")' > {{.Output}}/directory/raw-{{._id_}}-{{.Workspace}}.csv")

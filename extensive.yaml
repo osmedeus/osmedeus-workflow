@@ -1,14 +1,12 @@
-name: slow
-desc: run slow routine
+name: extensive
+desc: run extensive routine with more in-depth module
 type: general
 validator: domain
-
-
 
 routines:
   - modules:
       - subdomain
-  - flow: 'slow'
+  - flow: 'extensive'
     modules:
       - probing
   - modules:
@@ -23,13 +21,13 @@ routines:
   - modules:
       - vulnscan
 
-  - flow: 'slow'
+  - flow: 'extensive'
     modules:
       - portscan
-  - flow: 'slow'
+  - flow: 'extensive'
     modules:
       - pvulnscan
-  - flow: 'slow'
+  - flow: 'extensive'
     modules:
       - dirbscan
   # push final result again

@@ -12,7 +12,7 @@ report:
 params:
   - inputfile: "{{.Output}}/probing/diffhttp-{{.Workspace}}.txt"
   - spiderTimeout: "1h"
-  - threads: "5"
+  - spiderThreads: "5"
 
 # {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
 pre_run:
@@ -24,7 +24,7 @@ steps:
       - "{{.Binaries}}/gospider"
       - "{{.inputfile}}"
     source: "{{.inputfile}}"
-    threads: '{{.threads}}'
+    threads: '{{.spiderThreads}}'
     commands:
       - "timeout -k 1m {{.spiderTimeout}} {{.Binaries}}/gospider -B -s {{.line}} --depth 1 --no-redirect -t 5 --json >> {{.Output}}/linkfinding/links-json-{{.Workspace}}.txt"
 

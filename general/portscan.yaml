@@ -15,23 +15,20 @@ pre_run:
 # only run for top 1k port
 # edit via osmedeus scan -P 'ports=0-65535' -P 'rate=5000' ...
 params:
-  - ports: "0-65535"
-  - rate: "20000"
-  - sign: "~/.jaeles/base-signatures/products/.*"
-  - final: "sensitive"
-  - threads: "100"
-  - lines: "200"
   - inputfile: "{{.Output}}/ipspace/{{.Workspace}}-noncdn.txt"
-  - rate: "5000"
-  - pthreads: "150"
+  # portscan
+  - ports: "0-65535"
+  - rateRustScan: "10000"
   - nmapThreads: "20"
+  - httpThreads: "100"
+  - screenThreads: "8"
 
 steps:
   # do port scan first
   - required:
       - '{{.inputfile}}'
     commands:
-      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rate}} --scripts None --range {{.ports}} -a {{.inputfile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
+      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --range {{.ports}} -a {{.inputfile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
     scripts:
       - CleanRustScan("{{.Output}}/portscan/raw-open-ports.txt", "{{.Output}}/portscan/open-ports.txt")
 
@@ -40,7 +37,7 @@ steps:
       - "{{.Output}}/portscan/open-ports.txt"
       - "{{.Output}}/portscan/raw-open-ports.txt"
     commands:
-      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c 200 -t 7000 >> {{.Output}}/portscan/{{.Workspace}}-http.txt"
+      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c {{.httpThreads}} -t 7000 >> {{.Output}}/portscan/{{.Workspace}}-http.txt"
       - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.nmapThreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
     scripts:
       - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
@@ -51,6 +48,6 @@ steps:
       - "{{.Binaries}}/aquatone"
       - "{{.Output}}/portscan/{{.Workspace}}-http.txt"
     commands:
-      - "cat {{.Output}}/portscan/{{.Workspace}}-http.txt | {{.Binaries}}/aquatone -threads 5 -out {{.Output}}/portscan/{{.Workspace}}-screenshot > /dev/null 2>&1"
+      - "cat {{.Output}}/portscan/{{.Workspace}}-http.txt | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-screenshot > /dev/null 2>&1"
     scripts:
       - ExecCmd("mv {{.Output}}/portscan/{{.Workspace}}-screenshot/aquatone_report.html {{.Output}}/portscan/{{.Workspace}}-screenshot/screenshot-{{.Workspace}}.html")

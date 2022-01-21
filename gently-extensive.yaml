@@ -1,0 +1,69 @@
+name: gently-extensive
+desc: run extensive routine but with very low threads
+type: general
+validator: domain
+force-params: true
+
+params:
+  - subfinderThreads: "20"
+  # probing
+  - dnsThreads: "300"
+  - httpThreads: "30"
+  - massdnsRateBrute: "300"
+  # screenshot
+  - screenThreads: "8"
+  # fingerprint & spider
+  - ssthreads: "30"
+  - overviewThreads: '30'
+  - stoThreads: '30'
+  - spiderThreads: "5"
+
+  # vulnscan
+  - nucleiThreads: "30"
+  - jaelesThreads: "20"
+  # dirbscan
+  - ffThreads: '20' # threads for single ffuf-scan
+  - dirbThreads: '2' # how many ffuf run at the same time
+  # portscan
+  - ports: "0-65535"
+  - rateRustScan: "5000"
+  - nmapThreads: "10"
+
+routines:
+  - flow: 'extensive'
+    modules:
+      - subdomain
+  - flow: 'extensive'
+    modules:
+      - probing
+  - flow: 'extensive'
+    modules:
+      - ssame
+  - modules:
+      - screenshot
+  - modules:
+      - sto
+      - fingerprint
+  - flow: 'extensive'
+    modules:
+      - spider
+      - archive
+  - modules:
+      - ipspace
+  - modules:
+      - vulnscan
+  # - modules:
+  #     - vhostscan
+
+  - modules:
+      - portscan
+  - flow: 'extensive'
+    modules:
+      - pdirbscan
+
+  - flow: 'extensive'
+    modules:
+      - dirbscan
+  # push final result again
+  - modules:
+      - summary
