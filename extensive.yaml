@@ -3,6 +3,8 @@ desc: run extensive routine with more in-depth module
 type: general
 validator: domain
 
+# osmedeus scan -f extensive -t sample.com
+
 routines:
   - modules:
       - subdomain
@@ -24,12 +26,11 @@ routines:
   - flow: 'extensive'
     modules:
       - portscan
-  - flow: 'extensive'
-    modules:
-      - pvulnscan
+
   - flow: 'extensive'
     modules:
       - dirbscan
-  # push final result again
-  - modules:
-      - summary
+
+  - flow: 'extensive'
+    modules:
+      - pvulnscan # doing vulnscan + dirbscan on portscan result too
