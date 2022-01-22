@@ -64,7 +64,7 @@ steps:
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - ExecCmd("cat {{.Storages}}/paths/{{.Workspace}}/paths-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{.Output}}/directory/beautify-{{.Workspace}}.txt")
-      - ExecCmd('cat {{.Output}}/directory/beautify-{{.Workspace}}.txt')
+      - Cat('{{.Output}}/directory/beautify-{{.Workspace}}.txt')
 
 post_run:
   - TotalDirb("{{.Output}}/directory/beautify-{{.Workspace}}.txt")

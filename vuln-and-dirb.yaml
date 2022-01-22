@@ -16,6 +16,3 @@ routines:
 
   - modules:
       - portscan
-  # push final result again
-  - modules:
-      - summary

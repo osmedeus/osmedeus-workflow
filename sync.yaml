@@ -10,5 +10,4 @@ routines:
   - modules:
       - report
       - storages
-  - modules:
-      - summary
+

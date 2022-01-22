@@ -36,16 +36,22 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/osmedeus/osmedeus-base/m
 Check out [this page](https://docs.osmedeus.org/installation/usage#scan-actually-start-a-scan-based-on-predefined-workflow) to see how this workflow can be use to scan
 
 ```shell
-# Practical Scan Usage:
+# Practical Usage:
+osmedeus scan -f [flowName] -t [target]
+osmedeus scan -f [flowName] -T [targetsFile]
+osmedeus scan -f /path/to/flow.yaml -t [target]
+osmedeus scan -m /path/to/module.yaml -t [target] --params 'port=9200'
+osmedeus scan -m /path/to/module.yaml -t [target] -l /tmp/log.log
+cat targets | osmedeus scan -f sample
 
 ## Start a simple scan with default 'general' flow
 osmedeus scan -t sample.com
 
-## Start a general scan but exclude some of the module
-osmedeus scan -t sample.com -x screenshot -x spider
-
 ## Start a scan directly with a module with inputs as a list of http domains like this https://sub.example.com
 osmedeus scan -m ~/osmedeus-base/workflow/direct-module/dirbscan.yaml -t http-file.txt
+
+## Start a general scan but exclude some of the module
+osmedeus scan -t sample.com -x screenshot -x spider
 
 ## Start a simple scan with other flow
 osmedeus scan -f vuln -t sample.com
@@ -71,6 +77,33 @@ cat list_of_targets.txt | osmedeus scan -c 2
 
 ## Start the scan with your custom workflow folder
 osmedeus scan --wfFolder ~/custom-workflow/ -f your-custom-workflow -t sample.com
+
+# Example Commands:
+osmedeus scan -t target.com
+osmedeus scan -T list_of_targets.txt -W custom_workspaces
+osmedeus scan -t target.com -w workspace_name --debug
+osmedeus scan -f single -t www.sample.com
+osmedeus scan -f ovuln-T list_of_target.txt
+osmedeus scan -m ~/osmedeus-base/workflow/test/dirbscan.yaml -t list_of_urls.txt
+osmedeus health
+ls ~/.osmedeus/storages/summary/ | osmedeus scan -m ~/osmedeus-base/workflow/test/dirbscan.yaml
+ls ~/.osmedeus/storages/summary/ | osmedeus scan -m ~/osmedeus-base/workflow/test/busting.yaml -D
+
+# Start Web UI at https://<your-instance-machine>:8000/ui/
+osmedeus server
+# login with credentials from `~/.osmedeus/config.yaml`
+
+# Delete workspace
+osmedeus config delete -w workspace_name
+
+# Utils Commands
+
+osmedeus utils tmux ls
+osmedeus utils tmux logs -A -l 10
+osmedeus utils ps
+osmedeus utils ps --proc 'jaeles'
+osmedeus utils cron --cmd 'osmdeus scan -t example.com' --sch 60
+osmedeus utils cron --for --cmd 'osmedeus scan -t example.com'
 ```
 
 

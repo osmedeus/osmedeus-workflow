@@ -64,7 +64,7 @@ steps:
     scripts:
       - TeleMessByFile("#report", "{{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt")
       - TotalVulnerability("{{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt")
-      - ExecCmd('cat {{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt')
+      - Cat('{{.Output}}/vuln/active/activescan-{{.Workspace}}-{{.TS}}.txt')
 
   - required:
       - "{{.Output}}/vuln/sensitive/jaeles-summary.txt"
@@ -73,7 +73,7 @@ steps:
     scripts:
       - TeleMessByFile("#sensitive", "{{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt")
       - TotalVulnerability("{{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt")
-      - ExecCmd('cat {{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt')
+      - Cat('{{.Output}}/vuln/sensitive/sensitivescan-{{.Workspace}}-{{.TS}}.txt')
 
   # nuclei scan
   - required:
@@ -83,4 +83,4 @@ steps:
       - CreateFolder('{{.Output}}/vuln/nuclei')
       - "ExecCmd(\"{{.Binaries}}/nuclei -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4581.0 Safari/537.36' -silent -c {{.nucleiThreads}} -json -severity critical,high,medium,low -t ~/nuclei-templates/ -l {{.inputfile}} -irr -o {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
       - GenNucleiReport('{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt', '{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei.html')
-      - ExecCmd('cat {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt')
+      - Cat('{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt')

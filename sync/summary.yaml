@@ -1,9 +1,0 @@
-name: summary
-desc: summary the things
-
-steps:
-  # cleaning some result
-  - scripts:
-
-
-

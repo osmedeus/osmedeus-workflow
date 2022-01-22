@@ -53,6 +53,3 @@ routines:
       - pdirbscan
   - modules:
       - dirbscan
-  # push final result again
-  - modules:
-      - summary
