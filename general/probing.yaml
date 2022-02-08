@@ -5,6 +5,7 @@ report:
   final:
     - "{{.Output}}/probing/dns-{{.Workspace}}.txt"
     - "{{.Output}}/probing/http-{{.Workspace}}.txt"
+    - "{{.Output}}/probing/new-dns-{{.Workspace}}.txt"
 
 pre_run:
   - CreateFolder("{{.Storages}}/summary/{{.Workspace}}/")
@@ -26,6 +27,15 @@ params:
   - dnsFile: "{{.Output}}/probing/dns-{{.Workspace}}.txt"
 
 steps:
+  # check if we already scan before
+  - conditions:
+      - "FileLength('{{.dnsFile}}') > 1"
+    commands:
+      - cp {{.dnsFile}} {{.Output}}/probing/bak-dns-{{.Workspace}}.txt
+    scripts:
+      - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.inputfile}}")
+      - SortU("{{.inputfile}}")
+
   # simple bruteforce with main domain
   - required:
       - "{{.Binaries}}/puredns"
@@ -76,6 +86,14 @@ steps:
       - cat '{{.dnsFile}}' | grep ' A ' | awk '{print $3}' | sort -u >> {{.Output}}/ipspace/{{.Workspace}}-ip.txt
     scripts:
       - SortU("{{.Output}}/ipspace/{{.Workspace}}-ip.txt")
+
+  # generate new dns 
+  - conditions:
+      - "FileLength('{{.Output}}/probing/bak-dns-{{.Workspace}}.txt') > 1"
+    scripts:
+      - ExecCmd("cat {{.dnsFile}} | anew {{.Output}}/probing/bak-dns-{{.Workspace}}.txt > {{.Output}}/probing/new-dns-{{.Workspace}}.txt")
+      - SortU("{{.Output}}/probing/new-dns-{{.Workspace}}.txt")
+      - "Printf('New DNS detected: {{.Output}}/probing/new-dns-{{.Workspace}}.txt')"
 
 post_run:
   - TotalSubdomain('{{.Output}}/probing/nonwild-{{.Workspace}}.txt')
