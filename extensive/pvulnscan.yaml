@@ -59,7 +59,7 @@ steps:
     pscripts:
       - GenNucleiReport('{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt', '{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei.html')
       # noti to telegram if anything found
-      - ExecCmd("cat {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.templateID,.matched] | join(\" - \")' > {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
+      - ExecCmd("cat {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\"] | join(\" - \")' > {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
       - TeleMessByFile("#sensitive", "{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
       - Cat("{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt")
 
