@@ -21,7 +21,7 @@ params:
   - nuclei: "true"
   - jaelesThreads: "100"
   - nucleiThreads: "200"
-  - lines: "500"
+  - splitLines: "500"
   - limit: "100000"
   - out: "{{.Output}}/vuln"
   # in case we want to add -p 'dest=xx.burpcollab.net' or something
@@ -37,7 +37,7 @@ steps:
   - required:
       - "{{.httpFile}}"
     scripts:
-      - SplitFile("{{.httpFile}}", "{{.Workspace}}-index", {{.lines}}, "{{.Output}}/vuln/raw")
+      - SplitFile("{{.httpFile}}", "{{.Workspace}}-index", {{.splitLines}}, "{{.Output}}/vuln/raw")
 
   # run jaeles with all products signatures each {{.line}} at a time
   - required:

@@ -19,7 +19,7 @@ params:
   - sign2: "~/.jaeles/base-signatures/common/.*"
   - sign3: "~/.jaeles/base-signatures/sensitive/.*"
   - final: "sensitive"
-  - lines: "500"
+  - splitLines: "500"
   - limit: "25000"
   # in case we want to add -p 'dest=xx.burpcollab.net' or something
   - extra: " "
@@ -45,7 +45,7 @@ steps:
   - required:
       - "{{.inputfile}}"
     scripts:
-      - SplitFile("{{.inputfile}}", "{{.Workspace}}-index", {{.lines}}, "{{.Output}}/vuln/raw")
+      - SplitFile("{{.inputfile}}", "{{.Workspace}}-index", {{.splitLines}}, "{{.Output}}/vuln/raw")
 
   # run jaeles with all products signatures each {{.line}} at a time
   - label: 'Run Jaeles scan'
