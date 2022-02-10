@@ -9,7 +9,7 @@ report:
 
 # osmedeus scan -m /path/to/this/pws.yaml -t ip-ranges.txt
 params:
-  - inputfile: "{{.Output}}/portscan/http-running.txt"
+  - httpFile: "{{.Output}}/portscan/http-running.txt"
   - screenThreads: "8"
   - overviewThreads: "5"
 
@@ -20,10 +20,10 @@ steps:
   # do screenshot
   - required:
       - "{{.Binaries}}/aquatone"
-      - "{{.inputfile}}"
+      - "{{.httpFile}}"
     commands: 
-      - "cat {{.inputfile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-aquatone > /dev/null 2>&1"
-      - "cat {{.inputfile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent -favicon >> {{.Output}}/portscan/http-overview-{{.Workspace}}.txt"
+      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-aquatone > /dev/null 2>&1"
+      - "cat {{.httpFile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent -favicon >> {{.Output}}/portscan/http-overview-{{.Workspace}}.txt"
     scripts:
       # change html report name
       - ExecCmd("mv {{.Output}}/portscan/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/portscan/{{.Workspace}}-aquatone/portscan-{{.Workspace}}.html")

@@ -11,7 +11,7 @@ report:
     - "{{.Output}}/fingerprint/diff-{{.Workspace}}-{{.TS}}.txt"
 
 params:
-  - inputfile: "{{.Output}}/portscan/http-running.txt"
+  - httpFile: "{{.Output}}/portscan/http-running.txt"
   - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - dirbThreads: '30' # threads for single site
   - ffThreads: '15' # threads for running number of ffuf commands
@@ -27,15 +27,15 @@ pre_run:
 steps:
   # check wildcard before brute force dns. We don't want tons of garbage here
   - conditions:
-      - "FileLength('{{.inputfile}}') > {{.limit}}"
+      - "FileLength('{{.httpFile}}') > {{.limit}}"
     scripts:
       - ErrPrintf("Filter", "Got input file greater than {{.limit}} line")
       - Exit(1)
 
   - required:
       - "{{.Binaries}}/ffuf"
-      - "{{.inputfile}}"
-    source: "{{.inputfile}}"
+      - "{{.httpFile}}"
+    source: "{{.httpFile}}"
     threads: '{{.dirbThreads}}'
     commands:
       - "{{.Binaries}}/ffuf -t {{.ffThreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-{{._id_}}.json -u '{{.line}}/FUZZ' -w {{.wordlists}}:FUZZ"
