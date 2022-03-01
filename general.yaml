@@ -22,7 +22,6 @@ routines:
       - vulnscan
   - modules:
       - dirbscan
-
   - modules:
       - portscan
 

@@ -9,6 +9,7 @@ routines:
   - modules:
       - screenshot
   - modules:
+      - port-fingerprint
       - vulnscan
   - modules:
       - dirbscan

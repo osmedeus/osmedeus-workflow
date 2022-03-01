@@ -13,7 +13,7 @@ report:
 params:
   - inputfile: "{{.Output}}/probe/http-{{.Workspace}}.txt"
   - fuzzFile: "{{.Output}}/probe/fuzz-{{.Workspace}}.txt"
-  - wordlists: "{{.Data}}/wordlists/content/small.txt"
+  - wordlists: "{{.Data}}/wordlists/content/medium.txt"
   - ffThreads: '30' # threads for single site
   - threads: '10'
   - dirbThreads: '15'

@@ -1,8 +1,7 @@
-name: gently-extensive
-desc: run extensive routine but with very low threads
-type: general
-validator: domain
-force-params: true
+name: gently-cidr
+desc: Scan for CIDR File
+type: cidr
+validator: cidr-file
 
 params:
   - subfinderThreads: "20"
@@ -28,39 +27,13 @@ params:
   - ports: "0-65535"
   - rateRustScan: "5000"
   - nmapThreads: "10"
-
 routines:
-  - flow: 'extensive'
-    modules:
-      - subdomain
-  - flow: 'extensive'
-    modules:
-      - probing
-  - flow: 'extensive'
-    modules:
-      - ssame
+  - modules:
+      - portscan
   - modules:
       - screenshot
   - modules:
-      - sto
-      - fingerprint
-  - flow: 'extensive'
-    modules:
-      - spider
-      - archive
-  - modules:
-      - ipspace
-  - modules:
-      - vulnscan
-
-  - modules:
-      - portscan
-
-  - flow: 'extensive'
-    modules:
-      - dirbscan
-
-  - flow: 'extensive'
-    modules:
       - port-fingerprint
-      - pvulnscan # doing vulnscan + dirbscan on portscan result too
+      - vulnscan
+  - modules:
+      - dirbscan

@@ -38,9 +38,9 @@ steps:
       - "{{.Output}}/portscan/raw-open-ports.txt"
     commands:
       - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c {{.httpThreads}} -t 7000 >> {{.Output}}/portscan/{{.Workspace}}-http.txt"
-      - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.nmapThreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
+      # - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.nmapThreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
     scripts:
-      - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
+      # - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
       - SortU('{{.Output}}/portscan/{{.Workspace}}-http.txt')
 
   # do screenshot on new http running

@@ -31,6 +31,9 @@ routines:
     modules:
       - dirbscan
 
+  - modules:
+      - portscan
   - flow: 'extensive'
     modules:
+      - port-fingerprint
       - pvulnscan # doing vulnscan + dirbscan on portscan result too

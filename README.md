@@ -104,6 +104,11 @@ osmedeus utils ps
 osmedeus utils ps --proc 'jaeles'
 osmedeus utils cron --cmd 'osmdeus scan -t example.com' --sch 60
 osmedeus utils cron --for --cmd 'osmedeus scan -t example.com'
+
+# Report Usage
+osmedeus report --list
+osmedeus report --static -t target.com
+osmedeus report --raw --static --ip <your-public-ip> -t target.com
 ```
 
 
