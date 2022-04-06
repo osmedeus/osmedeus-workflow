@@ -18,8 +18,8 @@ params:
 
 steps:
   - commands:
-      - "seq 1 500 | tee -a {{.Output}}/probing/dns-{{.Workspace}}.txt > /dev/null 2>&1"
-      - "seq 1 1000 | tee -a {{.Output}}/probing/dns-{{.Workspace}}.txt > /dev/null 2>&1"
+      - "seq 1 500 | tee -a {{.Output}}/probing/dns-{{.Workspace}}.txt >/dev/null 2>&1"
+      - "seq 1 1000 | tee -a {{.Output}}/probing/dns-{{.Workspace}}.txt >/dev/null 2>&1"
 
   - scripts:
       - Sleep(5)

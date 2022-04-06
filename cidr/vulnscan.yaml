@@ -39,14 +39,14 @@ steps:
     scripts:
       - SplitFile("{{.httpFile}}", "{{.Workspace}}-index", {{.splitLines}}, "{{.Output}}/vuln/raw")
 
-  # run jaeles with all products signatures each {{.line}} at a time
+  # run jaeles with all products signatures each [[.line]] at a time
   - required:
       - "{{.Binaries}}/jaeles"
     source: "{{.Output}}/vuln/raw/{{.Workspace}}-index"
     threads: '1'
     commands:
-      - "{{.Binaries}}/jaeles scan -c {{.jaelesThreads}} -s '{{.sign}}' -s '{{.sign2}}' -U {{.line}} -o {{.Output}}/vuln/active/ {{.extra}}"
-      - "{{.Binaries}}/jaeles scan --fi -c {{.jaelesThreads}} -s '{{.sign3}}' -L 2 -U {{.line}} -o {{.Output}}/vuln/sensitive/ {{.extra}}"
+      - "{{.Binaries}}/jaeles scan -c {{.jaelesThreads}} -s '{{.sign}}' -s '{{.sign2}}' -U [[.line]] -o {{.Output}}/vuln/active/ {{.extra}}"
+      - "{{.Binaries}}/jaeles scan --fi -c {{.jaelesThreads}} -s '{{.sign3}}' -L 2 -U [[.line]] -o {{.Output}}/vuln/sensitive/ {{.extra}}"
     scripts:
       - ExecCmd('cat "{{.Output}}/vuln/active/jaeles-summary.txt" >> {{.Storages}}/assets/{{.Workspace}}/activescan-{{.Workspace}}.txt')
       - ExecCmd('{{.Binaries}}/jaeles report -o {{.Output}}/vuln/active/ -R {{.Output}}/vuln/active/{{.Workspace}}-report.html')

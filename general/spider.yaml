@@ -26,7 +26,7 @@ steps:
     source: "{{.inputfile}}"
     threads: '{{.spiderThreads}}'
     commands:
-      - "timeout -k 1m {{.spiderTimeout}} {{.Binaries}}/gospider -B -s {{.line}} --depth 1 --no-redirect -t 5 --json >> {{.Output}}/linkfinding/links-json-{{.Workspace}}.txt"
+      - "timeout -k 1m {{.spiderTimeout}} {{.Binaries}}/gospider -B -s [[.line]] --depth 1 --no-redirect -t 5 --json >> {{.Output}}/linkfinding/links-json-{{.Workspace}}.txt"
 
   - required:
       - "{{.Output}}/linkfinding/links-json-{{.Workspace}}.txt"

@@ -16,8 +16,8 @@ steps:
 
   - source: '/tmp/sammmm'
     commands:
-      - 'echo >>>>>> {{.line}}'
+      - 'echo >>>>>> [[.line]]'
     pconditions:
-      - "({{._id_}} % 5) == 0"
+      - "([[._id_]] % 5) == 0"
     pscripts:
-      - "ExecCmd('echo ---> {{.line}}')"
+      - "ExecCmd('echo ---> [[.line]]')"

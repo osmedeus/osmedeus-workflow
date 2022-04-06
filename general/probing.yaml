@@ -41,7 +41,7 @@ steps:
       - "{{.Binaries}}/puredns"
       - "{{.Binaries}}/massdns"
     commands:
-      - '{{.Binaries}}/puredns bruteforce {{.bruteWordlist}} {{.Target}} -r {{.resolvers}} -n 50 -w {{.Output}}/probing/subbrute-{{.Workspace}}.txt --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns > /dev/null 2>&1'
+      - '{{.Binaries}}/puredns bruteforce {{.bruteWordlist}} {{.Target}} -r {{.resolvers}} -n 50 -w {{.Output}}/probing/subbrute-{{.Workspace}}.txt --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns >/dev/null 2>&1'
     scripts:
       - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.inputfile}}")
       - SortU("{{.inputfile}}")
@@ -57,7 +57,7 @@ steps:
       - "{{.Binaries}}/puredns"
       - "{{.Binaries}}/massdns"
     commands:
-      - "{{.Binaries}}/puredns resolve {{.domainFile}} -r {{.resolvers}} --write {{.Output}}/probing/nonwild-{{.Workspace}}.txt --write-massdns {{.dnsFile}} --write-wildcards {{.Output}}/probing/wildcards-{{.Workspace}}.txt --wildcard-tests 50 --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns > /dev/null 2>&1"
+      - "{{.Binaries}}/puredns resolve {{.domainFile}} -r {{.resolvers}} --write {{.Output}}/probing/nonwild-{{.Workspace}}.txt --write-massdns {{.dnsFile}} --write-wildcards {{.Output}}/probing/wildcards-{{.Workspace}}.txt --wildcard-tests 50 --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns >/dev/null 2>&1"
     scripts:
       - "SortU('{{.dnsFile}}')"
 

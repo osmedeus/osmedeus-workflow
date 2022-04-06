@@ -23,12 +23,12 @@ steps:
       - "{{.Binaries}}/assetfinder"
       - "{{.Binaries}}/findomain"
     commands:
-      - "timeout -k 1m {{.amassTimeout}} {{.Binaries}}/amass enum -config {{.Data}}/configs/amass.ini -d {{.Target}} -o {{.Output}}/subdomain/{{.Workspace}}-amass.txt > /dev/null 2>&1"
+      - "timeout -k 1m {{.amassTimeout}} {{.Binaries}}/amass enum -config {{.Data}}/configs/amass.ini -d {{.Target}} -o {{.Output}}/subdomain/{{.Workspace}}-amass.txt >/dev/null 2>&1"
       - "{{.Binaries}}/assetfinder -subs-only {{.Target}} > {{.Output}}/subdomain/{{.Workspace}}-assetfinder.txt"
   # these two commands will run in parallels
   - commands:
-      - "{{.Binaries}}/findomain -u {{.Output}}/subdomain/{{.Workspace}}-findomain.txt -t {{.Target}} > /dev/null 2>&1"
-      - "{{.Binaries}}/subfinder -d {{.Target}} -t {{.subfinderThreads}} -o {{.Output}}/subdomain/{{.Workspace}}-subfinder.txt > /dev/null 2>&1"
+      - "{{.Binaries}}/findomain -u {{.Output}}/subdomain/{{.Workspace}}-findomain.txt -t {{.Target}} >/dev/null 2>&1"
+      - "{{.Binaries}}/subfinder -d {{.Target}} -t {{.subfinderThreads}} -o {{.Output}}/subdomain/{{.Workspace}}-subfinder.txt >/dev/null 2>&1"
 
   # cleaning some result
   - scripts:

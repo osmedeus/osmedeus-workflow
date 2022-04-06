@@ -48,6 +48,6 @@ steps:
       - "{{.Binaries}}/aquatone"
       - "{{.Output}}/portscan/{{.Workspace}}-http.txt"
     commands:
-      - "cat {{.Output}}/portscan/{{.Workspace}}-http.txt | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-screenshot > /dev/null 2>&1"
+      - "cat {{.Output}}/portscan/{{.Workspace}}-http.txt | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-screenshot >/dev/null 2>&1"
     scripts:
       - ExecCmd("mv {{.Output}}/portscan/{{.Workspace}}-screenshot/aquatone_report.html {{.Output}}/portscan/{{.Workspace}}-screenshot/screenshot-{{.Workspace}}.html")

@@ -22,9 +22,9 @@ steps:
       - "{{.Binaries}}/metabigor"
       - "{{.Binaries}}/amass"
     commands:
-      - "{{.Binaries}}/amass intel -org '{{.Org}}' | awk -F ', ' '{print $1}' | timeout -k 1m {{.ipTimeout}} {{.Binaries}}/metabigor net --asn -o {{.Output}}/ipspace/{{.Workspace}}-range.txt > /dev/null 2>&1"
-      - "echo '{{.Org}}' | timeout -k 1m {{.ipTimeout}} {{.Binaries}}/metabigor netd --org -o {{.Output}}/ipspace/{{.Workspace}}-range.txt > /dev/null 2>&1"
-      - "cat {{.ipFile}} | {{.Binaries}}/metabigor ipc --json -o {{.Output}}/ipspace/{{.Workspace}}-ipspace-summary.txt > /dev/null 2>&1"
+      - "{{.Binaries}}/amass intel -org '{{.Org}}' | awk -F ', ' '{print $1}' | timeout -k 1m {{.ipTimeout}} {{.Binaries}}/metabigor net --asn -o {{.Output}}/ipspace/{{.Workspace}}-range.txt >/dev/null 2>&1"
+      - "echo '{{.Org}}' | timeout -k 1m {{.ipTimeout}} {{.Binaries}}/metabigor netd --org -o {{.Output}}/ipspace/{{.Workspace}}-range.txt >/dev/null 2>&1"
+      - "cat {{.ipFile}} | {{.Binaries}}/metabigor ipc --json -o {{.Output}}/ipspace/{{.Workspace}}-ipspace-summary.txt >/dev/null 2>&1"
     scripts:
       - SortU('{{.Output}}/ipspace/{{.Workspace}}-range.txt')
       - ExecCmd("cat {{.Output}}/ipspace/{{.Workspace}}-ipspace-summary.txt > {{.Storages}}/summary/{{.Workspace}}/ipsum-{{.Workspace}}.txt")

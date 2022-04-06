@@ -22,7 +22,7 @@ steps:
       - "{{.Binaries}}/aquatone"
       - "{{.httpFile}}"
     commands: 
-      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-aquatone > /dev/null 2>&1"
+      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-aquatone >/dev/null 2>&1"
       - "cat {{.httpFile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent -favicon >> {{.Output}}/portscan/http-overview-{{.Workspace}}.txt"
     scripts:
       # change html report name
