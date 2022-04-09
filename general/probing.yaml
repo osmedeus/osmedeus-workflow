@@ -14,7 +14,7 @@ pre_run:
   - StartNoti()
 
 params:
-  - inputfile: "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
+  - finalSubdomainFile: "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
   - domainFile: "{{.Output}}/probing/subdomain-{{.Workspace}}.txt"
   - rawFile: "{{.Output}}/probing/raw-{{.Workspace}}.txt"
   - permWordlists: "{{.Data}}/wordlists/dns/altdns.txt"
@@ -33,8 +33,8 @@ steps:
     commands:
       - cp {{.dnsFile}} {{.Output}}/probing/bak-dns-{{.Workspace}}.txt
     scripts:
-      - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.inputfile}}")
-      - SortU("{{.inputfile}}")
+      - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.finalSubdomainFile}}")
+      - SortU("{{.finalSubdomainFile}}")
 
   # simple bruteforce with main domain
   - required:
@@ -43,14 +43,14 @@ steps:
     commands:
       - '{{.Binaries}}/puredns bruteforce {{.bruteWordlist}} {{.Target}} -r {{.resolvers}} -n 50 -w {{.Output}}/probing/subbrute-{{.Workspace}}.txt --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns >/dev/null 2>&1'
     scripts:
-      - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.inputfile}}")
-      - SortU("{{.inputfile}}")
+      - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.finalSubdomainFile}}")
+      - SortU("{{.finalSubdomainFile}}")
 
   # in case alt dns fail
   - conditions:
       - "FileLength('{{.domainFile}}') <= 0"
     commands:
-      - cp {{.inputfile}} {{.domainFile}}
+      - cp {{.finalSubdomainFile}} {{.domainFile}}
 
   # resolve DNS
   - required:
@@ -65,7 +65,7 @@ steps:
   - required:
       - "{{.Binaries}}/httprobe"
     commands:
-      - "cat {{.inputfile}} | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.Output}}/probing/http-{{.Workspace}}.txt"
+      - "cat {{.finalSubdomainFile}} | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.Output}}/probing/http-{{.Workspace}}.txt"
   # join with old result
   - required:
       - "{{.Output}}/probing/http-{{.Workspace}}.txt"
