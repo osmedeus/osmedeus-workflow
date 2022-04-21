@@ -42,7 +42,7 @@ steps:
       - ExecCmd("cat {{.httpFile}} | {{.Binaries}}/goverview screen -c {{.threads}} --json -o {{.Output}}/screenshot/")
       - ExecCmd("{{.Binaries}}/goverview report -o {{.Output}}/screenshot/ --report report.html")
 
-  # do screenshot
+  # do http overview
   - required:
       - "{{.Binaries}}/httpx"
       - "{{.inputfile}}"
@@ -50,6 +50,6 @@ steps:
       - cat {{.inputfile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/probe/http-overview-{{.Workspace}}.txt
     # change html report name
     scripts:
-      - CleanJSONHttpx('{{.Output}}/probe/http-overview-{{.Workspace}}.txt', '{{.Output}}/probe/{{.Workspace}}-overview.txt')
-      - ExecCmd("cat {{.Output}}/probe/http-overview-{{.Workspace}}.txt | csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/probe/beautify-http-{{.Workspace}}.txt")
+      - CleanJSONHttpx('{{.Output}}/probe/http-overview-{{.Workspace}}.txt', '{{.Output}}/probe/{{.Workspace}}-technologies.txt')
+      - ExecCmd("cat {{.Output}}/probe/{{.Workspace}}-technologies.txt | csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/probe/beautify-http-{{.Workspace}}.txt")
       - Cat('{{.Output}}/probe/beautify-http-{{.Workspace}}.txt')

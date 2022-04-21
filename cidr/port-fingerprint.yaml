@@ -6,7 +6,7 @@ report:
     - "{{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt"
     - "{{.Output}}/portscan/detail-open-ports.txt"
 params:
-  - inputfile: "{{.Target}}"
+  - inputFile: "{{.Target}}"
   # portscan
   - nmapThreads: "30"
   - httpThreads: "100"

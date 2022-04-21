@@ -14,7 +14,7 @@ report:
     - "{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt"
 
 params:
-  - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
   - sign: "~/.jaeles/base-signatures/cves/.*"
   - sign2: "~/.jaeles/base-signatures/common/.*"
   - sign3: "~/.jaeles/base-signatures/sensitive/.*"
@@ -36,16 +36,16 @@ pre_run:
 steps:
   # check input file
   - conditions:
-      - "FileLength('{{.inputfile}}') > {{.limit}}"
+      - "FileLength('{{.httpFile}}') > {{.limit}}"
     scripts:
       - ErrPrintf("Filter", "got input file greater than {{.limit}} line")
       - Exit(1)
 
   # prepare input for Jaeles
   - required:
-      - "{{.inputfile}}"
+      - "{{.httpFile}}"
     scripts:
-      - SplitFile("{{.inputfile}}", "{{.Workspace}}-index", {{.splitLines}}, "{{.Output}}/vuln/raw")
+      - SplitFile("{{.httpFile}}", "{{.Workspace}}-index", {{.splitLines}}, "{{.Output}}/vuln/raw")
 
   # run jaeles with all products signatures each [[.line]] at a time
   - label: 'Run Jaeles scan'
@@ -93,11 +93,11 @@ steps:
     conditions:
       - '"{{.nuclei}}" == "true"'
     required:
-      - "{{.inputfile}}"
+      - "{{.httpFile}}"
       - "{{.Binaries}}/nuclei"
     scripts:
       - "CreateFolder('{{.Output}}/vuln/nuclei')"
-      - "ExecCmd(\"timeout -k 1m {{.nucleiTimeout}} {{.Binaries}}/nuclei -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4581.0 Safari/537.36' -silent -c {{.nucleiThreads}} -json -severity 'critical,high,medium,low' -t ~/nuclei-templates/ -l {{.inputfile}} -irr -o {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
+      - "ExecCmd(\"timeout -k 1m {{.nucleiTimeout}} {{.Binaries}}/nuclei -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4581.0 Safari/537.36' -silent -c {{.nucleiThreads}} -json -severity 'critical,high,medium,low' -t ~/nuclei-templates/ -l {{.httpFile}} -irr -o {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
     pconditions:
       - "FileLength('{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt') > 0"
     pscripts:

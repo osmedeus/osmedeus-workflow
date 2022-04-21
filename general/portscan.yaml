@@ -15,7 +15,7 @@ pre_run:
 # only run for top 1k port
 # edit via osmedeus scan -P 'ports=0-65535' -P 'rate=5000' ...
 params:
-  - inputfile: "{{.Output}}/ipspace/{{.Workspace}}-noncdn.txt"
+  - nonCdn: "{{.Output}}/ipspace/{{.Workspace}}-noncdn.txt"
   # portscan
   - ports: "0-65535"
   - rateRustScan: "10000"
@@ -26,9 +26,9 @@ params:
 steps:
   # do port scan first
   - required:
-      - '{{.inputfile}}'
+      - '{{.nonCdn}}'
     commands:
-      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --range {{.ports}} -a {{.inputfile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
+      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --range {{.ports}} -a {{.nonCdn}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
     scripts:
       - CleanRustScan("{{.Output}}/portscan/raw-open-ports.txt", "{{.Output}}/portscan/open-ports.txt")
 

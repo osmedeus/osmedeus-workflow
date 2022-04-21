@@ -13,7 +13,7 @@ report:
     - "{{.Storages}}/assets/{{.Workspace}}/alive-archive-{{.Workspace}}.txt"
 
 params:
-  - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
   - archiveTimeout: "1h"
   - alimit: "10000"
 
@@ -25,9 +25,9 @@ pre_run:
 
 steps:
   - required:
-      - "{{.inputfile}}"
+      - "{{.httpFile}}"
     commands:
-      - "cat {{.inputfile}} | {{.Binaries}}/unfurl format %d | sort -u > {{.Output}}/archive/{{.Workspace}}-domain.txt"
+      - "cat {{.httpFile}} | {{.Binaries}}/unfurl format %d | sort -u > {{.Output}}/archive/{{.Workspace}}-domain.txt"
 
   - required:
       - "{{.Binaries}}/ourl"

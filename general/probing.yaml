@@ -11,7 +11,6 @@ pre_run:
   - CreateFolder("{{.Storages}}/summary/{{.Workspace}}/")
   - CreateFolder("{{.Output}}/probing")
   - CreateFolder("{{.Output}}/ipspace")
-  - StartNoti()
 
 params:
   - finalSubdomainFile: "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
@@ -25,6 +24,7 @@ params:
   - massdnsRateBrute: "3000"
   - dnsJsonFile: "{{.Output}}/probing/dns-json-{{.Workspace}}.txt"
   - dnsFile: "{{.Output}}/probing/dns-{{.Workspace}}.txt"
+  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
 
 steps:
   # check if we already scan before
@@ -65,12 +65,12 @@ steps:
   - required:
       - "{{.Binaries}}/httprobe"
     commands:
-      - "cat {{.finalSubdomainFile}} | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.Output}}/probing/http-{{.Workspace}}.txt"
+      - "cat {{.finalSubdomainFile}} | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.httpFile}}"
   # join with old result
   - required:
-      - "{{.Output}}/probing/http-{{.Workspace}}.txt"
+      - "{{.httpFile}}"
     commands:
-      - "cat {{.Output}}/probing/http-{{.Workspace}}.txt >> {{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt"
+      - "cat {{.httpFile}} >> {{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt"
     scripts:
       - SortU("{{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt")
 

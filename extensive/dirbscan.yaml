@@ -7,7 +7,7 @@ report:
     - "{{.Output}}/directory/paths-{{.Workspace}}.csv"
 
 params:
-  - inputfile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
   - wordlists: "{{.Data}}/wordlists/content/big.txt"
   - lines: "20"
   - ffThreads: '20' # threads for single site
@@ -23,7 +23,7 @@ pre_run:
 steps:
   # check if the size is too big, We don't want tons of garbage here
   - conditions:
-      - "FileLength('{{.inputfile}}') > {{.dlimit}}"
+      - "FileLength('{{.httpFile}}') > {{.dlimit}}"
     scripts:
       - ErrPrintf("Filter", "Got input file greater than {{.dlimit}} line")
       - Exit(1)
@@ -34,8 +34,8 @@ steps:
 
   - required:
       - "{{.Binaries}}/ffuf"
-      - "{{.inputfile}}"
-    source: "{{.inputfile}}"
+      - "{{.httpFile}}"
+    source: "{{.httpFile}}"
     threads: '{{.dirbThreads}}'
     commands:
       - "{{.Binaries}}/ffuf -t {{.ffThreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ"
