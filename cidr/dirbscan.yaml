@@ -11,7 +11,6 @@ params:
   - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - dirbThreads: '30' # threads for single site
   - ffThreads: '15' # threads for running number of ffuf commands
-  - limit: '35000'
   - recursion: '0'
   - chan: '#mics'
   - lines: "30"
@@ -22,13 +21,6 @@ pre_run:
   - CreateFolder("{{.Output}}/directory")
 
 steps:
-  # check wildcard before brute force dns. We don't want tons of garbage here
-  - conditions:
-      - "FileLength('{{.httpFile}}') > {{.limit}}"
-    scripts:
-      - ErrPrintf("Filter", "Got input file greater than {{.limit}} line")
-      - Exit(1)
-
   - required:
       - "{{.Binaries}}/ffuf"
       - "{{.httpFile}}"

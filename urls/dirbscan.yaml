@@ -8,7 +8,6 @@ report:
 
 params:
   - httpFile: "{{.Output}}/probe/http-{{.Workspace}}.txt"
-  - fuzzFile: "{{.Output}}/probe/fuzz-{{.Workspace}}.txt"
   - wordlists: "{{.Data}}/wordlists/content/medium.txt"
   - ffThreads: '30' # threads for single site
   - threads: '10'
@@ -22,18 +21,10 @@ pre_run:
   - CreateFolder("{{.Output}}/directory")
 
 steps:
-  # generate fuzz file
-  - required:
-      - "{{.httpFile}}"
-    commands:
-      - "cat {{.httpFile}} | {{.Binaries}}/urp -p | sort -u >> {{.fuzzFile}}"
-    scripts:
-      - SortU("{{.fuzzFile}}")
-
   - required:
       - "{{.Binaries}}/ffuf"
-      - "{{.fuzzFile}}"
-    source: "{{.fuzzFile}}"
+      - "{{.httpFile}}"
+    source: "{{.httpFile}}"
     threads: '{{.dirbThreads}}'
     commands:
       - "{{.Binaries}}/ffuf -t {{.ffThreads}} -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ >/dev/null 2>&1"
