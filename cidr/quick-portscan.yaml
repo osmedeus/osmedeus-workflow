@@ -10,7 +10,7 @@ report:
     - "{{.Output}}/portscan/detail-open-ports.txt"
     - "{{.Output}}/portscan/ssl-info.txt"
 params:
-  - inputfile: "{{.Target}}"
+  - inputFile: "{{.Target}}"
   - ports: "0-65535"
   - rateRustScan: "10000"
   - nmapThreads: "20"
@@ -26,7 +26,7 @@ steps:
   - required:
       - '{{.Binaries}}/rustscan'
     commands:
-      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --ports {{.ports}} -a {{.inputfile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
+      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --ports {{.ports}} -a {{.inputFile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
     scripts:
       - CleanRustScan("{{.Output}}/portscan/raw-open-ports.txt", "{{.Output}}/portscan/open-ports.txt")
 
