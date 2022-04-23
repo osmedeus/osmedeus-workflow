@@ -39,7 +39,7 @@ steps:
 
   # clean up and generate beautify report
   - scripts:
-      - ExecCmd("cat {{.Output}}/directory/raw-*.json > {{.Output}}/directory/summary-json-{{.Workspace}}.txt")
+      - ExecCmd("awk '{print}' {{.Output}}/directory/raw-*.json > {{.Output}}/directory/summary-json-{{.Workspace}}.txt")
       - CleanFFUFJson("{{.Output}}/directory/summary-json-{{.Workspace}}.txt", "{{.Output}}/directory/beautify-{{.Workspace}}.csv")
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{.Output}}/directory/beautify-{{.Workspace}}.txt")

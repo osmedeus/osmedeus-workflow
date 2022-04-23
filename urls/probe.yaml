@@ -9,9 +9,10 @@ report:
 
 # osmedeus scan -m /path/to/this/pws.yaml -t list-urls.txt
 params:
-  - inputfile: "{{.Target}}"
+  - inputFile: "{{.Target}}"
   - rate: "5000"
-  - threads: "5"
+  - screenThreads: "8"
+  - overviewThreads: "100"
   - screen: "true"
   - httpFile: "{{.Output}}/probe/http-{{.Workspace}}.txt"
 
@@ -21,33 +22,33 @@ pre_run:
 
 steps:
   - required:
-      - "{{.inputfile}}"
+      - "{{.inputFile}}"
     commands:
-      - "cat {{.inputfile}} | sort -u | sed 's/\\/$//g' > {{.httpFile}}"
-      - "cat {{.inputfile}} | {{.Binaries}}/httprobe -c 200 >> {{.httpFile}}"
+      - "cat {{.inputFile}} | sort -u | sed 's/\\/$//g' > {{.httpFile}}"
+      - "cat {{.inputFile}} | {{.Binaries}}/httprobe -c 200 >> {{.httpFile}}"
     scripts:
       - SortU("{{.httpFile}}")
 
   # do screenshot
-  # run screenshot -p 'screen=true'
+  # run screenshot -p 'screen=false' if you want to disable screenshot
   - conditions:
       - '{{.screen}} == true'
     required:
       - "{{.Binaries}}/aquatone"
       - "{{.httpFile}}"
     commands: 
-      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.threads}} -out {{.Output}}/probe/{{.Workspace}}-aquatone >/dev/null 2>&1"
+      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/probe/{{.Workspace}}-aquatone >/dev/null 2>&1"
     scripts:
       - ExecCmd("mv {{.Output}}/probe/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/probe/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html")
-      - ExecCmd("cat {{.httpFile}} | {{.Binaries}}/goverview screen -c {{.threads}} --json -o {{.Output}}/screenshot/")
+      - ExecCmd("cat {{.httpFile}} | {{.Binaries}}/goverview screen -c {{.overviewThreads}} --json -o {{.Output}}/screenshot/")
       - ExecCmd("{{.Binaries}}/goverview report -o {{.Output}}/screenshot/ --report report.html")
 
   # do http overview
   - required:
       - "{{.Binaries}}/httpx"
-      - "{{.inputfile}}"
+      - "{{.inputFile}}"
     commands: 
-      - cat {{.inputfile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/probe/http-overview-{{.Workspace}}.txt
+      - cat {{.inputFile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/probe/http-overview-{{.Workspace}}.txt
     # change html report name
     scripts:
       - CleanJSONHttpx('{{.Output}}/probe/http-overview-{{.Workspace}}.txt', '{{.Output}}/probe/{{.Workspace}}-technologies.txt')
