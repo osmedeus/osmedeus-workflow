@@ -19,12 +19,12 @@
 Workflow is the core of the Osmedeus Engine which represents your methodology as YAML files.
 
 
-## Installation
+## Installation for Linux
 
 > NOTE that you need some essential tools like `curl, wget, git, zip` and login as **root** to start
 
 ```shell
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/osmedeus/osmedeus-base/master/install.sh)"
+bash <(curl -fsSL https://raw.githubusercontent.com/osmedeus/osmedeus-base/master/install.sh)
 ```
 
 ## Anatomy of Public Community methodology

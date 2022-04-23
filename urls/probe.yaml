@@ -36,7 +36,7 @@ steps:
       - "{{.Binaries}}/aquatone"
       - "{{.httpFile}}"
     commands: 
-      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.threads}} -out {{.Output}}/probe/{{.Workspace}}-aquatone"
+      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.threads}} -out {{.Output}}/probe/{{.Workspace}}-aquatone >/dev/null 2>&1"
     scripts:
       - ExecCmd("mv {{.Output}}/probe/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/probe/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html")
       - ExecCmd("cat {{.httpFile}} | {{.Binaries}}/goverview screen -c {{.threads}} --json -o {{.Output}}/screenshot/")

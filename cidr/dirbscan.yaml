@@ -4,7 +4,7 @@ desc: Run Dirbscan
 report:
   final:
     - "{{.Output}}/directory/beautify-{{.Workspace}}.txt"
-    - "{{.Output}}/directory/summary-{{.Workspace}}.csv"
+    - "{{.Output}}/directory/beautify-{{.Workspace}}.csv"
 
 params:
   - httpFile: "{{.Output}}/portscan/http-running.txt"
@@ -35,12 +35,12 @@ steps:
     source: "{{.httpFile}}"
     threads: '{{.dirbThreads}}'
     commands:
-      - "{{.Binaries}}/ffuf -t {{.ffThreads}} -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ"
-
+      - "{{.Binaries}}/ffuf -t {{.ffThreads}} -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ >/dev/null 2>&1"
 
   # clean up and generate beautify report
   - scripts:
-      - ExecCmd("cat {{.Output}}/directory/raw-*.json | jq -r '.results[] | [.url,.status,.length,.words,.lines,.redirectlocation] | join(\",\")' > {{.Output}}/directory/beautify-{{.Workspace}}.csv")
+      - ExecCmd("cat {{.Output}}/directory/raw-*.json > {{.Output}}/directory/summary-json-{{.Workspace}}.txt")
+      - CleanFFUFJson("{{.Output}}/directory/summary-json-{{.Workspace}}.txt", "{{.Output}}/directory/beautify-{{.Workspace}}.csv")
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - Cat('{{.Output}}/directory/beautify-{{.Workspace}}.txt')
