@@ -39,10 +39,10 @@ steps:
   # strip CDN IP first
   - required:
       - "{{.ipFile}}"
-      - "{{.Binaries}}/cdnfilter"
+      - "{{.Binaries}}/cdnstrip"
     timeout: '{{.ipTimeout}}'
     commands:
-      - "cat {{.ipFile}} | timeout -k 1m {{.ipTimeout}} {{.Binaries}}/cdnfilter -c {{.Output}}/ipspace/{{.Workspace}}-cdn.txt -n {{.Output}}/ipspace/{{.Workspace}}-noncdn.txt"
+      - "cat {{.ipFile}} | timeout -k 1m {{.ipTimeout}} {{.Binaries}}/cdnstrip -cdn {{.Output}}/ipspace/{{.Workspace}}-cdn.txt -n {{.Output}}/ipspace/{{.Workspace}}-noncdn.txt"
 
   # in case strip CDN fail
   - conditions:
