@@ -6,7 +6,8 @@ validator: domain
 # osmedeus scan -f extensive -t sample.com
 
 routines:
-  - modules:
+  - flow: 'extensive'
+    modules:
       - subdomain
   - flow: 'extensive'
     modules:

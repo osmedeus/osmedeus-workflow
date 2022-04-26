@@ -1,0 +1,20 @@
+name: test-noti
+desc: test notification
+
+# osmedeus scan -m ~/osmedeus-base/workflow/tests/noti.yaml -t sample.com
+
+pre_run:
+  - CreateFolder("/tmp/test-osm-noti/")
+  - StartNoti()
+
+steps:
+  - scripts:
+      - ExecCmd("echo 'sample text here' > /tmp/test-osm-noti/dirb.txt")
+      - TeleMessByFile("#dirb", "/tmp/test-osm-noti/dirb.txt")
+      - TeleMess("#mics", "Sample message --> {{.Target}}")
+      # these channels usually use for vulnscan
+      - TeleMessByFile("#report", "/tmp/test-osm-noti/dirb.txt")
+      - TeleMessByFile("#sensitive", "/tmp/test-osm-noti/dirb.txt")
+
+post_run:
+  - DoneNoti()
