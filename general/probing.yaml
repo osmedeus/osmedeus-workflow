@@ -8,7 +8,6 @@ report:
     - "{{.Output}}/probing/new-dns-{{.Workspace}}.txt"
 
 pre_run:
-  - CreateFolder("{{.Storages}}/summary/{{.Workspace}}/")
   - CreateFolder("{{.Output}}/probing")
   - CreateFolder("{{.Output}}/ipspace")
 
@@ -16,15 +15,18 @@ params:
   - finalSubdomainFile: "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
   - domainFile: "{{.Output}}/probing/subdomain-{{.Workspace}}.txt"
   - rawFile: "{{.Output}}/probing/raw-{{.Workspace}}.txt"
+  - customDnsWordlist: "{{.Output}}/probing/customDnsWordlist-{{.Workspace}}.txt"
   - permWordlists: "{{.Data}}/wordlists/dns/altdns.txt"
   - bruteWordlist: "{{.Data}}/wordlists/dns/shorts.txt"
   - resolvers: "{{.Data}}/resolvers.txt"
   - dnsThreads: "3000"
   - httpThreads: "200"
-  - massdnsRateBrute: "3000"
+  - dnsxThreads: "300"
+  - massdnsRateBrute: "8000"
   - dnsJsonFile: "{{.Output}}/probing/dns-json-{{.Workspace}}.txt"
   - dnsFile: "{{.Output}}/probing/dns-{{.Workspace}}.txt"
   - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - ssTimeout: "2h"
 
 steps:
   # check if we already scan before
@@ -32,32 +34,43 @@ steps:
       - "FileLength('{{.dnsFile}}') > 1"
     commands:
       - cp {{.dnsFile}} {{.Output}}/probing/bak-dns-{{.Workspace}}.txt
+      - cp {{.httpFile}} {{.Output}}/probing/bak-http-{{.Workspace}}.txt
     scripts:
+      # joining the old subdomains with a new one too
       - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.finalSubdomainFile}}")
       - SortU("{{.finalSubdomainFile}}")
+
+  # build the custom wordlists based on the subdomain file
+  - commands:
+      - "cat {{.finalSubdomainFile}} | {{.Binaries}}/str-replace -d '.' -n | sort -u >> {{.customDnsWordlist}}"
+      - 'cat {{.bruteWordlist}} >> {{.customDnsWordlist}}'
+    scripts:
+      - "SortU('{{.customDnsWordlist}}')"
 
   # simple bruteforce with main domain
   - required:
       - "{{.Binaries}}/puredns"
       - "{{.Binaries}}/massdns"
     commands:
-      - '{{.Binaries}}/puredns bruteforce {{.bruteWordlist}} {{.Target}} -r {{.resolvers}} -n 50 -w {{.Output}}/probing/subbrute-{{.Workspace}}.txt --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns >/dev/null 2>&1'
+      - '{{.Binaries}}/puredns bruteforce {{.customDnsWordlist}} {{.Target}} -r {{.resolvers}} --wildcard-tests 50 -w {{.Output}}/probing/subbrute-{{.Workspace}}.txt --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns'
     scripts:
       - ExecCmd("cat {{.Output}}/probing/subbrute-{{.Workspace}}.txt >> {{.finalSubdomainFile}}")
       - SortU("{{.finalSubdomainFile}}")
 
-  # in case alt dns fail
+  # generate simple permutation DNS when there is not too much domains
   - conditions:
-      - "FileLength('{{.domainFile}}') <= 0"
+      - "FileLength('{{.finalSubdomainFile}}') <= 20000"
     commands:
-      - cp {{.finalSubdomainFile}} {{.domainFile}}
+      - 'cat {{.finalSubdomainFile}} | {{.Binaries}}/str-replace -W {{.permWordlists}} -tld {{.Target}} >> {{.domainFile}}'
+    scripts:
+      - "SortU('{{.domainFile}}')"
 
-  # resolve DNS
+  # actually resolving all the DNS
   - required:
       - "{{.Binaries}}/puredns"
       - "{{.Binaries}}/massdns"
     commands:
-      - "{{.Binaries}}/puredns resolve {{.domainFile}} -r {{.resolvers}} --write {{.Output}}/probing/nonwild-{{.Workspace}}.txt --write-massdns {{.dnsFile}} --write-wildcards {{.Output}}/probing/wildcards-{{.Workspace}}.txt --wildcard-tests 50 --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns >/dev/null 2>&1"
+      - "{{.Binaries}}/puredns resolve {{.domainFile}} -r {{.resolvers}} --write {{.Output}}/probing/nonwild-{{.Workspace}}.txt --write-massdns {{.dnsFile}} --write-wildcards {{.Output}}/probing/wildcards-{{.Workspace}}.txt --wildcard-tests 50 --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns"
     scripts:
       - "SortU('{{.dnsFile}}')"
 
@@ -65,21 +78,13 @@ steps:
   - required:
       - "{{.Binaries}}/httprobe"
     commands:
-      - "cat {{.finalSubdomainFile}} | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.httpFile}}"
-  # join with old result
-  - required:
-      - "{{.httpFile}}"
-    commands:
-      - "cat {{.httpFile}} >> {{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt"
+      - "cat {{.domainFile}} {{.finalSubdomainFile}} | sort -u | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.httpFile}}"
+      - "cat {{.Output}}/probing/filtered-{{.Workspace}}.txt >> {{.httpFile}}"
     scripts:
-      - SortU("{{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt")
+      - "SortU('{{.httpFile}}')"
+      - "ExecCmd('rm -rf {{.domainFile}}')"
 
-  # unique with storage
-  - commands:
-      - "cat {{.dnsFile}} >> {{.Storages}}/summary/{{.Workspace}}/dns-{{.Workspace}}.txt"
-    scripts:
-      - SortU("{{.Storages}}/summary/{{.Workspace}}/dns-{{.Workspace}}.txt")
-
+  # get IP Address for later modules
   - required:
       - '{{.dnsFile}}'
     commands:
@@ -87,6 +92,7 @@ steps:
     scripts:
       - SortU("{{.Output}}/ipspace/{{.Workspace}}-ip.txt")
 
+  ### Checking if we have new HTTP or DNS results
   # generate new dns 
   - conditions:
       - "FileLength('{{.Output}}/probing/bak-dns-{{.Workspace}}.txt') > 1"
@@ -94,8 +100,14 @@ steps:
       - ExecCmd("cat {{.dnsFile}} | anew {{.Output}}/probing/bak-dns-{{.Workspace}}.txt > {{.Output}}/probing/new-dns-{{.Workspace}}.txt")
       - SortU("{{.Output}}/probing/new-dns-{{.Workspace}}.txt")
       - "Printf('New DNS detected: {{.Output}}/probing/new-dns-{{.Workspace}}.txt')"
+  # generate new http 
+  - conditions:
+      - "FileLength('{{.Output}}/probing/bak-http-{{.Workspace}}.txt') > 1"
+    scripts:
+      - ExecCmd("cat {{.httpFile}} | anew {{.Output}}/probing/bak-http-{{.Workspace}}.txt > {{.Output}}/probing/new-http-{{.Workspace}}.txt")
+      - SortU("{{.Output}}/probing/new-http-{{.Workspace}}.txt")
+      - "Printf('New HTTP detected: {{.Output}}/probing/new-http-{{.Workspace}}.txt')"
 
 post_run:
   - TotalSubdomain('{{.Output}}/probing/nonwild-{{.Workspace}}.txt')
   - TotalDns('{{.dnsFile}}')
-  - Cleaning("{{.Output}}/probing/")
