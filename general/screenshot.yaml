@@ -7,7 +7,7 @@ report:
     - "{{.Output}}/screenshot/goverview/report.html"
 
 params:
-  - inputfile: "{{.Output}}/probing/diffhttp-{{.Workspace}}.txt"
+  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
   - screenThreads: "8"
   - limit: "50000"
 
@@ -18,7 +18,7 @@ pre_run:
 steps:
   # check if the size is too big, We don't want tons of garbage here
   - conditions:
-      - "FileLength('{{.inputfile}}') > {{.limit}}"
+      - "FileLength('{{.httpFile}}') > {{.limit}}"
     scripts:
       - ErrPrintf("Filter", "Got input file greater than {{.limit}} line")
       - Exit(1)
@@ -26,9 +26,9 @@ steps:
   # only screenshot the one have different hash
   - required:
       - "{{.Binaries}}/aquatone"
-      - "{{.inputfile}}"
+      - "{{.httpFile}}"
     commands: 
-      - "cat {{.inputfile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/screenshot/{{.Workspace}}-aquatone >/dev/null 2>&1"
+      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/screenshot/{{.Workspace}}-aquatone >/dev/null 2>&1"
   # change html report name
   - commands:
       - "mv {{.Output}}/screenshot/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/screenshot/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html"
@@ -36,7 +36,7 @@ steps:
 
   # do screenshot with goverview
   - scripts:
-      - ExecCmd("cat {{.inputfile}} | {{.Binaries}}/goverview screen -c {{.screenThreads}} --json -o {{.Output}}/screenshot/goverview/")
+      - ExecCmd("cat {{.httpFile}} | {{.Binaries}}/goverview screen -c {{.screenThreads}} --json -o {{.Output}}/screenshot/goverview/")
       - ExecCmd("{{.Binaries}}/goverview report -o {{.Output}}/screenshot/goverview/ --report report.html")
 
 post_run:
