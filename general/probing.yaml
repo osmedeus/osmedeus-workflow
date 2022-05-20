@@ -79,7 +79,6 @@ steps:
       - "{{.Binaries}}/httprobe"
     commands:
       - "cat {{.domainFile}} {{.finalSubdomainFile}} | sort -u | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.httpFile}}"
-      - "cat {{.Output}}/probing/filtered-{{.Workspace}}.txt >> {{.httpFile}}"
     scripts:
       - "SortU('{{.httpFile}}')"
       - "ExecCmd('rm -rf {{.domainFile}}')"
