@@ -23,6 +23,8 @@ params:
   - httpThreads: "200"
   - dnsxThreads: "300"
   - massdnsRateBrute: "8000"
+  - permLimit: "8000"
+  - enablePermutation: "true"
   - dnsJsonFile: "{{.Output}}/probing/dns-json-{{.Workspace}}.txt"
   - dnsFile: "{{.Output}}/probing/dns-{{.Workspace}}.txt"
   - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
@@ -59,7 +61,8 @@ steps:
 
   # generate simple permutation DNS when there is not too much domains
   - conditions:
-      - "FileLength('{{.finalSubdomainFile}}') <= 20000"
+      - "FileLength('{{.finalSubdomainFile}}') <= {{.permLimit}}"
+      - '"{{.enablePermutation}}" == "true"'
     commands:
       - 'cat {{.finalSubdomainFile}} | {{.Binaries}}/str-replace -W {{.permWordlists}} -tld {{.Target}} >> {{.domainFile}}'
     scripts:
