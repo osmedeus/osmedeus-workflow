@@ -61,7 +61,8 @@ steps:
       - SortU("{{.finalSubdomainFile}}")
 
   # generate simple permutation DNS when there is not too much domains
-  - conditions:
+  - label: 'Generating permutation subdomains wordlists which might create a very big file'
+    conditions:
       - "FileLength('{{.finalSubdomainFile}}') <= {{.permLimit}}"
       - '"{{.enablePermutation}}" == "true"'
     commands:

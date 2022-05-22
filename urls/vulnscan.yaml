@@ -22,6 +22,7 @@ params:
   - jaelesThreads: "20"
   - lines: "500"
   - out: "{{.Output}}/vuln"
+  - nucleiSeverity: "critical,high,medium,low"
   # in case we want to add -p 'dest=xx.burpcollab.net' or something
   - extra: " "
 
@@ -81,6 +82,6 @@ steps:
       - "{{.Binaries}}/nuclei"
     scripts:
       - CreateFolder('{{.Output}}/vuln/nuclei')
-      - "ExecCmd(\"{{.Binaries}}/nuclei -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4581.0 Safari/537.36' -silent -c {{.nucleiThreads}} -json -severity critical,high,medium,low -t ~/nuclei-templates/ -l {{.httpFile}} -irr -o {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
+      - "ExecCmd(\"{{.Binaries}}/nuclei -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4581.0 Safari/537.36' -silent -c {{.nucleiThreads}} -json -severity '{{.nucleiSeverity}}' -t ~/nuclei-templates/ -l {{.httpFile}} -irr -o {{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
       - GenNucleiReport('{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-json.txt', '{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei.html')
       - Cat('{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt')
