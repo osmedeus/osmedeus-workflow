@@ -16,7 +16,7 @@
 
 ## Osmedeus Workflow
 
-Workflow is the core of the Osmedeus Engine which represents your methodology as YAML files.
+Workflow is part of Osmedeus which is a collection of YAML files that describe your methodology.
 
 
 ## Installation for Linux
