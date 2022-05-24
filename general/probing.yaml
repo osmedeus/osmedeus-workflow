@@ -13,7 +13,7 @@ pre_run:
 
 params:
   - finalSubdomainFile: "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
-  - domainFile: "{{.Output}}/probing/subdomain-{{.Workspace}}.txt"
+  - permDomainFile: "{{.Output}}/probing/permutation-{{.Workspace}}.txt"
   - rawFile: "{{.Output}}/probing/raw-{{.Workspace}}.txt"
   - customDnsWordlist: "{{.Output}}/probing/customDnsWordlist-{{.Workspace}}.txt"
   - permWordlists: "{{.Data}}/wordlists/dns/altdns.txt"
@@ -65,16 +65,16 @@ steps:
       - "FileLength('{{.finalSubdomainFile}}') <= {{.permLimit}}"
       - '"{{.enablePermutation}}" == "true"'
     commands:
-      - 'cat {{.finalSubdomainFile}} | {{.Binaries}}/str-replace -W {{.permWordlists}} -tld {{.Target}} >> {{.domainFile}}'
+      - 'cat {{.finalSubdomainFile}} | {{.Binaries}}/str-replace -W {{.permWordlists}} -tld {{.Target}} >> {{.permDomainFile}}'
     scripts:
-      - "SortU('{{.domainFile}}')"
+      - "SortU('{{.permDomainFile}}')"
 
   # actually resolving all the DNS
   - required:
       - "{{.Binaries}}/puredns"
       - "{{.Binaries}}/massdns"
     commands:
-      - "{{.Binaries}}/puredns resolve {{.domainFile}} -r {{.resolvers}} --write {{.Output}}/probing/nonwild-{{.Workspace}}.txt --write-massdns {{.dnsFile}} --write-wildcards {{.Output}}/probing/wildcards-{{.Workspace}}.txt --wildcard-tests 50 --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns"
+      - "{{.Binaries}}/puredns resolve {{.permDomainFile}} -r {{.resolvers}} --write {{.Output}}/probing/nonwild-{{.Workspace}}.txt --write-massdns {{.dnsFile}} --write-wildcards {{.Output}}/probing/wildcards-{{.Workspace}}.txt --wildcard-tests 50 --rate-limit {{.massdnsRateBrute}} --bin {{.Binaries}}/massdns"
     scripts:
       - "SortU('{{.dnsFile}}')"
 
@@ -82,10 +82,10 @@ steps:
   - required:
       - "{{.Binaries}}/httprobe"
     commands:
-      - "cat {{.domainFile}} {{.finalSubdomainFile}} | sort -u | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.httpFile}}"
+      - "cat {{.permDomainFile}} {{.finalSubdomainFile}} | sort -u | {{.Binaries}}/httprobe -c {{.httpThreads}} >> {{.httpFile}}"
     scripts:
       - "SortU('{{.httpFile}}')"
-      - "ExecCmd('rm -rf {{.domainFile}}')"
+      - "ExecCmd('rm -rf {{.permDomainFile}}')"
 
   # get IP Address for later modules
   - required:
