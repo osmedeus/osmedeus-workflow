@@ -26,7 +26,7 @@ params:
   - nuclei: 'true'
   - nucleiTimeout: "8h"
   - nucleiSeverity: "critical,high,medium,low,info"
-  - defaultUA: "Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
+  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
   - nthreads: '200'
 
 pre_run:

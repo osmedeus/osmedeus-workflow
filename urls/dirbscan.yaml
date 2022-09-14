@@ -17,7 +17,7 @@ params:
   - lines: "30"
   - threads: '50'
   - ffTimeout: '2h'
-  - defaultUA: "Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
+  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
   - CreateFolder("{{.Output}}/directory")
