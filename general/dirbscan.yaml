@@ -17,6 +17,7 @@ params:
   - commitLength: '400'
   - chan: '#mics'
   - ffTimeout: '2h'
+  - defaultUA: "Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
   - CreateFolder("{{.Output}}/directory")
@@ -35,7 +36,7 @@ steps:
     source: "{{.httpFile}}"
     threads: '{{.dirbThreads}}'
     commands:
-      - "{{.Binaries}}/ffuf -t {{.ffThreads}} -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ >/dev/null 2>&1"
+      - "{{.Binaries}}/ffuf -t {{.ffThreads}} -H '{{.defaultUA}}' -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ >/dev/null 2>&1"
 
   # clean up and generate beautify report
   - scripts:
