@@ -52,5 +52,5 @@ steps:
     # change html report name
     scripts:
       - CleanJSONHttpx('{{.Output}}/probe/http-overview-{{.Workspace}}.txt', '{{.Output}}/probe/{{.Workspace}}-technologies.txt')
-      - ExecCmd("cat {{.Output}}/probe/{{.Workspace}}-technologies.txt | csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/probe/beautify-http-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/probe/{{.Workspace}}-technologies.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/probe/beautify-http-{{.Workspace}}.txt")
       - Cat('{{.Output}}/probe/beautify-http-{{.Workspace}}.txt')

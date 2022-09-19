@@ -78,7 +78,7 @@ steps:
       # join to final result
       - ExecCmd("cat {{.Output}}/pdirectory/raw-[[._id_]]-{{.Workspace}}.csv >> {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv")
       # noti small file to telegram
-      - ExecCmd("cat {{.Output}}/pdirectory/raw-[[._id_]]-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-[[._id_]]-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/pdirectory/raw-[[._id_]]-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-[[._id_]]-{{.Workspace}}.txt")
       - TeleMessByFile("{{.chan}}", "{{.Output}}/pdirectory/beautify-[[._id_]]-{{.Workspace}}.txt")
       # sorting & clean up
       - SortU("{{.Output}}/pdirectory/beautify-{{.Workspace}}.csv")
@@ -87,13 +87,13 @@ steps:
     pconditions:
       - "([[._id_]] % {{.commitLength}}) == 0"
     pscripts:
-      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
 
   # clean up and notify to summary channel
   - required:
       - "{{.Output}}/pdirectory/beautify-{{.Workspace}}.csv"
     scripts:
-      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/pdirectory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
       - Cat("{{.Output}}/pdirectory/beautify-{{.Workspace}}.txt")
 

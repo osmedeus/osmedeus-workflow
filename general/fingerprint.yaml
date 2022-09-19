@@ -25,7 +25,7 @@ steps:
       - cat {{.httpFile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt
     scripts:
       - CleanJSONHttpx('{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt', '{{.Output}}/fingerprint/{{.Workspace}}-raw-overview.txt')
-      - ExecCmd("cat {{.Output}}/fingerprint/{{.Workspace}}-raw-overview.txt | csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt")
+      - ExecCmd("cat {{.Output}}/fingerprint/{{.Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt")
       - Cat('{{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt')
 
 

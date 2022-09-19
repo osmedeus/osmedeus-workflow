@@ -51,6 +51,6 @@ steps:
   - required:
       - "{{.Output}}/directory/beautify-{{.Workspace}}.csv"
     scripts:
-      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk cut -f 1,2,3,4,5,7 -I | {{.Binaries}}/csvtk uniq -f 4 -I | {{.Binaries}}/csvtk pretty -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk cut -f 1,2,3,4,5,7 -I | {{.Binaries}}/csvtk uniq -f 4 -I | {{.Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
       - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.txt >> {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
       - SortU("{{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
