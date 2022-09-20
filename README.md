@@ -27,9 +27,11 @@ Workflow is part of Osmedeus which is a collection of YAML files that describe y
 bash <(curl -fsSL https://raw.githubusercontent.com/osmedeus/osmedeus-base/master/install.sh)
 ```
 
-## Anatomy of Public Community methodology
+## Anatomy of the Public Community methodology
 
 ![community-workflow](https://raw.githubusercontent.com/osmedeus/documentation/main/src/static/workflow/community-workflow.png)
+
+![general workflow](https://raw.githubusercontent.com/osmedeus/assets/main/general-workflow-mindmap.png)
 
 ## Usage
 
