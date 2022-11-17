@@ -1,5 +1,5 @@
 name: vulnscan
-desc: Run common Jaeles Signature
+desc: Run vulnerability scan with provided inputs
 
 report:
   final:
@@ -11,9 +11,9 @@ report:
     - "{{.Output}}/vuln/nuclei/raw-{{.Workspace}}-nuclei-json.txt"
     - "{{.Output}}/vuln/active/"
     - "{{.Output}}/vuln/nuclei/{{.Workspace}}-nuclei-scan.txt"
-
+    - "{{.Output}}/vuln/nuclei/{{.Workspace}}-custom-nuclei.html"
 params:
-  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - httpFile: "{{.Output}}/vuln/http-file.txt"
   - sign: "~/.jaeles/base-signatures/cves/.*"
   - sign2: "~/.jaeles/base-signatures/common/.*"
   - sign3: "~/.jaeles/base-signatures/sensitive/.*"
@@ -34,12 +34,18 @@ pre_run:
   - CreateFolder("{{.Output}}/vuln/raw")
 
 steps:
-  # check input file
-  - conditions:
-      - "FileLength('{{.httpFile}}') > {{.limit}}"
+  - required:
+      - "{{.Binaries}}/httpx"
     scripts:
-      - ErrPrintf("Filter", "got input file greater than {{.limit}} line")
-      - Exit(1)
+      - Printf('==> Clean up the input first if it hasn't have the prefix http(s)://')
+      - ExecCmd('cat {{.inputFile}} | httpx -silent -c {{.httpThreads}} | tee -a {{.httpFile}} > /dev/null 2>&1')
+      - SortU('{{.httpFile}}')
+
+  # prepare input for Jaeles
+  - required:
+      - "{{.httpFile}}"
+    scripts:
+      - SplitFile("{{.httpFile}}", "{{.Workspace}}-index", {{.splitLines}}, "{{.Output}}/vuln/raw")
 
   # prepare input for Jaeles
   - required:

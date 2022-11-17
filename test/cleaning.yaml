@@ -9,7 +9,7 @@ report:
     - "{{.Output}}/directory/summary-{{.Workspace}}.csv"
 
 params:
-  - inputfile: "{{.Target}}"
+  - inputFile: "{{.Target}}"
   - lines: "20"
   - threads: '80'
   - limit: '10000'

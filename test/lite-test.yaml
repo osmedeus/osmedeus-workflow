@@ -8,7 +8,7 @@ report:
 
 params:
   - limit: '10000'
-  - inputfile: '/tmp/dam/data'
+  - inputFile: '/tmp/dam/data'
 
 steps:
   - scripts:

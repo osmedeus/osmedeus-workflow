@@ -3,11 +3,11 @@ desc: echo testing
 
 params:
   - limit: '10000'
-  - inputfile: '/tmp/dam/data'
+  - inputFile: '/tmp/dam/data'
 
 steps:
   - conditions:
-      - "FileLength('{{.inputfile}}') > {{.limit}}"
+      - "FileLength('{{.inputFile}}') > {{.limit}}"
     scripts:
       - ErrPrintf("Filter", "got input file greater than {{.limit}} line")
       - Exit(1)

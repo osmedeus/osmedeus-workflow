@@ -11,7 +11,7 @@ report:
     - "{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei.html"
 
 params:
-  - inputfile: "{{.Output}}/portscan/{{.Workspace}}-http.txt"
+  - inputFile: "{{.Output}}/portscan/{{.Workspace}}-http.txt"
   - wordlists: "{{.Data}}/wordlists/content/small.txt"
   - sign: "~/.jaeles/base-signatures/cves/.*"
   - sign2: "~/.jaeles/base-signatures/common/.*"
@@ -37,9 +37,9 @@ steps:
   # Jaeles Scan
   - required:
       - "{{.Binaries}}/jaeles"
-      - "{{.inputfile}}"
+      - "{{.inputFile}}"
     commands:
-      - "{{.Binaries}}/jaeles scan -c {{.vthreads}} -s '{{.sign}}' -s '{{.sign2}}' -U {{.inputfile}} -o {{.Output}}/vportscan/vuln/ {{.extra}}"
+      - "{{.Binaries}}/jaeles scan -c {{.vthreads}} -s '{{.sign}}' -s '{{.sign2}}' -U {{.inputFile}} -o {{.Output}}/vportscan/vuln/ {{.extra}}"
     pconditions:
       - "FileLength('{{.Output}}/vportscan/vuln/jaeles-summary.txt') > 0"
     scripts:
@@ -51,11 +51,11 @@ steps:
     conditions:
       - '"{{.nuclei}}" == "true"'
     required:
-      - "{{.inputfile}}"
+      - "{{.inputFile}}"
       - "{{.Binaries}}/nuclei"
     scripts:
       - "CreateFolder('{{.Output}}/vportscan/vuln/nuclei')"
-      - "ExecCmd(\"timeout -k 1m {{.nucleiTimeout}} {{.Binaries}}/nuclei -H '{{.defaultUA}}' -silent -c {{.nthreads}} -json -severity '{{.nucleiSeverity}}' -t ~/nuclei-templates/ -l {{.inputfile}} -irr -o {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
+      - "ExecCmd(\"timeout -k 1m {{.nucleiTimeout}} {{.Binaries}}/nuclei -H '{{.defaultUA}}' -silent -c {{.nthreads}} -json -severity '{{.nucleiSeverity}}' -t ~/nuclei-templates/ -l {{.inputFile}} -irr -o {{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt\")"
     pconditions:
       - "FileLength('{{.Output}}/vportscan/vuln/nuclei/{{.Workspace}}-nuclei-json.txt') > 0"
     pscripts:
@@ -67,8 +67,8 @@ steps:
 
   - required:
       - "{{.Binaries}}/ffuf"
-      - "{{.inputfile}}"
-    source: "{{.inputfile}}"
+      - "{{.inputFile}}"
+    source: "{{.inputFile}}"
     threads: '{{.dirbThreads}}'
     commands:
       - "{{.Binaries}}/ffuf -t {{.fthreads}} -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/pdirectory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ"

@@ -1,7 +1,6 @@
 name: urls
 desc: Scan for List of URLs
 type: urls
-validator: url-file
 
 usage: |
     osmedeus scan -f urls -t urls_file.txt

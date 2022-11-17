@@ -24,8 +24,8 @@ steps:
   - required:
       - "{{.inputFile}}"
     commands:
-      - "cat {{.inputFile}} | sort -u | sed 's/\\/$//g' > {{.httpFile}}"
-      - "cat {{.inputFile}} | {{.Binaries}}/httprobe -c 200 >> {{.httpFile}}"
+      - "echo {{.inputFile}} | {{.Binaries}}/httpx -silent -t 100 >> {{.httpFile}}"
+      - "cat {{.inputFile}} | {{.Binaries}}/httpx -silent -t 100 >> {{.httpFile}}"
     scripts:
       - SortU("{{.httpFile}}")
 

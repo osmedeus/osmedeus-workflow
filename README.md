@@ -98,14 +98,21 @@ osmedeus server
 # Delete workspace
 osmedeus config delete -w workspace_name
 
-# Utils Commands
-
-osmedeus utils tmux ls
-osmedeus utils tmux logs -A -l 10
-osmedeus utils ps
-osmedeus utils ps --proc 'jaeles'
-osmedeus utils cron --cmd 'osmdeus scan -t example.com' --sch 60
-osmedeus utils cron --for --cmd 'osmedeus scan -t example.com'
+# Utilities Usage
+  osmedeus health
+  osmedeus health git
+  osmedeus health cloud
+  osmedeus version --json
+  osmedeus update
+  osmedeus update --vuln
+  osmedeus update --force --clean
+  osmedeus utils tmux ls
+  osmedeus utils tmux logs -A -l 10
+  osmedeus utils ps
+  osmedeus utils ps --proc 'jaeles'
+  osmedeus utils cron --cmd 'osmdeus scan -t example.com' --sch 60
+  osmedeus utils cron --for --cmd 'osmedeus scan -t example.com'
+  osmedeus utils workflow
 
 # Report Usage
 osmedeus report --list
