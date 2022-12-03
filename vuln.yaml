@@ -1,5 +1,5 @@
 name: vuln
-desc: run fast routine with vuln scan
+desc: Running fast routine with vuln scan
 type: general
 validator: domain
 
@@ -15,8 +15,7 @@ routines:
       - vulnscan
   - modules:
       - dirbscan
-#   - modules:
-#       - portscan
+
   # push final result again
   - modules:
       - summary

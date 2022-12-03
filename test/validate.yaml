@@ -4,4 +4,4 @@ validator: cidr-file
 
 steps:
   - commands:
-      - "cat '{{.Target}}' | eip -s 24"
+      - "cat '{{Target}}' | eip -s 24"

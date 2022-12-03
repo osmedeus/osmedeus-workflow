@@ -1,7 +1,15 @@
 name: cidr
-desc: Scan for CIDR File
+desc: Scanning for CIDR File
 type: cidr
 validator: cidr-file
+
+usage: |
+    osmedeus scan -f cidr -t cidr_file.txt
+    osmedeus scan -f cidr -t cidr_file.txt -w custom_ws
+    # Do detail scan on open port too
+    osmedeus scan -f cidr -t cidr_file.txt -p 'slow=true' -p 'ports=80,443,8080,8443'
+    # Skip the port fingerprint
+    osmedeus scan -f cidr -t cidr_file.txt -p 'skipPortFingerprint=true'
 
 routines:
   - modules:

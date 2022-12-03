@@ -2,6 +2,7 @@ name: test
 desc: testing workflow
 type: test
 validator: domain
+skip-indexed: true
 
 routines:
   - modules:

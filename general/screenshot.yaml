@@ -3,41 +3,41 @@ desc: Screenshot based on result of probing
 
 report:
   final:
-    - "{{.Output}}/screenshot/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html"
-    - "{{.Output}}/screenshot/goverview/report.html"
+    - "{{Output}}/screenshot/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html"
+    - "{{Output}}/screenshot/goverview/report.html"
 
 params:
-  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
-  - screenThreads: "8"
-  - limit: "50000"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
+  - screenThreads: "{{ threads * 2}}"
+  - limit: "20000"
 
-# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+# {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
 pre_run:
-  - CreateFolder("{{.Output}}/screenshot")
+  - CreateFolder("{{Output}}/screenshot")
 
 steps:
   # check if the size is too big, We don't want tons of garbage here
   - conditions:
-      - "FileLength('{{.httpFile}}') > {{.limit}}"
+      - "FileLength('{{httpFile}}') > {{limit}}"
     scripts:
-      - ErrPrintf("Filter", "Got input file greater than {{.limit}} line")
+      - ErrPrintf("Filter", "Got input file greater than {{limit}} line")
       - Exit(1)
 
   # only screenshot the one have different hash
   - required:
-      - "{{.Binaries}}/aquatone"
-      - "{{.httpFile}}"
+      - "{{Binaries}}/aquatone"
+      - "{{httpFile}}"
     commands: 
-      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/screenshot/{{.Workspace}}-aquatone >/dev/null 2>&1"
+      - "cat {{httpFile}} | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/screenshot/{{Workspace}}-aquatone >/dev/null 2>&1"
   # change html report name
   - commands:
-      - "mv {{.Output}}/screenshot/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/screenshot/{{.Workspace}}-aquatone/screenshot-{{.Workspace}}.html"
-      - "ls {{.Output}}/screenshot/{{.Workspace}}-aquatone/screenshots/ > {{.Output}}/screenshot/number-of-screenshot.txt"
+      - "mv {{Output}}/screenshot/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/screenshot/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html"
+      - "ls {{Output}}/screenshot/{{Workspace}}-aquatone/screenshots/ > {{Output}}/screenshot/number-of-screenshot.txt"
 
   # do screenshot with goverview
   - scripts:
-      - ExecCmd("cat {{.httpFile}} | {{.Binaries}}/goverview screen -c {{.screenThreads}} --json -o {{.Output}}/screenshot/goverview/")
-      - ExecCmd("{{.Binaries}}/goverview report -o {{.Output}}/screenshot/goverview/ --report report.html")
+      - ExecCmd("cat {{httpFile}} | {{Binaries}}/goverview screen -c {{screenThreads}} --json -o {{Output}}/screenshot/goverview/")
+      - ExecCmd("{{Binaries}}/goverview report -o {{Output}}/screenshot/goverview/ --report report.html")
 
 post_run:
-  - TotalScreenShot('{{.Output}}/screenshot/number-of-screenshot.txt')
+  - TotalScreenShot('{{Output}}/screenshot/number-of-screenshot.txt')

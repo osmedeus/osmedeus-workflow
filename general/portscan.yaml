@@ -3,51 +3,49 @@ desc: Quick port scan for all port
 
 report:
   final:
-    - "{{.Output}}/portscan/open-ports.txt"
-    - "{{.Output}}/portscan/{{.Workspace}}-detail.txt"
-    - "{{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt"
-    - "{{.Output}}/portscan/{{.Workspace}}-screenshot/screenshot-{{.Workspace}}.html"
-    - "{{.Output}}/portscan/{{.Workspace}}-http.txt"
+    - "{{Output}}/portscan/open-ports.txt"
+    - "{{Output}}/portscan/{{Workspace}}-detail.txt"
+    - "{{Output}}/portscan/nmap-raw-{{Workspace}}.txt"
+    - "{{Output}}/portscan/{{Workspace}}-screenshot/screenshot-{{Workspace}}.html"
+    - "{{Output}}/portscan/{{Workspace}}-http.txt"
 
 pre_run:
-  - CreateFolder("{{.Output}}/portscan")
+  - CreateFolder("{{Output}}/portscan")
 
 # only run for top 1k port
 # edit via osmedeus scan -P 'ports=0-65535' -P 'rate=5000' ...
 params:
-  - nonCdn: "{{.Output}}/ipspace/{{.Workspace}}-noncdn.txt"
+  - nonCdnFile: "{{Output}}/ipspace/{{Workspace}}-noncdn.txt"
   # portscan
   - ports: "0-65535"
-  - rateRustScan: "10000"
-  - nmapThreads: "20"
-  - httpThreads: "100"
-  - screenThreads: "8"
+  - rateRustScan: "{{ threads * 1000}}"
+  - httpThreads: "{{ threads * 12}}"
+  - screenThreads: "{{ threads * 2}}"
+  - skipPortScan: "false"
 
 steps:
   # do port scan first
   - required:
-      - '{{.nonCdn}}'
+      - '{{nonCdnFile}}'
     commands:
-      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --range {{.ports}} -a {{.nonCdn}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
+      - "{{Binaries}}/rustscan --timeout 3000 -b {{rateRustScan}} --scripts None --range {{ports}} -a {{nonCdnFile}} -g >> {{Output}}/portscan/raw-open-ports.txt"
     scripts:
-      - CleanRustScan("{{.Output}}/portscan/raw-open-ports.txt", "{{.Output}}/portscan/open-ports.txt")
+      - CleanRustScan("{{Output}}/portscan/raw-open-ports.txt", "{{Output}}/portscan/open-ports.txt")
 
   # detect http running on open ports and service
   - required:
-      - "{{.Output}}/portscan/open-ports.txt"
-      - "{{.Output}}/portscan/raw-open-ports.txt"
+      - "{{Output}}/portscan/open-ports.txt"
+      - "{{Output}}/portscan/raw-open-ports.txt"
     commands:
-      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c {{.httpThreads}} -t 7000 >> {{.Output}}/portscan/{{.Workspace}}-http.txt"
-      # - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.nmapThreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
+      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httprobe -c {{httpThreads}} -t 7000 >> {{Output}}/portscan/{{Workspace}}-http.txt"
     scripts:
-      # - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
-      - SortU('{{.Output}}/portscan/{{.Workspace}}-http.txt')
+      - SortU('{{Output}}/portscan/{{Workspace}}-http.txt')
 
   # do screenshot on new http running
   - required:
-      - "{{.Binaries}}/aquatone"
-      - "{{.Output}}/portscan/{{.Workspace}}-http.txt"
+      - "{{Binaries}}/aquatone"
+      - "{{Output}}/portscan/{{Workspace}}-http.txt"
     commands:
-      - "cat {{.Output}}/portscan/{{.Workspace}}-http.txt | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-screenshot >/dev/null 2>&1"
+      - "cat {{Output}}/portscan/{{Workspace}}-http.txt | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/portscan/{{Workspace}}-screenshot >/dev/null 2>&1"
     scripts:
-      - ExecCmd("mv {{.Output}}/portscan/{{.Workspace}}-screenshot/aquatone_report.html {{.Output}}/portscan/{{.Workspace}}-screenshot/screenshot-{{.Workspace}}.html")
+      - ExecCmd("mv {{Output}}/portscan/{{Workspace}}-screenshot/aquatone_report.html {{Output}}/portscan/{{Workspace}}-screenshot/screenshot-{{Workspace}}.html")

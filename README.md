@@ -69,7 +69,7 @@ osmedeus scan -f vuln-and-dirb -t list-of-domains.txt
 osmedeus scan -f domains -t list-of-domains.txt
 
 ## Use a custom wordlist
-osmedeus scan -t sample.com -p 'wordlists={{.Data}}/wordlists/content/big.txt' -p 'fthreads=40'
+osmedeus scan -t sample.com -p 'wordlists={{Data}}/wordlists/content/big.txt' -p 'fthreads=40'
 
 ## Scan list of targets
 osmedeus scan -T list_of_targets.txt

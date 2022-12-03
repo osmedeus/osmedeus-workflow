@@ -3,13 +3,13 @@ desc: Skip Scanning for subdomain
 
 report:
   final:
-    - "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
+    - "{{Output}}/subdomain/final-{{Workspace}}.txt"
 
-# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+# {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
 pre_run:
-  - CreateFolder("{{.Output}}/subdomain/")
+  - CreateFolder("{{Output}}/subdomain/")
 
 steps:
   - commands:
-      - "cp {{.Target}} {{.Output}}/subdomain/final-{{.Workspace}}.txt"
+      - "cp {{Target}} {{Output}}/subdomain/final-{{Workspace}}.txt"
 

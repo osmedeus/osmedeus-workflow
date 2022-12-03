@@ -3,53 +3,51 @@ desc: Scanning for subdomain
 
 report:
   final:
-    - "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
-    - "{{.Output}}/subdomain/more-{{.Workspace}}.txt"
+    - "{{Output}}/subdomain/final-{{Workspace}}.txt"
+    - "{{Output}}/subdomain/more-{{Workspace}}.txt"
 
-# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+# {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
 pre_run:
-  - CreateFolder("{{.Storages}}/subdomain/{{.Workspace}}/")
-  - CreateFolder("{{.Storages}}/summary/{{.Workspace}}/")
-  - CreateFolder("{{.Output}}/subdomain/")
+  - CreateFolder("{{Output}}/subdomain/")
 
 params:
-  - subfinderThreads: "50"
   - amassTimeout: "3h"
+  - subfinderThreads: "{{threads * 5}}"
 
 steps:
   - required:
-      - "{{.Binaries}}/amass"
-      - "{{.Binaries}}/subfinder"
-      - "{{.Binaries}}/assetfinder"
-      - "{{.Binaries}}/findomain"
+      - "{{Binaries}}/amass"
+      - "{{Binaries}}/subfinder"
+      - "{{Binaries}}/assetfinder"
+      - "{{Binaries}}/findomain"
     commands:
-      - "timeout -k 1m {{.amassTimeout}} {{.Binaries}}/amass enum -config {{.Data}}/configs/amass.ini -d {{.Target}} -o {{.Output}}/subdomain/{{.Workspace}}-amass.txt >/dev/null 2>&1"
-      - "{{.Binaries}}/assetfinder -subs-only {{.Target}} > {{.Output}}/subdomain/{{.Workspace}}-assetfinder.txt"
+      - "timeout -k 1m {{amassTimeout}} {{Binaries}}/amass enum -config {{Data}}/configs/amass.ini -d {{Target}} -o {{Output}}/subdomain/{{Workspace}}-amass.txt >/dev/null 2>&1"
+      - "{{Binaries}}/assetfinder -subs-only {{Target}} > {{Output}}/subdomain/{{Workspace}}-assetfinder.txt"
   # these two commands will run in parallels
   - commands:
-      - "{{.Binaries}}/findomain -u {{.Output}}/subdomain/{{.Workspace}}-findomain.txt -t {{.Target}} >/dev/null 2>&1"
-      - "{{.Binaries}}/subfinder -d {{.Target}} -t {{.subfinderThreads}} -o {{.Output}}/subdomain/{{.Workspace}}-subfinder.txt >/dev/null 2>&1"
+      - "{{Binaries}}/findomain -u {{Output}}/subdomain/{{Workspace}}-findomain.txt -t {{Target}} >/dev/null 2>&1"
+      - "{{Binaries}}/subfinder -d {{Target}} -t {{subfinderThreads}} -o {{Output}}/subdomain/{{Workspace}}-subfinder.txt >/dev/null 2>&1"
 
   # cleaning some result
   - scripts:
-      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-amass.txt")
-      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-subfinder.txt")
-      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-assetfinder.txt")
-      - Append("{{.Output}}/subdomain/sum-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-findomain.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-amass.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-subfinder.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-assetfinder.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-findomain.txt")
       # remove junk subdomain like sample@subdomain.com and 1-2-3.subdomain.com format
-      - ExecCmd("cat {{.Output}}/subdomain/sum-{{.Workspace}}.txt | {{.Binaries}}/cleansub -t '{{.Target}}' > {{.Output}}/subdomain/final-{{.Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/subdomain/sum-{{Workspace}}.txt | {{Binaries}}/cleansub -t '{{Target}}' > {{Output}}/subdomain/final-{{Workspace}}.txt")
   - scripts:
-      - SortU("{{.Output}}/subdomain/final-{{.Workspace}}.txt")
+      - SortU("{{Output}}/subdomain/final-{{Workspace}}.txt")
 
   # get more related domains
   - required:
-      - "{{.Binaries}}/metabigor"
-    # assume you run 'osmedeus scan -t example.com' then {{.Org}} == 'example'
+      - "{{Binaries}}/metabigor"
+    # assume you run 'osmedeus scan -t example.com' then {{Org}} == 'example'
     commands:
-      - "echo '{{.Org}}' | {{.Binaries}}/metabigor cert --json -o {{.Output}}/subdomain/more-json-{{.Workspace}}.txt"
+      - "echo '{{Org}}' | {{Binaries}}/metabigor cert --json -o {{Output}}/subdomain/more-json-{{Workspace}}.txt"
     scripts:
-      - ExecCmd("cat {{.Output}}/subdomain/more-json-{{.Workspace}}.txt | jq -r '.Domain' | sed 's/\*.//g' | sort -u > {{.Output}}/subdomain/more-{{.Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/subdomain/more-json-{{Workspace}}.txt | jq -r '.Domain' | sed 's/\*.//g' | sort -u > {{Output}}/subdomain/more-{{Workspace}}.txt")
 
 post_run:
   # delete all files in workspaces folder except a file lists in report section
-  - Cleaning("{{.Output}}/subdomain/")
+  - Cleaning("{{Output}}/subdomain/")

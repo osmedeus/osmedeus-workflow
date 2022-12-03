@@ -4,60 +4,60 @@ mtimeout: '2h'
 
 report:
   final:
-    - "{{.Output}}/archive-beautify/archive-beautify/archive-report-{{.Workspace}}.html"
-    - "{{.Output}}/archive/{{.Workspace}}-archive.txt"
-    - "{{.Output}}/archive/{{.Workspace}}-interesting.txt"
-    - "{{.Output}}/archive/{{.Workspace}}-alive-archive.txt"
-    - "{{.Storages}}/assets/{{.Workspace}}/archive-{{.Workspace}}.txt"
-    - "{{.Storages}}/assets/{{.Workspace}}/interesting-{{.Workspace}}.txt"
-    - "{{.Storages}}/assets/{{.Workspace}}/alive-archive-{{.Workspace}}.txt"
+    - "{{Output}}/archive-beautify/archive-beautify/archive-report-{{Workspace}}.html"
+    - "{{Output}}/archive/{{Workspace}}-archive.txt"
+    - "{{Output}}/archive/{{Workspace}}-interesting.txt"
+    - "{{Output}}/archive/{{Workspace}}-alive-archive.txt"
+    - "{{Storages}}/assets/{{Workspace}}/archive-{{Workspace}}.txt"
+    - "{{Storages}}/assets/{{Workspace}}/interesting-{{Workspace}}.txt"
+    - "{{Storages}}/assets/{{Workspace}}/alive-archive-{{Workspace}}.txt"
 
 params:
-  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - archiveTimeout: "1h"
   - alimit: "10000"
 
-# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+# {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
 pre_run:
-  - CreateFolder("{{.Output}}/archive")
-  - CreateFolder("{{.Storages}}/assets/{{.Workspace}}")
-  - CreateFolder("{{.Output}}/archive-beautify")
+  - CreateFolder("{{Output}}/archive")
+  - CreateFolder("{{Storages}}/assets/{{Workspace}}")
+  - CreateFolder("{{Output}}/archive-beautify")
 
 steps:
   - required:
-      - "{{.httpFile}}"
+      - "{{httpFile}}"
     commands:
-      - "cat {{.httpFile}} | {{.Binaries}}/unfurl format %d | sort -u > {{.Output}}/archive/{{.Workspace}}-domain.txt"
+      - "cat {{httpFile}} | {{Binaries}}/unfurl format %d | sort -u > {{Output}}/archive/{{Workspace}}-domain.txt"
 
   - required:
-      - "{{.Binaries}}/ourl"
-      - "{{.Binaries}}/durl"
+      - "{{Binaries}}/ourl"
+      - "{{Binaries}}/durl"
     commands:
-      - "timeout -k 1m {{.archiveTimeout}} {{.Binaries}}/ourl -subs -p {{.Target}} | {{.Binaries}}/durl | shuf -n {{.alimit}} >> {{.Output}}/archive/{{.Workspace}}-archive.txt"
+      - "timeout -k 1m {{archiveTimeout}} {{Binaries}}/ourl -subs -p {{Target}} | {{Binaries}}/durl | shuf -n {{alimit}} >> {{Output}}/archive/{{Workspace}}-archive.txt"
     scripts:
-      - "SortU('{{.Output}}/archive/{{.Workspace}}-archive.txt')"
+      - "SortU('{{Output}}/archive/{{Workspace}}-archive.txt')"
 
   # do get request to archive result
-  - timeout: "{{.archiveTimeout}}"
+  - timeout: "{{archiveTimeout}}"
     required:
-      - "{{.Output}}/archive/{{.Workspace}}-archive.txt"
+      - "{{Output}}/archive/{{Workspace}}-archive.txt"
     commands:
-      - "cat {{.Output}}/archive/{{.Workspace}}-archive.txt | {{.Binaries}}/wurl -t 50 > {{.Output}}/archive/{{.Workspace}}-alive-archive.txt"
+      - "cat {{Output}}/archive/{{Workspace}}-archive.txt | {{Binaries}}/wurl -t 50 > {{Output}}/archive/{{Workspace}}-alive-archive.txt"
 
   # unique by content length
   - required:
-      - "{{.Output}}/archive/{{.Workspace}}-archive.txt"
+      - "{{Output}}/archive/{{Workspace}}-archive.txt"
     commands:
-      - "LC_ALL=C sort -u -k3,3n -o {{.Output}}/archive/{{.Workspace}}-alive-archive.txt {{.Output}}/archive/{{.Workspace}}-alive-archive.txt"
+      - "LC_ALL=C sort -u -k3,3n -o {{Output}}/archive/{{Workspace}}-alive-archive.txt {{Output}}/archive/{{Workspace}}-alive-archive.txt"
   # get interesting urls to fuzz
-      - cat {{.Output}}/archive/{{.Workspace}}-archive.txt | {{.Binaries}}/durl -p > {{.Output}}/archive/{{.Workspace}}-interesting.txt
+      - cat {{Output}}/archive/{{Workspace}}-archive.txt | {{Binaries}}/durl -p > {{Output}}/archive/{{Workspace}}-interesting.txt
     scripts:
-      - Append("{{.Storages}}/assets/{{.Workspace}}/archive-{{.Workspace}}.txt", "{{.Output}}/archive/{{.Workspace}}-archive.txt")
-      - SortU("{{.Storages}}/assets/{{.Workspace}}/archive-{{.Workspace}}.txt")
-      - Copy("{{.Output}}/archive/{{.Workspace}}-alive-archive.txt", "{{.Storages}}/assets/{{.Workspace}}/alive-archive-{{.Workspace}}.txt")
-      - Append("{{.Storages}}/assets/{{.Workspace}}/interesting-{{.Workspace}}.txt", "{{.Output}}/archive/{{.Workspace}}-interesting.txt")
-      - SortU("{{.Storages}}/assets/{{.Workspace}}/interesting-{{.Workspace}}.txt")
+      - Append("{{Storages}}/assets/{{Workspace}}/archive-{{Workspace}}.txt", "{{Output}}/archive/{{Workspace}}-archive.txt")
+      - SortU("{{Storages}}/assets/{{Workspace}}/archive-{{Workspace}}.txt")
+      - Copy("{{Output}}/archive/{{Workspace}}-alive-archive.txt", "{{Storages}}/assets/{{Workspace}}/alive-archive-{{Workspace}}.txt")
+      - Append("{{Storages}}/assets/{{Workspace}}/interesting-{{Workspace}}.txt", "{{Output}}/archive/{{Workspace}}-interesting.txt")
+      - SortU("{{Storages}}/assets/{{Workspace}}/interesting-{{Workspace}}.txt")
 
 post_run:
-  - TotalArchive('{{.Output}}/archive/{{.Workspace}}-archive.txt')
+  - TotalArchive('{{Output}}/archive/{{Workspace}}-archive.txt')
 

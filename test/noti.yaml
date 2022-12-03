@@ -11,7 +11,7 @@ steps:
   - scripts:
       - ExecCmd("echo 'sample text here' > /tmp/test-osm-noti/dirb.txt")
       - TeleMessByFile("#dirb", "/tmp/test-osm-noti/dirb.txt")
-      - TeleMess("#mics", "Sample message --> {{.Target}}")
+      - TeleMess("#mics", "Sample message --> {{Target}}")
       # these channels usually use for vulnscan
       - TeleMessByFile("#report", "/tmp/test-osm-noti/dirb.txt")
       - TeleMessByFile("#sensitive", "/tmp/test-osm-noti/dirb.txt")

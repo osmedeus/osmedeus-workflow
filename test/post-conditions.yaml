@@ -10,7 +10,7 @@ steps:
     - seq 20 > /tmp/sammmm
 
   - pconditions:
-      - "{{.con}} == true"
+      - "{{con}} == true"
     pscripts:
       - "ExecCmd('echo post-scripts')"
 

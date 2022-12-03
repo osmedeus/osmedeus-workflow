@@ -4,53 +4,53 @@ desc: Sync result from local to Git
 steps:
   # subdomain
   - scripts:
-      - ExecCmd("cat {{.Output}}/subdomain/final-{{.Workspace}}.txt >> {{.Storages}}/summary/{{.Workspace}}/subdomain-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/summary/{{.Workspace}}/subdomain-{{.Workspace}}.txt")
-      - SortU("{{.Output}}/subdomain/final-{{.Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/subdomain/final-{{Workspace}}.txt >> {{Storages}}/summary/{{Workspace}}/subdomain-{{Workspace}}.txt")
+      - SortU("{{Storages}}/summary/{{Workspace}}/subdomain-{{Workspace}}.txt")
+      - SortU("{{Output}}/subdomain/final-{{Workspace}}.txt")
 
   # http
   - required:
-      - "{{.Output}}/probing/http-{{.Workspace}}.txt"
+      - "{{Output}}/probing/http-{{Workspace}}.txt"
     scripts:
-      - ExecCmd("cat {{.Output}}/probing/http-{{.Workspace}}.txt >> {{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/summary/{{.Workspace}}/http-{{.Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/probing/http-{{Workspace}}.txt >> {{Storages}}/summary/{{Workspace}}/http-{{Workspace}}.txt")
+      - SortU("{{Storages}}/summary/{{Workspace}}/http-{{Workspace}}.txt")
 
   # dns
   - required:
-      - "{{.Output}}/probing/dns-{{.Workspace}}.txt"
+      - "{{Output}}/probing/dns-{{Workspace}}.txt"
     scripts:
-      - ExecCmd("cat {{.Output}}/probing/dns-{{.Workspace}}.txt >> {{.Storages}}/summary/{{.Workspace}}/dns-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/summary/{{.Workspace}}/dns-{{.Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/probing/dns-{{Workspace}}.txt >> {{Storages}}/summary/{{Workspace}}/dns-{{Workspace}}.txt")
+      - SortU("{{Storages}}/summary/{{Workspace}}/dns-{{Workspace}}.txt")
 
   # archive
   - required:
-      - "{{.Output}}/archive/{{.Workspace}}-archive.txt"
+      - "{{Output}}/archive/{{Workspace}}-archive.txt"
     scripts:
-      - ExecCmd("cat {{.Output}}/archive/{{.Workspace}}-archive.txt >> {{.Storages}}/assets/{{.Workspace}}/archive-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/assets/{{.Workspace}}/archive-{{.Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/archive/{{Workspace}}-archive.txt >> {{Storages}}/assets/{{Workspace}}/archive-{{Workspace}}.txt")
+      - SortU("{{Storages}}/assets/{{Workspace}}/archive-{{Workspace}}.txt")
 
   # http fingerprint
   - required:
-      - "{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt"
+      - "{{Output}}/fingerprint/{{Workspace}}-http-overview.txt"
     scripts:
-      - Copy("{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt", "{{.Storages}}/http/{{.Workspace}}/overview-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/http/{{.Workspace}}/overview-{{.Workspace}}.txt")
+      - Copy("{{Output}}/fingerprint/{{Workspace}}-http-overview.txt", "{{Storages}}/http/{{Workspace}}/overview-{{Workspace}}.txt")
+      - SortU("{{Storages}}/http/{{Workspace}}/overview-{{Workspace}}.txt")
 
   # vuln
   - required:
-      - "{{.Output}}/vuln/active/jaeles-summary.txt"
+      - "{{Output}}/vuln/active/jaeles-summary.txt"
     scripts:
-      - ExecCmd("{{.Output}}/vuln/active/jaeles-summary.txt >> {{.Storages}}/assets/{{.Workspace}}/activescan-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/assets/{{.Workspace}}/activescan-{{.Workspace}}.txt")
+      - ExecCmd("{{Output}}/vuln/active/jaeles-summary.txt >> {{Storages}}/assets/{{Workspace}}/activescan-{{Workspace}}.txt")
+      - SortU("{{Storages}}/assets/{{Workspace}}/activescan-{{Workspace}}.txt")
   - required:
-      - "{{.Output}}/vuln/sensitive/jaeles-summary.txt"
+      - "{{Output}}/vuln/sensitive/jaeles-summary.txt"
     scripts:
-      - ExecCmd("{{.Output}}/vuln/sensitive/jaeles-summary.txt >> {{.Storages}}/assets/{{.Workspace}}/sensitive-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/assets/{{.Workspace}}/sensitive-{{.Workspace}}.txt")
+      - ExecCmd("{{Output}}/vuln/sensitive/jaeles-summary.txt >> {{Storages}}/assets/{{Workspace}}/sensitive-{{Workspace}}.txt")
+      - SortU("{{Storages}}/assets/{{Workspace}}/sensitive-{{Workspace}}.txt")
   
   - required:
-      - "{{.Output}}/directory/beautify-{{.Workspace}}.csv"
+      - "{{Output}}/directory/beautify-{{Workspace}}.csv"
     scripts:
-      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk cut -f 1,2,3,4,5,7 -I | {{.Binaries}}/csvtk uniq -f 4 -I | {{.Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
-      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.txt >> {{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
-      - SortU("{{.Storages}}/paths/{{.Workspace}}/beautify-{{.Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv | {{Binaries}}/csvtk cut -f 1,2,3,4,5,7 -I | {{Binaries}}/csvtk uniq -f 4 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.txt >> {{Storages}}/paths/{{Workspace}}/beautify-{{Workspace}}.txt")
+      - SortU("{{Storages}}/paths/{{Workspace}}/beautify-{{Workspace}}.txt")

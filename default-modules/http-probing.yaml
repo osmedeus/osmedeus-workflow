@@ -1,26 +1,52 @@
-name: fingerprint
-desc: fingerprint HTTP technology and response
+name: http-probing
+desc: Running HTTP fingerprint technology and response with the supplied inputs
 
 report:
   final:
-    - "{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt"
-    - "{{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt"
-    - "{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt"
+    - "{{Output}}/fingerprint/{{Workspace}}-technologies.txt"
+    - "{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt"
+    - "{{Output}}/fingerprint/{{Workspace}}-http-overview.txt"
 
 params:
-  - inputFile: "{{.Target}}"
-  - overviewThreads: '100'
+  - inputFile: "{{Target}}"
+  - httpFile: "{{Output}}/fingerprint/http-{{Workspace}}.txt"
+  - httpThreads: '{{ threads * 15 }}'
+  - screenThreads: '{{ threads }}'
+  - enableSreenshot: 'false'
+  - httpTimeout: '10'
 
 pre_run:
-  - CreateFolder("{{.Output}}/fingerprint")
+  - CreateFolder("{{Output}}/fingerprint")
 
 steps:
   - required:
-      - "{{.Binaries}}/httpx"
-      - "{{.inputFile}}"
+      - "{{inputFile}}"
     commands:
-      - cat {{.inputFile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt
+      - "echo {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
+      - "cat {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
     scripts:
-      - CleanJSONHttpx('{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt', '{{.Output}}/fingerprint/{{.Workspace}}-raw-overview.txt')
-      - ExecCmd("cat {{.Output}}/fingerprint/{{.Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt")
-      - Cat('{{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt')
+      - SortU("{{httpFile}}")
+
+  - required:
+      - "{{Binaries}}/httpx"
+      - "{{httpFile}}"
+    commands:
+      - cat {{httpFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -t {{httpThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/fingerprint/{{Workspace}}-http-overview.txt
+    scripts:
+      - CleanJSONHttpx('{{Output}}/fingerprint/{{Workspace}}-http-overview.txt', '{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
+      - ExecCmd("cat {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/fingerprint/beautify-{{Workspace}}-http.txt")
+      - Cat('{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt')
+
+  # do screenshot
+  # skip the screenshot by adding -p 'enableSreenshot=false'
+  - conditions:
+      - '{{enableSreenshot}} == true'
+    required:
+      - "{{Binaries}}/aquatone"
+      - "{{httpFile}}"
+    commands: 
+      - "cat {{httpFile}} | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/probe/{{Workspace}}-aquatone > /dev/null 2>&1"
+    scripts:
+      - ExecCmd("mv {{Output}}/probe/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html")
+      - ExecCmd("cat {{httpFile}} | {{Binaries}}/goverview screen -c {{threads}} --json -o {{Output}}/screenshot/ > /dev/null 2>&1")
+      - ExecCmd("{{Binaries}}/goverview report -o {{Output}}/screenshot/ --report report.html")

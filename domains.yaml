@@ -1,5 +1,5 @@
 name: domains
-desc: run normal routine but without subdomain scan
+desc: Running normal routine but without subdomain enumeration
 type: general
 validator: domain-file # -t domains_file.txt
 
@@ -26,6 +26,3 @@ routines:
 
   - modules:
       - portscan
-  # push final result again
-  - modules:
-      - summary

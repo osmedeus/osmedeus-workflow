@@ -7,12 +7,12 @@ params:
   - inp: 'http-xiaomi.com.txt'
 steps:
 
-  - timeout: '{{.time}}'
+  - timeout: '{{time}}'
     scripts:
       - ExecCmd('sleep 2')
       - ExecCmd('touch /tmp/scrr/111')
 
-  - timeout: '{{.time}}'
+  - timeout: '{{time}}'
     commands:
       - sleep 2
     scripts:
@@ -20,7 +20,7 @@ steps:
       - ExecCmd('sleep 10')
       - ExecCmd('touch /tmp/scrr/333')
 
-  - timeout: '{{.time}}'
+  - timeout: '{{time}}'
     commands:
       - sleep 20
     scripts:

@@ -3,41 +3,53 @@ desc: portscan on 65k ports
 
 report:
   final:
-    - "{{.Output}}/portscan/open-ports.txt"
-    - "{{.Output}}/portscan/http-running.txt"
-    - "{{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt"
-    - "{{.Output}}/portscan/{{.Workspace}}-aquatone/portscan-{{.Workspace}}.html"
-    - "{{.Output}}/portscan/detail-open-ports.txt"
-    - "{{.Output}}/portscan/ssl-info.txt"
+    - "{{Output}}/portscan/open-ports.txt"
+    - "{{Output}}/portscan/http-running.txt"
+    - "{{Output}}/portscan/ssl-info.txt"
+
 params:
-  - inputFile: "{{.Target}}"
+  - inputFile: "{{Target}}"
   - ports: "0-65535"
-  - rateRustScan: "10000"
-  - nmapThreads: "20"
-  - httpThreads: "100"
-  - screenThreads: "8"
+  - rateRustScan: "{{ threads * 1000}}"
+  - httpThreads: "{{ threads * 12}}"
+  - skipPortscan: "false"
+  - httpTimeout: "10"
 
 pre_run:
-  - CreateFolder("{{.Storages}}/ports/{{.Workspace}}")
-  - CreateFolder("{{.Output}}/portscan")
+  - CreateFolder("{{Storages}}/ports/{{Workspace}}")
+  - CreateFolder("{{Output}}/portscan")
 
 steps:
   # do port scan first
-  - required:
-      - '{{.Binaries}}/rustscan'
+  - conditions:
+      - '"{{skipPortscan}}" != "true"'
+    required:
+      - '{{Binaries}}/metabigor'
     commands:
-      - "{{.Binaries}}/rustscan --timeout 3000 -b {{.rateRustScan}} --scripts None --range {{.ports}} -a {{.inputFile}} -g >> {{.Output}}/portscan/raw-open-ports.txt"
+      - "cat {{inputFile}} | {{Binaries}}/metabigor scan --rate {{rateRustScan}} -p {{ports}} --pipe >> {{Output}}/portscan/raw-open-ports.txt"
     scripts:
-      - CleanRustScan("{{.Output}}/portscan/raw-open-ports.txt", "{{.Output}}/portscan/open-ports.txt")
+      - CleanRustScan("{{Output}}/portscan/raw-open-ports.txt", "{{Output}}/portscan/open-ports.txt")
 
-  # detect http running on open ports and service
-  - required:
-      - "{{.Output}}/portscan/open-ports.txt"
-      - "{{.Output}}/portscan/raw-open-ports.txt"
+  # if skipping portscan then take input file as open ports
+  - conditions:
+      - '"{{skipPortscan}}" == "true"'
     commands:
-      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/cinfo -c {{.httpThreads}} > {{.Output}}/portscan/ssl-info.txt"
-      - "cat {{.Output}}/portscan/open-ports.txt | {{.Binaries}}/httprobe -c {{.httpThreads}} -t 7000 > {{.Output}}/portscan/http-running.txt"
-      - "cat {{.Output}}/portscan/raw-open-ports.txt | {{.Binaries}}/metabigor scan -c {{.screenThreads}} -R --tmp {{.Output}}/portscan/nmap-raw/ -o {{.Output}}/portscan/{{.Workspace}}-detail.txt"
-    scripts:
-      - ExecCmd("cat {{.Output}}/portscan/nmap-raw/*.nmap > {{.Output}}/portscan/nmap-raw-{{.Workspace}}.txt")
+      - "cp {{InputFile}} {{Output}}/portscan/open-ports.txt"
 
+  # detect http running on open ports and TLS info
+  - required:
+      - "{{Output}}/portscan/open-ports.txt"
+    commands:
+      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -tls-grab -json -tls-probe > {{Output}}/portscan/ssl-info-json.txt"
+      - "cat {{httpFile}} | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/portscan/http-overview-{{Workspace}}.txt"
+    scripts:
+      - ExecCmd("cat {{Output}}/portscan/ssl-info-json.txt | jq -r '.url'  | sort -u  > {{Output}}/portscan/http-running.txt")
+      - Copy('{{Output}}/portscan/http-running.txt', '{{Storages}}/ports/{{Workspace}}/httpport-{{Workspace}}.txt')
+      - CleanJSONHttpx('{{Output}}/portscan/http-overview-{{Workspace}}.txt', '{{Output}}/portscan/{{Workspace}}-overview.txt')
+      - ExecCmd("cat {{Output}}/portscan/{{Workspace}}-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/portscan/beautify-http-{{Workspace}}.txt")
+      - Cat('{{Output}}/portscan/beautify-http-{{Workspace}}.txt')
+
+  # backup output to storage
+  - scripts:
+      - Copy("{{Output}}/portscan/open-ports.txt", "{{Storages}}/ports/{{Workspace}}/portscan-{{Workspace}}.txt")
+      - Copy("{{Output}}/portscan/http-running.txt", "{{Storages}}/ports/{{Workspace}}/http-port-{{Workspace}}.txt")

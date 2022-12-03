@@ -3,8 +3,8 @@ desc: lite-test
 
 report:
   final:
-    - '{{.Output}}/subdomain/http-{{.Workspace}}'
-    - '{{.Output}}/subdomain/final-{{.Workspace}}.txt'
+    - '{{Output}}/subdomain/http-{{Workspace}}'
+    - '{{Output}}/subdomain/final-{{Workspace}}.txt'
 
 params:
   - limit: '10000'
@@ -12,19 +12,19 @@ params:
 
 steps:
   - scripts:
-      - CreateFolder("{{.Output}}/subdomain/")
+      - CreateFolder("{{Output}}/subdomain/")
   - commands:
-      - "{{.Binaries}}/findomain -u {{.Output}}/subdomain/{{.Workspace}}-findomain.txt -t {{.Target}}"
-      - 'seq 10 >> {{.Output}}/subdomain/{{.Workspace}}-findomain.txt'
-      - 'seq 20 >> {{.Output}}/subdomain/{{.Workspace}}-findomain.txt'
+      - "{{Binaries}}/findomain -u {{Output}}/subdomain/{{Workspace}}-findomain.txt -t {{Target}}"
+      - 'seq 10 >> {{Output}}/subdomain/{{Workspace}}-findomain.txt'
+      - 'seq 20 >> {{Output}}/subdomain/{{Workspace}}-findomain.txt'
 
   - scripts:
-      - Append("{{.Output}}/subdomain/final-{{.Workspace}}.txt", "{{.Output}}/subdomain/{{.Workspace}}-findomain.txt")
-      - SortU("{{.Output}}/subdomain/final-{{.Workspace}}.txt")
+      - Append("{{Output}}/subdomain/final-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-findomain.txt")
+      - SortU("{{Output}}/subdomain/final-{{Workspace}}.txt")
 
   - required:
-      - '{{.Output}}/subdomain/final-{{.Workspace}}.txt'
+      - '{{Output}}/subdomain/final-{{Workspace}}.txt'
     commands:
-      - 'cat {{.Output}}/subdomain/final-{{.Workspace}}.txt | head -n 20 | httprobe -c 100 | tee {{.Output}}/subdomain/http-{{.Workspace}}'
+      - 'cat {{Output}}/subdomain/final-{{Workspace}}.txt | head -n 20 | httprobe -c 100 | tee {{Output}}/subdomain/http-{{Workspace}}'
     scripts:
-      - Cleaning("{{.Output}}/subdomain/")
+      - Cleaning("{{Output}}/subdomain/")

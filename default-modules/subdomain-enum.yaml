@@ -1,0 +1,133 @@
+name: subdomain-enum
+desc: Running subdomain enumeration
+
+report:
+  final:
+    - "{{Output}}/subdomain/final-{{Workspace}}.txt"
+    - "{{Output}}/subdomain/more-{{Workspace}}.txt"
+
+# {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
+pre_run:
+  - CreateFolder("{{Output}}/subdomain/")
+  - CreateFolder("{{Output}}/probing/")
+
+params:
+  - subThreads: "{{threads * 10}}"
+  - amassTimeout: "2h"
+  - ghTimeout: "1h"
+  - amassConfig: "{{Data}}/configs/amass.ini"
+  # probing variables
+  - finalSubdomainFile: "{{Output}}/probing/final-{{Workspace}}.txt"
+  - permDomainFile: "{{Output}}/probing/permutation-{{Workspace}}.txt"
+  - customDnsWordlist: "{{Output}}/probing/customDnsWordlist-{{Workspace}}.txt"
+  - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
+  - bruteWordlist: "{{Data}}/wordlists/dns/all-dns.txt"
+  - resolvers: "{{Data}}/resolvers.txt"
+  - permLimit: "8000"
+  - enablePermutation: "true"
+  - dnsFile: "{{Output}}/probing/dns-{{Workspace}}.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
+  # - dnsThreads: "3000"
+  # - httpThreads: "200"
+  # - dnsxThreads: "300"
+  # - massdnsRateBrute: "8000"
+  - massdnsRateBrute: "{{ threads * 300}}"
+  - dnsThreads: "{{ threads * 50}}"
+  - httpThreads: "{{ threads * 12}}"
+  - dnsxThreads: "{{ threads * 15}}"
+
+steps:
+  - required:
+      - "{{Binaries}}/amass"
+      - "{{Binaries}}/subfinder"
+      - "{{Binaries}}/assetfinder"
+      - "{{Binaries}}/github-subdomains"
+      - "{{Binaries}}/findomain"
+    commands:
+      - "timeout -k 1m {{amassTimeout}} {{Binaries}}/amass enum -config {{amassConfig}} -d {{Target}} -o {{Output}}/subdomain/{{Workspace}}-amass.txt > /dev/null 2>&1"
+      - "timeout -k 1m {{ghTimeout}} {{Binaries}}/github-subdomains -d {{Target}} -q -o {{Output}}/subdomain/{{Workspace}}-github.txt > /dev/null 2>&1"
+      - "timeout -k 1m {{amassTimeout}} {{Binaries}}/ourl -subs -p -a {{Target}} > {{Output}}/subdomain/{{Workspace}}-ourl.txt"
+  - commands:
+      - "{{Binaries}}/assetfinder -subs-only {{Target}} > {{Output}}/subdomain/{{Workspace}}-assetfinder.txt"
+      - "{{Binaries}}/findomain -u {{Output}}/subdomain/{{Workspace}}-findomain.txt -t {{Target}} > /dev/null 2>&1"
+      - "{{Binaries}}/subfinder -d {{Target}} -t {{subThreads}} -o {{Output}}/subdomain/{{Workspace}}-subfinder.txt > /dev/null 2>&1"
+
+  # get data from cdn
+  - scripts:
+      - CleanAmass("{{Output}}/subdomain/amass-{{Workspace}}/amass.json", "{{Output}}/ipspace/{{Workspace}}-amass-range.txt")
+      - SortU("{{Output}}/subdomain/{{Workspace}}-github.txt")
+
+  # cleaning some result
+  - scripts:
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-amass.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-subfinder.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-assetfinder.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-findomain.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-github.txt")
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-ourl.txt")
+      # append with result in stogres too
+      - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Storages}}/summary/{{Workspace}}/subdomain-{{Workspace}}.txt")
+      # remove junk subdomain and 1-2-3.subdomain.com
+      - ExecCmd("cat {{Output}}/subdomain/sum-{{Workspace}}.txt | {{Binaries}}/cleansub -t '{{Target}}' > {{Output}}/subdomain/final-{{Workspace}}.txt")
+
+  # get more related domains
+  - required:
+      - "{{Binaries}}/metabigor"
+    commands:
+      - "echo '{{Org}}' | metabigor cert --json -o {{Output}}/subdomain/more-json-{{Workspace}}.txt > /dev/null 2>&1"
+    scripts:
+      - ExecCmd("cat {{Output}}/subdomain/more-json-{{Workspace}}.txt | jq -r '.Domain' | sed 's/\*.//g' | sort -u > {{Output}}/subdomain/more-{{Workspace}}.txt")
+  - scripts:
+      - Append("{{Storages}}/summary/{{Workspace}}/subdomain-{{Workspace}}.txt", "{{Output}}/subdomain/final-{{Workspace}}.txt")
+      - SortU("{{Storages}}/summary/{{Workspace}}/subdomain-{{Workspace}}.txt")
+      - SortU("{{Output}}/subdomain/final-{{Workspace}}.txt")
+
+  ###### Running subdomain resolving
+
+  # build the custom wordlists based on the subdomain file
+  - commands:
+      - "cat {{finalSubdomainFile}} | {{Binaries}}/str-replace -d '.' -n | sort -u >> {{customDnsWordlist}}"
+      - 'cat {{bruteWordlist}} >> {{customDnsWordlist}}'
+    scripts:
+      - "SortU('{{customDnsWordlist}}')"
+
+  # simple bruteforce with main domain
+  - required:
+      - "{{Binaries}}/puredns"
+      - "{{Binaries}}/massdns"
+    commands:
+      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests 50 -w {{Output}}/probing/subbrute-{{Workspace}}.txt --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
+    scripts:
+      - ExecCmd("cat {{Output}}/probing/subbrute-{{Workspace}}.txt >> {{finalSubdomainFile}}")
+      - SortU("{{finalSubdomainFile}}")
+
+  # generate simple permutation DNS when there is not too much domains
+  -  scripts:
+      - Printf("Generating permutation subdomains wordlists which might create a very big file")
+      # - ExecCmd("cat {{bruteWordlist}} | sed 's/$/.{{Target}}/' >> {{permDomainFile}}")
+      - ExecCmd("cat {{finalSubdomainFile}} | {{Binaries}}/str-replace -W {{permWordlists}} -tld {{Target}} >> {{permDomainFile}}")
+      - SortU('{{permDomainFile}}')
+
+  # actually resolving all the DNS
+  - required:
+      - "{{Binaries}}/puredns"
+      - "{{Binaries}}/massdns"
+    commands:
+      - "{{Binaries}}/puredns resolve {{permDomainFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 50 --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
+    scripts:
+      - "SortU('{{dnsFile}}')"
+
+  # probing for http
+  - required:
+      - "{{Binaries}}/httprobe"
+    commands:
+      - "cat {{permDomainFile}} {{finalSubdomainFile}} | sort -u | {{Binaries}}/httprobe -c {{httpThreads}} >> {{httpFile}}"
+      - "cat {{Output}}/probing/filtered-{{Workspace}}.txt >> {{httpFile}}"
+    scripts:
+      - "SortU('{{httpFile}}')"
+      - "ExecCmd('rm -rf {{permDomainFile}}')"
+
+
+post_run:
+  # delete all files in workspaces folder except a file lists in report section
+  - Cleaning("{{Output}}/subdomain/")

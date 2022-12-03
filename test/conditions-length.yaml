@@ -7,9 +7,9 @@ params:
 
 steps:
   - conditions:
-      - "FileLength('{{.inputFile}}') > {{.limit}}"
+      - "FileLength('{{inputFile}}') > {{limit}}"
     scripts:
-      - ErrPrintf("Filter", "got input file greater than {{.limit}} line")
+      - ErrPrintf("Filter", "got input file greater than {{limit}} line")
       - Exit(1)
   - commands:
       - echo 'run dirb scan'

@@ -6,12 +6,13 @@ usage: |
     osmedeus scan -f urls -t urls_file.txt
     osmedeus scan -f urls -t urls_file.txt -w custom_ws
     # Change the wordlists
-    osmedeus scan -f urls -t cidr_file.txt -p 'wordlists={{.Data}}/wordlists/content/normal.txt'
+    osmedeus scan -f urls -t cidr_file.txt -p 'wordlists={{Data}}/wordlists/content/normal.txt'
 
 routines:
   - modules:
       - probe
   - modules:
+      - spider
       - vulnscan
   - modules:
       - dirbscan

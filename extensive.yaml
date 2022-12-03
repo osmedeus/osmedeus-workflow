@@ -1,5 +1,5 @@
 name: extensive
-desc: run extensive routine with more in-depth module
+desc: Running extensive reconnaissance routine with in-depth module + bigger wordlists
 type: general
 validator: domain
 
@@ -12,6 +12,7 @@ routines:
   - flow: 'extensive'
     modules:
       - probing
+
   - modules:
       - screenshot
   - modules:
@@ -26,15 +27,10 @@ routines:
 
   - flow: 'extensive'
     modules:
-      - portscan
-
-  - flow: 'extensive'
-    modules:
       - dirbscan
 
   - modules:
       - portscan
-  - flow: 'extensive'
-    modules:
+  - modules:
       - port-fingerprint
       - pvulnscan # doing vulnscan + dirbscan on portscan result too

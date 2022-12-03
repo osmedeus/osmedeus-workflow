@@ -1,0 +1,74 @@
+name: brutefocing-subdomain
+desc: Running Subdomain Brutefocing on provided domain
+
+report:
+  final:
+    - "{{Output}}/probing/dns-{{Workspace}}.txt"
+    - "{{Output}}/probing/http-{{Workspace}}.txt"
+    - "{{Output}}/probing/new-dns-{{Workspace}}.txt"
+
+pre_run:
+  - CreateFolder("{{Output}}/probing")
+
+params:
+  - finalSubdomainFile: "{{Output}}/probing/final-{{Workspace}}.txt"
+  - permDomainFile: "{{Output}}/probing/permutation-{{Workspace}}.txt"
+  - customDnsWordlist: "{{Output}}/probing/customDnsWordlist-{{Workspace}}.txt"
+  - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
+  - bruteWordlist: "{{Data}}/wordlists/dns/all-dns.txt"
+  - resolvers: "{{Data}}/resolvers.txt"
+  - permLimit: "8000"
+  - enablePermutation: "true"
+  - dnsFile: "{{Output}}/probing/dns-{{Workspace}}.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
+  # - dnsThreads: "3000"
+  # - httpThreads: "200"
+  # - dnsxThreads: "300"
+  # - massdnsRateBrute: "8000"
+  - massdnsRateBrute: "{{ threads * 100}}"
+  - dnsThreads: "{{ threads * 50}}"
+  - httpThreads: "{{ threads * 12}}"
+  - dnsxThreads: "{{ threads * 15}}"
+
+steps:
+  # build the custom wordlists based on the subdomain file
+  - commands:
+      - "cat {{finalSubdomainFile}} | {{Binaries}}/str-replace -d '.' -n | sort -u >> {{customDnsWordlist}}"
+      - 'cat {{bruteWordlist}} >> {{customDnsWordlist}}'
+    scripts:
+      - "SortU('{{customDnsWordlist}}')"
+
+  # simple bruteforce with main domain
+  - required:
+      - "{{Binaries}}/puredns"
+      - "{{Binaries}}/massdns"
+    commands:
+      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests 50 -w {{Output}}/probing/subbrute-{{Workspace}}.txt --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
+    scripts:
+      - ExecCmd("cat {{Output}}/probing/subbrute-{{Workspace}}.txt >> {{finalSubdomainFile}}")
+      - SortU("{{finalSubdomainFile}}")
+
+  # generate simple permutation DNS when there is not too much domains
+  -  scripts:
+      - Printf("Generating permutation subdomains wordlists which might create a very big file")
+      - ExecCmd("cat {{bruteWordlist}} | sed 's/$/.{{Target}}/' >> {{permDomainFile}}")
+      - ExecCmd("cat {{finalSubdomainFile}} | {{Binaries}}/str-replace -W {{permWordlists}} -tld {{Target}} >> {{permDomainFile}}")
+      - SortU('{{permDomainFile}}')
+
+  # actually resolving all the DNS
+  - required:
+      - "{{Binaries}}/puredns"
+      - "{{Binaries}}/massdns"
+    commands:
+      - "{{Binaries}}/puredns resolve {{permDomainFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 50 --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
+    scripts:
+      - "SortU('{{dnsFile}}')"
+
+  # probing for http
+  - required:
+      - "{{Binaries}}/httprobe"
+    commands:
+      - "cat {{permDomainFile}} {{finalSubdomainFile}} | sort -u | {{Binaries}}/httprobe -c {{httpThreads}} >> {{httpFile}}"
+    scripts:
+      - "SortU('{{httpFile}}')"
+      - "ExecCmd('rm -rf {{permDomainFile}}')"

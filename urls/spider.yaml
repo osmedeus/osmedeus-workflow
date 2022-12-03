@@ -7,17 +7,24 @@ report:
     
 
 params:
-  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
+  - httpFile: "{{Output}}/probing/diffhttp-{{Workspace}}.txt"
   - linkFile: "{{Output}}/linkfinding/links-{{Workspace}}.txt"
   - spiderTimeout: "1h"
   - spiderThreads: "{{ threads * 2 }}"
   - spiderPrallel: "{{ threads }}"
   - crawlingTime: "30"
+  - skipSpidering: "false"
 
 pre_run:
   - CreateFolder("{{Output}}/linkfinding")
 
 steps:
+  - conditions:
+      - '"{{skipSpidering}}" == "true"'
+    scripts:
+      - ErrPrintf("Filter", "Skipping spidering")
+      - Exit(1)
+
   - required:
       - "{{Binaries}}/katana"
       - "{{httpFile}}"

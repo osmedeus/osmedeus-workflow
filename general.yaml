@@ -1,5 +1,5 @@
 name: general
-desc: run normal routine
+desc: Running default reconnaissance routine
 type: general
 validator: domain
 

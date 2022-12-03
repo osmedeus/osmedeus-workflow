@@ -3,33 +3,28 @@ desc: fingerprint HTTP technology and response
 
 report:
   final:
-    - "{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt"
-    - "{{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt"
-    - "{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt"
-    - "{{.Storages}}/http/{{.Workspace}}/overview-{{.Workspace}}.txt"
+    - "{{Output}}/fingerprint/{{Workspace}}-technologies.txt"
+    - "{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt"
+    - "{{Output}}/fingerprint/{{Workspace}}-http-overview.txt"
 
 params:
-  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
-  - finThreads: '6'
-  - overviewThreads: '100'
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
+  - overviewThreads: "{{ threads * 10}}"
 
 pre_run:
-  - CreateFolder("{{.Storages}}/http/{{.Workspace}}/")
-  - CreateFolder("{{.Output}}/fingerprint")
+  - CreateFolder("{{Output}}/fingerprint")
 
 steps:
   - required:
-      - "{{.Binaries}}/httpx"
-      - "{{.httpFile}}"
+      - "{{Binaries}}/httpx"
+      - "{{httpFile}}"
     commands:
-      - cat {{.httpFile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt
+      - cat {{httpFile}} | {{Binaries}}/httpx -t {{overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/fingerprint/{{Workspace}}-http-overview.txt
     scripts:
-      - CleanJSONHttpx('{{.Output}}/fingerprint/{{.Workspace}}-http-overview.txt', '{{.Output}}/fingerprint/{{.Workspace}}-raw-overview.txt')
-      - ExecCmd("cat {{.Output}}/fingerprint/{{.Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt")
-      - Cat('{{.Output}}/fingerprint/beautify-{{.Workspace}}-http.txt')
-
+      - CleanJSONHttpx('{{Output}}/fingerprint/{{Workspace}}-http-overview.txt', '{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
+      - ExecCmd("cat {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/fingerprint/beautify-{{Workspace}}-http.txt")
+      - Cat('{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt')
 
 post_run:
-  - Append("{{.Storages}}/summary/{{.Workspace}}/technologies-{{.Workspace}}.txt", "{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt")
-  - Sort("{{.Storages}}/summary/{{.Workspace}}/technologies-{{.Workspace}}.txt")
-  - TotalTech("{{.Output}}/fingerprint/{{.Workspace}}-technologies.txt")
+  - Sort("{{Storages}}/summary/{{Workspace}}/technologies-{{Workspace}}.txt")
+  - TotalTech("{{Output}}/fingerprint/{{Workspace}}-technologies.txt")

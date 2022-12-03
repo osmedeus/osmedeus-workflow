@@ -3,49 +3,47 @@ desc: Run Dirbscan
 
 report:
   final:
-    - "{{.Output}}/directory/beautify-{{.Workspace}}.txt"
-    - "{{.Output}}/directory/beautify-{{.Workspace}}.csv"
+    - "{{Output}}/directory/beautify-{{Workspace}}.txt"
+    - "{{Output}}/directory/beautify-{{Workspace}}.csv"
 
 params:
-  - httpFile: "{{.Output}}/probing/http-{{.Workspace}}.txt"
-  - wordlists: "{{.Data}}/wordlists/content/small.txt"
-  - lines: "20"
-  - ffThreads: '20' # threads for single site
-  - dirbThreads: '10'
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
+  - wordlists: "{{Data}}/wordlists/content/small.txt"
+  - ffThreads: '{{ threads * 2 }}' # threads for single site
+  - dirbThreads: '{{ threads }}'
   - dlimit: '50000'
   - recursion: '0'
-  - commitLength: '400'
   - chan: '#mics'
   - ffTimeout: '2h'
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
-  - CreateFolder("{{.Output}}/directory")
+  - CreateFolder("{{Output}}/directory")
 
 steps:
   # check if the size is too big, We don't want tons of garbage here
   - conditions:
-      - "FileLength('{{.httpFile}}') > {{.dlimit}}"
+      - "FileLength('{{httpFile}}') > {{dlimit}}"
     scripts:
-      - ErrPrintf("Filter", "Got input file greater than {{.dlimit}} line")
+      - ErrPrintf("Filter", "Got input file greater than {{dlimit}} line")
       - Exit(1)
 
   - required:
-      - "{{.Binaries}}/ffuf"
-      - "{{.httpFile}}"
-    source: "{{.httpFile}}"
-    threads: '{{.dirbThreads}}'
+      - "{{Binaries}}/ffuf"
+      - "{{httpFile}}"
+    source: "{{httpFile}}"
+    threads: '{{dirbThreads}}'
     commands:
-      - "{{.Binaries}}/ffuf -t {{.ffThreads}} -H '{{.defaultUA}}' -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{.Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{.wordlists}}:FUZZ >/dev/null 2>&1"
+      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -t {{ffThreads}} -H '{{defaultUA}}' -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{wordlists}}:FUZZ >/dev/null 2>&1"
 
   # clean up and generate beautify report
   - scripts:
-      - ExecCmd("awk '{print}' {{.Output}}/directory/raw-*.json > {{.Output}}/directory/summary-json-{{.Workspace}}.txt")
-      - CleanFFUFJson("{{.Output}}/directory/summary-json-{{.Workspace}}.txt", "{{.Output}}/directory/beautify-{{.Workspace}}.csv")
-      - ExecCmd("cat {{.Output}}/directory/beautify-{{.Workspace}}.csv | {{.Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/directory/beautify-{{.Workspace}}.txt")
-      - TeleMessByFile("#dirb", "{{.Output}}/directory/beautify-{{.Workspace}}.txt")
-      - Cat('{{.Output}}/directory/beautify-{{.Workspace}}.txt')
+      - ExecCmd("awk '{print}' {{Output}}/directory/raw-*.json > {{Output}}/directory/summary-json-{{Workspace}}.txt")
+      - CleanFFUFJson("{{Output}}/directory/summary-json-{{Workspace}}.txt", "{{Output}}/directory/beautify-{{Workspace}}.csv")
+      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
+      - TeleMessByFile("#dirb", "{{Output}}/directory/beautify-{{Workspace}}.txt")
+      - Cat('{{Output}}/directory/beautify-{{Workspace}}.txt')
 
 post_run:
-  - TotalDirb("{{.Output}}/directory/beautify-{{.Workspace}}.txt")
+  - TotalDirb("{{Output}}/directory/beautify-{{Workspace}}.txt")
 

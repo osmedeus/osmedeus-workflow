@@ -1,0 +1,55 @@
+name: http-probing
+desc: probing HTTP for the URLs first
+
+report:
+  final:
+    - "{{Output}}/probe/http-{{Workspace}}.txt"
+    - "{{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html"
+    - "{{Output}}/screenshot/goverview/report.html"
+    - "{{Output}}/probe/beautify-http-{{Workspace}}.txt"
+
+params:
+  - inputFile: "{{Target}}"
+  - httpFile: "{{Output}}/probe/http-{{Workspace}}.txt"
+  - enableSreenshot: "true"
+  - screenThreads: "{{ threads }}"
+  - httpThreads: "{{ threads * 12}}"
+  - httpTimeout: '10'
+pre_run:
+  - CreateFolder("{{Output}}/probe")
+  - CreateFolder("{{Output}}/screenshot")
+
+steps:
+  - required:
+      - "{{inputFile}}"
+    commands:
+      - "echo {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
+      - "cat {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
+    scripts:
+      - SortU("{{httpFile}}")
+
+  # do screenshot
+  # skip the screenshot by adding -p 'enableSreenshot=false'
+  - conditions:
+      - '{{enableSreenshot}} == true'
+    required:
+      - "{{Binaries}}/aquatone"
+      - "{{httpFile}}"
+    commands: 
+      - "cat {{httpFile}} | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/probe/{{Workspace}}-aquatone > /dev/null 2>&1"
+    scripts:
+      - ExecCmd("mv {{Output}}/probe/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html")
+      - ExecCmd("cat {{httpFile}} | {{Binaries}}/goverview screen -c {{threads}} --json -o {{Output}}/screenshot/ > /dev/null 2>&1")
+      - ExecCmd("{{Binaries}}/goverview report -o {{Output}}/screenshot/ --report report.html")
+
+  # do http overview
+  - required:
+      - "{{Binaries}}/httpx"
+      - "{{inputFile}}"
+    commands: 
+      - cat {{inputFile}} | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/probe/http-overview-{{Workspace}}.txt
+    # change html report name
+    scripts:
+      - CleanJSONHttpx('{{Output}}/probe/http-overview-{{Workspace}}.txt', '{{Output}}/probe/{{Workspace}}-technologies.txt')
+      - ExecCmd("cat {{Output}}/probe/{{Workspace}}-technologies.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/probe/beautify-http-{{Workspace}}.txt")
+      - Cat('{{Output}}/probe/beautify-http-{{Workspace}}.txt')

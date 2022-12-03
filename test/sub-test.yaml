@@ -3,11 +3,11 @@ desc: Scanning for subdomain
 
 report:
   final:
-    - "{{.Output}}/subdomain/final-{{.Workspace}}.txt"
+    - "{{Output}}/subdomain/final-{{Workspace}}.txt"
 
-# {{.Output}} == {{.Workspaces}} + {{.Workspace}} but strip "/" char
+# {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
 pre_run:
-  - CreateFolder("{{.Output}}/subdomain/")
+  - CreateFolder("{{Output}}/subdomain/")
   - StartNoti()
 
 params:
@@ -17,12 +17,12 @@ params:
 
 steps:
   - commands:
-      - "seq 1 500 | tee -a {{.Output}}/subdomain/final-{{.Workspace}}.txt >/dev/null 2>&1"
-      - "seq 1 1000 | tee -a {{.Output}}/subdomain/final-{{.Workspace}}.txt >/dev/null 2>&1"
+      - "seq 1 500 | tee -a {{Output}}/subdomain/final-{{Workspace}}.txt >/dev/null 2>&1"
+      - "seq 1 1000 | tee -a {{Output}}/subdomain/final-{{Workspace}}.txt >/dev/null 2>&1"
 
   - scripts:
       - Sleep(5)
 
   - scripts:
-      - "SortU('{{.Output}}/subdomain/final-{{.Workspace}}.txt')"
-      - "TotalSubdomain('{{.Output}}/subdomain/final-{{.Workspace}}.txt')"
+      - "SortU('{{Output}}/subdomain/final-{{Workspace}}.txt')"
+      - "TotalSubdomain('{{Output}}/subdomain/final-{{Workspace}}.txt')"

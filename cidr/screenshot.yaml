@@ -3,35 +3,32 @@ desc: screenshot on open HTTP port
 
 report:
   final:
-    - "{{.Output}}/portscan/{{.Workspace}}-aquatone/portscan-{{.Workspace}}.html"
-    - "{{.Output}}/portscan/beautify-http-{{.Workspace}}.txt"
-    - "{{.Output}}/portscan/goverview/report.html"
+    - "{{Output}}/portscan/{{Workspace}}-aquatone/portscan-{{Workspace}}.html"
+    - "{{Output}}/portscan/{{Workspace}}-http-overview.txt"
+    - "{{Output}}/portscan/goverview/report.html"
+    - "{{Output}}/portscan/beautify-http-{{Workspace}}.txt"
 
 # osmedeus scan -m /path/to/this/pws.yaml -t ip-ranges.txt
 params:
-  - httpFile: "{{.Output}}/portscan/http-running.txt"
-  - screenThreads: "8"
-  - overviewThreads: "5"
+  - httpFile: "{{Output}}/portscan/http-running.txt"
+  - screenThreads: "{{ threads * 2}}"
+  - overviewThreads: "{{ threads * 10}}"
 
 pre_run:
-  - CreateFolder("{{.Output}}/portscan")
+  - CreateFolder("{{Output}}/portscan")
 
 steps:
   # do screenshot
   - required:
-      - "{{.Binaries}}/aquatone"
-      - "{{.httpFile}}"
+      - "{{Binaries}}/aquatone"
+      - "{{httpFile}}"
     commands: 
-      - "cat {{.httpFile}} | {{.Binaries}}/aquatone -threads {{.screenThreads}} -out {{.Output}}/portscan/{{.Workspace}}-aquatone >/dev/null 2>&1"
-      - "cat {{.httpFile}} | {{.Binaries}}/httpx -t {{.overviewThreads}} -no-color -json -title -tech-detect -status-code -silent -favicon >> {{.Output}}/portscan/http-overview-{{.Workspace}}.txt"
+      - "cat {{httpFile}} | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/portscan/{{Workspace}}-aquatone > /dev/null 2>&1"
+    # change html report name
     scripts:
-      # change html report name
-      - ExecCmd("mv {{.Output}}/portscan/{{.Workspace}}-aquatone/aquatone_report.html {{.Output}}/portscan/{{.Workspace}}-aquatone/portscan-{{.Workspace}}.html")
-      - CleanJSONHttpx('{{.Output}}/portscan/http-overview-{{.Workspace}}.txt', '{{.Output}}/portscan/{{.Workspace}}-overview.txt')
-      - ExecCmd("cat {{.Output}}/portscan/{{.Workspace}}-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{.Output}}/portscan/beautify-http-{{.Workspace}}.txt")
-      - Cat('{{.Output}}/portscan/beautify-http-{{.Workspace}}.txt')
+      - ExecCmd("mv {{Output}}/portscan/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/portscan/{{Workspace}}-aquatone/portscan-{{Workspace}}.html")
 
   # do screenshot with goverview
   - scripts:
-      - ExecCmd("cat {{.Output}}/portscan/http-running.txt | {{.Binaries}}/goverview screen -c {{.screenThreads}} --json -o  {{.Output}}/portscan/goverview/")
-      - ExecCmd("{{.Binaries}}/goverview report -o  {{.Output}}/portscan/goverview/ --report report.html")
+      - ExecCmd("cat {{Output}}/portscan/http-running.txt | {{Binaries}}/goverview screen -c {{screenThreads}} --json -o {{Output}}/portscan/goverview/ > /dev/null 2>&1")
+      - ExecCmd("{{Binaries}}/goverview report -o  {{Output}}/portscan/goverview/ --report report.html")
