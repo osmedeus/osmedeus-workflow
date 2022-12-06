@@ -3,6 +3,7 @@ desc: portscan on 65k ports
 
 report:
   final:
+    - "{{Output}}/portscan/beautify-http-{{Workspace}}.txt"
     - "{{Output}}/portscan/open-ports.txt"
     - "{{Output}}/portscan/http-running.txt"
     - "{{Output}}/portscan/ssl-info.txt"
@@ -40,10 +41,10 @@ steps:
   - required:
       - "{{Output}}/portscan/open-ports.txt"
     commands:
-      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -tls-grab -json -tls-probe > {{Output}}/portscan/ssl-info-json.txt"
-      - "cat {{httpFile}} | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/portscan/http-overview-{{Workspace}}.txt"
+      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -tls-grab -json -tls-probe > {{Output}}/portscan/ssl-info.txt"
+      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/portscan/http-overview-{{Workspace}}.txt"
     scripts:
-      - ExecCmd("cat {{Output}}/portscan/ssl-info-json.txt | jq -r '.url'  | sort -u  > {{Output}}/portscan/http-running.txt")
+      - ExecCmd("cat {{Output}}/portscan/http-overview-{{Workspace}}.txt | jq -r '.url'  | sort -u  > {{Output}}/portscan/http-running.txt")
       - Copy('{{Output}}/portscan/http-running.txt', '{{Storages}}/ports/{{Workspace}}/httpport-{{Workspace}}.txt')
       - CleanJSONHttpx('{{Output}}/portscan/http-overview-{{Workspace}}.txt', '{{Output}}/portscan/{{Workspace}}-overview.txt')
       - ExecCmd("cat {{Output}}/portscan/{{Workspace}}-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/portscan/beautify-http-{{Workspace}}.txt")

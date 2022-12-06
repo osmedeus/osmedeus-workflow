@@ -105,4 +105,3 @@ steps:
       - ExecCmd("cat {{Output}}/vuln/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\"] | join(\" - \")' > {{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
       - TeleMessByFile("#sensitive", "{{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
       - Cat('{{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt')
-
