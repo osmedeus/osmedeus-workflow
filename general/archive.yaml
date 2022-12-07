@@ -1,6 +1,5 @@
 name: archive
 desc: Finding archive URLs
-mtimeout: '2h'
 
 report:
   final:
@@ -38,8 +37,7 @@ steps:
       - "SortU('{{Output}}/archive/{{Workspace}}-archive.txt')"
 
   # do get request to archive result
-  - timeout: "{{archiveTimeout}}"
-    required:
+  - required:
       - "{{Output}}/archive/{{Workspace}}-archive.txt"
     commands:
       - "cat {{Output}}/archive/{{Workspace}}-archive.txt | {{Binaries}}/wurl -t 50 > {{Output}}/archive/{{Workspace}}-alive-archive.txt"

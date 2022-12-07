@@ -40,7 +40,6 @@ steps:
   - required:
       - "{{ipFile}}"
       - "{{Binaries}}/cdnstrip"
-    timeout: '{{ipTimeout}}'
     commands:
       - "cat {{ipFile}} | timeout -k 1m {{ipTimeout}} {{Binaries}}/cdnstrip -cdn {{Output}}/ipspace/{{Workspace}}-cdn.txt -n {{Output}}/ipspace/{{Workspace}}-noncdn.txt"
 
