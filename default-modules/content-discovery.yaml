@@ -26,7 +26,7 @@ steps:
       - "{{Binaries}}/httpx"
     scripts:
       - Printf('==> Clean up the input first if it hasn't have the prefix http(s)://')
-      - ExecCmd('cat {{inputFile}} | httpx -silent -c {{httpThreads}} -nf -timeout {{httpTimeout}} | tee -a {{httpFile}} > /dev/null 2>&1')
+      - ExecCmd('cat {{inputFile}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} | tee -a {{httpFile}} > /dev/null 2>&1')
       - SortU('{{httpFile}}')
 
   - required:
