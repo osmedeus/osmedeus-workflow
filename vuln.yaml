@@ -1,5 +1,5 @@
 name: vuln
-desc: Running fast routine with vuln scan
+desc: Performing a rapid routine and conducting a vulnerability scan on it
 type: general
 validator: domain
 

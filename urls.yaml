@@ -1,5 +1,5 @@
 name: urls
-desc: Scan for List of URLs
+desc: Performing vulnerability scan and directory scan using the provided URLs
 type: urls
 
 usage: |

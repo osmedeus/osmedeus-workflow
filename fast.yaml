@@ -1,5 +1,5 @@
 name: fast
-desc: Running fast routine for summary data only
+desc: Performing a quick summary data analysis
 type: general
 validator: domain
 

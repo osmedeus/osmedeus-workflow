@@ -1,5 +1,5 @@
 name: domains
-desc: Running normal routine but without subdomain enumeration
+desc: Performing the default routine using the provided list of domains, but skipping subdomain enumeration
 type: general
 validator: domain-file # -t domains_file.txt
 
