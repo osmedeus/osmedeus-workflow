@@ -1,5 +1,5 @@
 name: vuln-and-dirb
-desc: desc: Performing vulnerability scan and directory scan using the provided Domains, URLs or IP Address
+desc: Performing vulnerability scan and directory scan using the provided Domains, URLs or IP Address
 type: general
 validator: domain-file
 
