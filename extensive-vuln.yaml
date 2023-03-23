@@ -1,0 +1,23 @@
+name: vuln
+desc: Conducting a rapid scan and with port scan then performing a vulnerability assessment on the system
+type: general
+validator: domain
+
+routines:
+  - modules:
+      - subdomain
+  - modules:
+      - probing
+  - modules:
+      - ssame
+      - sto
+  - modules:
+      - vulnscan
+  - modules:
+      - dirbscan
+
+  - modules:
+      - portscan
+  - modules:
+      - port-fingerprint
+      - pvulnscan # doing vulnscan + dirbscan on portscan result too

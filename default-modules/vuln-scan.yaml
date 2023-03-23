@@ -1,5 +1,5 @@
 name: vuln-scan
-desc: Run quick vulnerability scan with provided inputs
+desc: Performing quick vulnerability scan with provided inputs
 
 report:
   final:

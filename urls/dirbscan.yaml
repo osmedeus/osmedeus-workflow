@@ -29,12 +29,11 @@ steps:
     source: "{{httpFile}}"
     threads: '{{dirbThreads}}'
     commands:
-      - "{{Binaries}}/ffuf -H '{{defaultUA}}' -t {{ffThreads}} -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{wordlists}}:FUZZ >/dev/null 2>&1"
-
-  # clean up and generate beautify report
+      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -H '{{defaultUA}}' -se -D -fc '429,404,400' -e 'asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt' -json -w {{wordlists}}:FUZZ -u [[.line]]/FUZZ > {{Output}}/directory/raw-[[._id_]].json"
   - scripts:
-      - ExecCmd("awk '{print}' {{Output}}/directory/raw-*.json > {{Output}}/directory/summary-json-{{Workspace}}.txt")
-      - CleanFFUFJson("{{Output}}/directory/summary-json-{{Workspace}}.txt", "{{Output}}/directory/beautify-{{Workspace}}.csv")
-      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/directory/raw-*.json | jq -r '[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.hash,.redirectlocation] | join(\",\")' > {{Output}}/directory/beautify-{{Workspace}}.csv")
+      - ExecCmd("rm -rf {{Output}}/directory/raw-*.json")
+      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv |  {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
+      - ExecCmd("cat {{Storages}}/paths/{{Workspace}}/paths-{{Workspace}}.csv | {{Binaries}}/csvtk uniq -f 4 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Storages}}/paths/{{Workspace}}/beautify-{{Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{Output}}/directory/beautify-{{Workspace}}.txt")
-      - Cat('{{Output}}/directory/beautify-{{Workspace}}.txt')
+      - Cat("{{Output}}/directory/beautify-{{Workspace}}.txt")
