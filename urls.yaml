@@ -10,7 +10,7 @@ usage: |
 
 routines:
   - modules:
-      - probe
+      - http-probing
   - modules:
       - spider
       - vulnscan
