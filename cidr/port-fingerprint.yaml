@@ -15,7 +15,7 @@ pre_run:
 
 steps:
   - conditions:
-      - '"{{skipPortFingerprint}}" != "true"'
+      - '"{{skipPortFingerprint}}" == "true"'
     scripts:
       - ErrPrintf("Filter", "Skipping port fingerprint")
       - Exit(1)
