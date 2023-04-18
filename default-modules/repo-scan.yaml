@@ -3,14 +3,15 @@ desc: Performing static vulnerability scan and secret scan on a git repo
 
 report:
   final:
-    - "{{Output}}/secret/gitleaks-output.txt"
-    - "{{Output}}/secret/trufflehog-output.txt"
-    - "{{Output}}/sast/semgrep-output.txt"
+    - "{{Output}}/secret/gitleaks-{{workspace}}.txt"
+    - "{{Output}}/secret/trufflehog-{{workspace}}.txt"
+    - "{{Output}}/sast/semgrep-{{workspace}}.txt"
 
 params:
   - repoFolder: "{{Output}}/source-repo"
   - semgrepThreads: "{{ threads * 5}}"
   - trufflehogThreads: "{{ threads * 5}}"
+  - gitDepth: "1000"
 
 pre_run:
   - CreateFolder("{{Output}}/sast")
@@ -21,14 +22,14 @@ steps:
   - commands:
     - "rm -rf {{repoFolder}}"
   - commands:
-    - "git clone {{Target}} {{repoFolder}}"
+    - "git clone --depth={{gitDepth}} {{Target}} {{repoFolder}}"
 
   # doing secret scan
   - commands:
-      - "gitleaks detect -v -s {{repoFolder}} > {{Output}}/secret/gitleaks-output.txt 2>&1"
+      - "gitleaks detect -v -s {{repoFolder}} > {{Output}}/secret/gitleaks-{{workspace}}.txt 2>&1"
   - commands:
-      - "trufflehog --concurrency={{trufflehogThreads}} filesystem {{repoFolder}} > {{Output}}/secret/trufflehog-output.txt 2>&1"
+      - "trufflehog --concurrency={{trufflehogThreads}} filesystem {{repoFolder}} > {{Output}}/secret/trufflehog-{{workspace}}.txt 2>&1"
 
   # doing static scan
   - commands:
-      - "semgrep scan -j {{semgrepThreads}} -q -o {{Output}}/sast/semgrep-output.txt --config auto {{repoFolder}}"
+      - "semgrep scan -j {{semgrepThreads}} -q --config auto {{repoFolder}} > {{Output}}/sast/semgrep-{{workspace}}.txt 2>&1"
