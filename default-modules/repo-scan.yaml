@@ -25,9 +25,9 @@ steps:
 
   # doing secret scan
   - commands:
-      - "gitleaks detect -s {{repoFolder}} -r {{Output}}/secret/gitleaks-output.txt"
+      - "gitleaks detect -v -s {{repoFolder}} > {{Output}}/secret/gitleaks-output.txt 2>&1"
   - commands:
-      - "trufflehog --concurrency={{trufflehogThreads}} --json filesystem {{repoFolder}} | tee {{Output}}/secret/trufflehog-output.txt"
+      - "trufflehog --concurrency={{trufflehogThreads}} filesystem {{repoFolder}} > {{Output}}/secret/trufflehog-output.txt 2>&1"
 
   # doing static scan
   - commands:
