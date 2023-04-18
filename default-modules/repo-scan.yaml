@@ -1,0 +1,34 @@
+name: repo-scan
+desc: Performing static vulnerability scan and secret scan on a git repo
+
+report:
+  final:
+    - "{{Output}}/secret/gitleaks-output.txt"
+    - "{{Output}}/secret/trufflehog-output.txt"
+    - "{{Output}}/sast/semgrep-output.txt"
+
+params:
+  - repoFolder: "{{Output}}/source-repo"
+  - semgrepThreads: "{{ threads * 5}}"
+  - trufflehogThreads: "{{ threads * 5}}"
+
+pre_run:
+  - CreateFolder("{{Output}}/sast")
+  - CreateFolder("{{Output}}/secret")
+
+steps:
+  # cleaning the folder first
+  - commands:
+    - "rm -rf {{repoFolder}}"
+  - commands:
+    - "git clone {{Target}} {{repoFolder}}"
+
+  # doing secret scan
+  - commands:
+      - "gitleaks detect -s {{repoFolder}} -r {{Output}}/secret/gitleaks-output.txt"
+  - commands:
+      - "trufflehog --concurrency={{trufflehogThreads}} --json filesystem {{repoFolder}} | tee {{Output}}/secret/trufflehog-output.txt"
+
+  # doing static scan
+  - commands:
+      - "semgrep scan -j {{semgrepThreads}} -q -o {{Output}}/sast/semgrep-output.txt --config auto {{repoFolder}}"
