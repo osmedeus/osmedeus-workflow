@@ -24,6 +24,13 @@ steps:
   - commands:
     - "git clone --depth={{gitDepth}} {{Target}} {{repoFolder}}"
 
+  # check if the target is a folder then copy it to repoFolder
+  - conditions:
+      - "FolderLength('{{Target}}') > 0"
+    scripts:
+      - "ExecCmd('rm -rf {{repoFolder}}')"
+      - "ExecCmd('cp -r {{Target}} {{repoFolder}}')"
+
   # doing secret scan
   - commands:
       - "gitleaks detect -v -s {{repoFolder}} > {{Output}}/secret/gitleaks-{{Workspace}}.txt 2>&1"
