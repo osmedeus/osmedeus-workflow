@@ -19,9 +19,7 @@ pre_run:
   - CreateFolder("{{Output}}/fingerprint")
 
 steps:
-  - required:
-      - "{{inputFile}}"
-    commands:
+  - commands:
       - "echo {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
       - "cat {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
     scripts:

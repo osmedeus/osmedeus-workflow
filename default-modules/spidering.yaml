@@ -29,9 +29,7 @@ pre_run:
   - CreateFolder("{{Output}}/probing")
 
 steps:
-  - required:
-      - "{{inputFile}}"
-    commands:
+  - commands:
       - "echo {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
       - "cat {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
     scripts:
@@ -49,7 +47,7 @@ steps:
       - "{{Binaries}}/katana"
       - "{{httpFile}}"
     commands:
-      - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless -depth {{spiderDepth}} -c {{spiderThreadHeadless}} -jc -ct {{crawlingTime}}  >> {{linkFile}}"
+      - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless -depth {{spiderDepth}} -c {{spiderThreadHeadless}} -jc -ct {{crawlingTime}} >> {{linkFile}}"
     scripts:
       - SortU("{{linkFile}}")
 

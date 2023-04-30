@@ -20,9 +20,7 @@ pre_run:
   - CreateFolder("{{Output}}/screenshot")
 
 steps:
-  - required:
-      - "{{inputFile}}"
-    commands:
+  - commands:
       - "echo {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
       - "cat {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
     scripts:
