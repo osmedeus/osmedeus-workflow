@@ -1,5 +1,5 @@
-name: spider
-desc: Crawling links in http site
+name: spidering
+desc: Crawling links in http site + scanning for secrets with trufflehog
 
 report:
   final:
@@ -7,14 +7,18 @@ report:
     - "{{Output}}/linkfinding/trufflehog-{{Workspace}}-output.txt"
 
 params:
-  - httpFile: "{{Output}}/probing/diffhttp-{{Workspace}}.txt"
+  - inputFile: "{{Target}}"
+  - httpFile: "{{Output}}/fingerprint/http-{{Workspace}}.txt"
+  - httpThreads: '{{ threads * 15 }}'
+  - httpTimeout: '15'
   - linkFile: "{{Output}}/linkfinding/links-{{Workspace}}.txt"
   - httpResponse: "{{Output}}/http-response/"
   - spiderTimeout: "2h"
   - spiderThreads: "{{ threads * 2 }}"
+  - spiderThreadHeadless: "{{ threads }}"
   - spiderPrallel: "{{ threads }}"
   - spiderDepth: "3"
-  - crawlingTime: "1000"
+  - crawlingTime: "30"
   - skipSpidering: "false"
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
   - trufflehogThreads: "{{ threads * 8}}"
@@ -22,30 +26,32 @@ params:
 
 pre_run:
   - CreateFolder("{{Output}}/linkfinding")
+  - CreateFolder("{{Output}}/probing")
 
 steps:
-  - conditions:
-      - '"{{skipSpidering}}" == "true"'
+  - required:
+      - "{{inputFile}}"
+    commands:
+      - "echo {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
+      - "cat {{inputFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -silent -t {{httpThreads}} >> {{httpFile}}"
     scripts:
-      - ErrPrintf("Filter", "Skipping spidering")
-      - Exit(1)
+      - SortU("{{httpFile}}")
+
+  - required:
+      - "{{Binaries}}/katana"
+      - "{{httpFile}}"
+    source: "{{httpFile}}"
+    threads: '{{spiderPrallel}}'
+    commands:
+      - "timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[.line]] | sort -u  >> {{linkFile}}"
 
   - required:
       - "{{Binaries}}/katana"
       - "{{httpFile}}"
     commands:
-      - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}} -nc | tee {{linkFile}}"
+      - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless -depth {{spiderDepth}} -c {{spiderThreadHeadless}} -jc -ct {{crawlingTime}}  >> {{linkFile}}"
     scripts:
       - SortU("{{linkFile}}")
-
-  # crawling again with katana without headless
-  - required:
-    - "{{Binaries}}/katana"
-    - "{{httpFile}}"
-  commands:
-    - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct 30  >> {{linkFile}}"
-  scripts:
-    - SortU("{{linkFile}}")
 
   - label: "Getting raw response & scanning for secrets with trufflehog"
     scripts:
