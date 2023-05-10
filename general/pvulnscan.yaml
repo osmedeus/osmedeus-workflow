@@ -55,7 +55,7 @@ steps:
       - "{{Binaries}}/nuclei"
     scripts:
       - "CreateFolder('{{Output}}/vportscan/vuln/nuclei')"
-      - "ExecCmd(\"timeout -k 1m {{nucleiTimeout}} {{Binaries}}/nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -json -severity '{{nucleiSeverity}}' -t ~/nuclei-templates/ -l {{inputFile}} -irr -o {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt\")"
+      - "ExecCmd(\"timeout -k 1m {{nucleiTimeout}} {{Binaries}}/nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t ~/nuclei-templates/ -l {{inputFile}} -irr -o {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt\")"
     pconditions:
       - "FileLength('{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt') > 0"
     pscripts:
