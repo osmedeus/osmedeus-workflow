@@ -14,8 +14,8 @@ params:
   - dlimit: '50000'
   - recursion: '0'
   - chan: '#mics'
-  - ffThreads: '{{ threads * 2 }}' # threads for single site
-  - dirbThreads: '{{ threads }}'
+  - ffThreads: '{{ threads }}' # threads for single site
+  - dirbThreads: '{{ threads / 3 }}'
   - ffTimeout: "2h"
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 

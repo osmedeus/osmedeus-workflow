@@ -9,8 +9,8 @@ report:
 
 params:
   - repoFolder: "{{Output}}/source-repo"
-  - semgrepThreads: "{{ threads * 5}}"
-  - trufflehogThreads: "{{ threads * 5}}"
+  - semgrepThreads: "{{ threads * 3}}"
+  - trufflehogThreads: "{{ threads * 3}}"
   - gitDepth: "1000"
 
 pre_run:

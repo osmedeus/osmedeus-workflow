@@ -10,8 +10,8 @@ report:
 params:
   - inputFile: "{{Target}}"
   - httpFile: "{{Output}}/fingerprint/http-{{Workspace}}.txt"
-  - httpThreads: '{{ threads * 15 }}'
-  - screenThreads: '{{ threads }}'
+  - httpThreads: '{{ threads * 8 }}'
+  - screenThreads: '{{ threads / 2 }}'
   - enableSreenshot: 'false'
   - httpTimeout: '10'
 

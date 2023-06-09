@@ -13,8 +13,8 @@ params:
   - recursion: '0'
   - chan: '#mics'
   - lines: "30"
-  - ffThreads: '{{ threads * 2 }}' # threads for single site
-  - dirbThreads: '{{ threads }}'
+  - ffThreads: '{{ threads }}' # threads for single site
+  - dirbThreads: '{{ threads / 3 }}'
   - ffTimeout: "2h"
 
 pre_run:

@@ -9,7 +9,7 @@ report:
 
 params:
   - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
-  - overviewThreads: "{{ threads * 10}}"
+  - overviewThreads: "{{ threads * 5 }}"
 
 pre_run:
   - CreateFolder("{{Output}}/fingerprint")

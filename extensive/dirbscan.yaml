@@ -9,8 +9,8 @@ report:
 params:
   - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - wordlists: "{{Data}}/wordlists/content/medium.txt"
-  - ffThreads: '{{ threads * 2 }}' # threads for single site
-  - dirbThreads: '{{ threads }}'
+  - ffThreads: '{{ threads }}' # threads for single site
+  - dirbThreads: '{{ threads / 3 }}'
   - dlimit: '80000'
   - recursion: '0'
   - chan: '#mics'

@@ -24,10 +24,10 @@ params:
   - dnsJsonFile: "{{Output}}/probing/dns-json-{{Workspace}}.txt"
   - dnsFile: "{{Output}}/probing/dns-{{Workspace}}.txt"
   - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
-  - massdnsRateBrute: "{{ threads * 300}}"
-  - dnsThreads: "{{ threads * 50}}"
-  - httpThreads: "{{ threads * 12}}"
-  - dnsxThreads: "{{ threads * 15}}"
+  - massdnsRateBrute: "{{ threads * 50 }}"
+  - dnsThreads: "{{ threads * 25 }}"
+  - httpThreads: "{{ threads * 8 }}"
+  - dnsxThreads: "{{ threads * 8 }}"
 
 steps:
   # check if we already scan before

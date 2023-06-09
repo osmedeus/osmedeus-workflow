@@ -12,8 +12,8 @@ report:
 
 params:
   - inputFile: "{{Output}}/portscan/{{Workspace}}-http.txt"
-  - ffThreads: '{{ threads * 2 }}' # threads for single site
-  - dirbThreads: '{{ threads }}'
+  - ffThreads: '{{ threads }}' # threads for single site
+  - dirbThreads: '{{ threads / 3 }}'
   - wordlists: "{{Data}}/wordlists/content/small.txt"
   - sign: "~/.jaeles/base-signatures/cves/.*"
   - sign2: "~/.jaeles/base-signatures/common/.*"
@@ -21,8 +21,8 @@ params:
   - recursion: '0'
   - chan: '#mics'
   - nuclei: 'true'
-  - nucleiThreads: '{{ threads * 20 }}'
-  - jaelesThreads: '{{ threads * 10 }}'
+  - nucleiThreads: '{{ threads * 10 }}'
+  - jaelesThreads: '{{ threads * 5 }}'
   - nucleiTimeout: "8h"
   - jaelesTimeout: "8h"
   - ffTimeout: "2h"

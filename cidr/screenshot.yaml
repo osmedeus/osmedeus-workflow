@@ -11,8 +11,8 @@ report:
 # osmedeus scan -m /path/to/this/pws.yaml -t ip-ranges.txt
 params:
   - httpFile: "{{Output}}/portscan/http-running.txt"
-  - screenThreads: "{{ threads * 2}}"
-  - overviewThreads: "{{ threads * 10}}"
+  - screenThreads: "{{ threads }}"
+  - overviewThreads: "{{ threads * 5}}"
 
 pre_run:
   - CreateFolder("{{Output}}/portscan")

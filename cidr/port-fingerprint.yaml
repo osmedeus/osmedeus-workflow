@@ -6,7 +6,7 @@ report:
     - "{{Output}}/portscan/nmap-raw-{{Workspace}}.txt"
     - "{{Output}}/portscan/detail-open-ports.txt"
 params:
-  - nmapThreads: "{{ threads * 7}}"
+  - nmapThreads: "{{ threads * 3}}"
   - skipPortFingerprint: "false"
 
 pre_run:

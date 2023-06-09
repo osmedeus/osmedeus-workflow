@@ -12,7 +12,7 @@ pre_run:
 
 params:
   - amassTimeout: "3h"
-  - subfinderThreads: "{{threads * 5}}"
+  - subfinderThreads: "{{threads * 3}}"
 
 steps:
   - required:

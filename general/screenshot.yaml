@@ -8,7 +8,7 @@ report:
 
 params:
   - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
-  - screenThreads: "{{ threads * 2}}"
+  - screenThreads: "{{ threads }}"
   - limit: "20000"
 
 # {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char

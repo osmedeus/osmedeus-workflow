@@ -11,7 +11,7 @@ params:
   - domainFile: "{{Output}}/subdomain/final-{{Workspace}}.txt"
   - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - dnsFile: "{{Output}}/probing/dns-{{Workspace}}.txt"
-  - stoThreads: '{{threads * 10}}'
+  - stoThreads: '{{threads * 8}}'
 
 pre_run:
   - CreateFolder("{{Output}}/sto")

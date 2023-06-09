@@ -13,7 +13,7 @@ pre_run:
   - CreateFolder("{{Output}}/subdomain/")
 
 params:
-  - subfinderThreads: "{{threads * 12}}"
+  - subfinderThreads: "{{threads * 6}}"
   - amassTimeout: "6h"
   - amassConfig: "{{Data}}/configs/amass-extensive.ini"
 

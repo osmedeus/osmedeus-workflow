@@ -11,11 +11,10 @@ params:
   - wordlists: "{{Data}}/wordlists/content/medium.txt"
   - ffThreads: '30' # threads for single site
   - threads: '10'
-  - dirbThreads: '15'
   - recursion: '0'
   - chan: '#mics'
-  - lines: "30"
-  - threads: '50'
+  - ffThreads: '{{ threads }}' # threads for single site
+  - dirbThreads: '{{ threads / 3 }}'
   - ffTimeout: '2h'
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 

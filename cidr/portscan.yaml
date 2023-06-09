@@ -11,8 +11,8 @@ report:
 params:
   - inputFile: "{{Target}}"
   - ports: "0-65535"
-  - rateRustScan: "{{ threads * 1000}}"
-  - httpThreads: "{{ threads * 12}}"
+  - rateRustScan: "{{ threads * 400 }}"
+  - httpThreads: "{{ threads * 8 }}"
   - skipPortscan: "false"
   - httpTimeout: "10"
 

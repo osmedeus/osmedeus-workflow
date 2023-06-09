@@ -24,8 +24,8 @@ params:
   # in case we want to add -p 'dest=xx.burpcollab.net' or something
   - extra: " "
   - httpTimeout: "10"
-  - nucleiThreads: "{{ threads * 20 }}"
-  - jaelesThreads: "{{ threads * 10 }}"
+  - nucleiThreads: "{{ threads * 10 }}"
+  - jaelesThreads: "{{ threads * 5 }}"
   - httpThreads: "{{ threads * 10 }}"
   - nuclei: "true"
   - nucleiTimeout: "8h"

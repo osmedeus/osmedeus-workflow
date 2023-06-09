@@ -10,9 +10,9 @@ params:
   - inputFile: "{{Target}}"
   - httpFile: "{{Output}}/directory/http-file.txt"
   - wordlists: "{{Data}}/wordlists/content/medium.txt"
-  - ffThreads: '{{ threads * 2 }}' # threads for single site
-  - httpThreads: '{{ threads * 10 }}'
-  - dirbThreads: '{{ threads }}'
+  - ffThreads: '{{ threads }}' # threads for single site
+  - httpThreads: '{{ threads * 8 }}'
+  - dirbThreads: '{{ threads / 3 }}'
   - recursion: '0'
   - httpTimeout: '10'
   - recursion: '0'

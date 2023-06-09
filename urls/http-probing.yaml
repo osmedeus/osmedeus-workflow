@@ -12,8 +12,8 @@ params:
   - inputFile: "{{Target}}"
   - httpFile: "{{Output}}/probe/http-{{Workspace}}.txt"
   - enableSreenshot: "true"
-  - screenThreads: "{{ threads }}"
-  - httpThreads: "{{ threads * 12}}"
+  - screenThreads: "{{ threads / 2 }}"
+  - httpThreads: "{{ threads * 8}}"
   - httpTimeout: '10'
 pre_run:
   - CreateFolder("{{Output}}/probe")

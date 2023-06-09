@@ -31,10 +31,10 @@ params:
   # - httpThreads: "200"
   # - dnsxThreads: "300"
   # - massdnsRateBrute: "8000"
-  - massdnsRateBrute: "{{ threads * 300}}"
-  - dnsThreads: "{{ threads * 50}}"
-  - httpThreads: "{{ threads * 12}}"
-  - dnsxThreads: "{{ threads * 15}}"
+  - massdnsRateBrute: "{{ threads * 50 }}"
+  - dnsThreads: "{{ threads * 25 }}"
+  - httpThreads: "{{ threads * 8 }}"
+  - dnsxThreads: "{{ threads * 8 }}"
 
 steps:
   - required:

@@ -11,13 +11,13 @@ params:
   - linkFile: "{{Output}}/linkfinding/links-{{Workspace}}.txt"
   - httpResponse: "{{Output}}/http-response/"
   - spiderTimeout: "2h"
-  - spiderThreads: "{{ threads * 2 }}"
-  - spiderPrallel: "{{ threads }}"
+  - spiderThreads: "{{ threads }}"
+  - spiderPrallel: "{{ threads / 2 }}"
   - spiderDepth: "3"
   - crawlingTime: "30"
   - skipSpidering: "false"
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
-  - trufflehogThreads: "{{ threads * 8}}"
+  - trufflehogThreads: "{{ threads * 6}}"
   - httpThreads: "{{ threads * 10}}"
 
 pre_run:
