@@ -51,3 +51,6 @@ steps:
       - CleanJSONHttpx('{{Output}}/probe/http-overview-{{Workspace}}.txt', '{{Output}}/probe/{{Workspace}}-technologies.txt')
       - ExecCmd("cat {{Output}}/probe/{{Workspace}}-technologies.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/probe/beautify-http-{{Workspace}}.txt")
       - Cat('{{Output}}/probe/beautify-http-{{Workspace}}.txt')
+
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/urls-template.md", "{{Output}}/summary.html")

@@ -36,3 +36,6 @@ steps:
       - ExecCmd("cat {{Storages}}/paths/{{Workspace}}/paths-{{Workspace}}.csv | {{Binaries}}/csvtk uniq -f 4 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Storages}}/paths/{{Workspace}}/beautify-{{Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{Output}}/directory/beautify-{{Workspace}}.txt")
       - Cat("{{Output}}/directory/beautify-{{Workspace}}.txt")
+
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/urls-template.md", "{{Output}}/summary.html")

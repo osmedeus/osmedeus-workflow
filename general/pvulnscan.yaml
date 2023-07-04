@@ -49,7 +49,7 @@ steps:
   # nuclei scan
   - label: 'Run nuclei scan'
     conditions:
-      - '"{{nuclei}}" == "true"'
+      - '"{{enableNuclei}}" == "true"'
     required:
       - "{{inputFile}}"
       - "{{Binaries}}/nuclei"
@@ -61,7 +61,7 @@ steps:
     pscripts:
       - GenNucleiReport('{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt', '{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei.html')
       # noti to telegram if anything found
-      - ExecCmd("cat {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\"] | join(\" - \")' > {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
+      - ExecCmd("cat {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\",.\"matched-name\"] | join(\" - \")' > {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
       - TeleMessByFile("#sensitive", "{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
       - Cat("{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
 

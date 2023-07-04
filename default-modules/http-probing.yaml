@@ -48,3 +48,6 @@ steps:
       - ExecCmd("mv {{Output}}/probe/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html")
       - ExecCmd("cat {{httpFile}} | {{Binaries}}/goverview screen -c {{threads}} --json -o {{Output}}/screenshot/ > /dev/null 2>&1")
       - ExecCmd("{{Binaries}}/goverview report -o {{Output}}/screenshot/ --report report.html")
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
+

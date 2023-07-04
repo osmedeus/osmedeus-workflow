@@ -43,3 +43,7 @@ steps:
       - CleanJSONHttpx('{{Output}}/portscan/{{Workspace}}-http-overview.txt', '{{Output}}/portscan/{{Workspace}}-raw-overview.txt')
       - ExecCmd("cat {{Output}}/portscan/{{Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/portscan/beautify-{{Workspace}}-http.txt")
       - Cat('{{Output}}/portscan/beautify-{{Workspace}}-http.txt')
+
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
+

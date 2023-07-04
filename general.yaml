@@ -3,6 +3,11 @@ desc: Running default reconnaissance routine
 type: general
 validator: domain
 
+usage: |
+    osmedeus scan -f general -t target.com
+    osmedeus scan -f general -x spidering -t example.com
+    osmedeus scan -f general -t example.com -p 'enableDnsBruteFocing=true'
+
 routines:
   - modules:
       - subdomain
@@ -24,4 +29,6 @@ routines:
       - dirbscan
   - modules:
       - portscan
+  - modules:
+      - summary
 

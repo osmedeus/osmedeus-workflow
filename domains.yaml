@@ -3,6 +3,10 @@ desc: Performing the default routine using the provided list of domains, but ski
 type: general
 validator: domain-file # -t domains_file.txt
 
+usage: |
+    osmedeus scan -f domains -t domains_file.txt
+    osmedeus scan -f domains -t domains_file.txt -w custom_ws
+
 routines:
   - flow: 'custom' # override the type: general to look for module in folder custom/skip-subdomain.yaml
     modules:
@@ -23,6 +27,5 @@ routines:
       - vulnscan
   - modules:
       - dirbscan
-
   - modules:
       - portscan

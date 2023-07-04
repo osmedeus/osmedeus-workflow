@@ -48,4 +48,4 @@ steps:
 
 post_run:
   - TotalDirb("{{Output}}/directory/beautify-{{Workspace}}.txt")
-  - PushFolder("{{Storages}}/paths/")
+  - GenMarkdownReport("{{Data}}/markdown/general-template.md", "{{Output}}/summary.html")

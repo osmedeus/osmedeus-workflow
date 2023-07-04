@@ -22,7 +22,7 @@ params:
   - limit: "25000"
   # in case we want to add -p 'dest=xx.burpcollab.net' or something
   - extra: " "
-  - nuclei: "true"
+  - enableNuclei: "true"
   - nucleiThreads: '{{ threads * 10 }}'
   - jaelesThreads: '{{ threads * 5 }}'
   - nucleiTimeout: "8h"
@@ -90,7 +90,7 @@ steps:
   # nuclei scan
   - label: 'Run nuclei scan'
     conditions:
-      - '"{{nuclei}}" == "true"'
+      - '"{{enableNuclei}}" == "true"'
     required:
       - "{{httpFile}}"
       - "{{Binaries}}/nuclei"
@@ -102,7 +102,9 @@ steps:
     pscripts:
       - GenNucleiReport('{{Output}}/vuln/nuclei/{{Workspace}}-nuclei-json.txt', '{{Output}}/vuln/nuclei/{{Workspace}}-nuclei.html')
       # noti to telegram if anything found
-      - ExecCmd("cat {{Output}}/vuln/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\"] | join(\" - \")' > {{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
+      - ExecCmd("cat {{Output}}/vuln/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\",.\"matched-name\"] | join(\" - \")' > {{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
       - TeleMessByFile("#sensitive", "{{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
       - Cat('{{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt')
 
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/cidr-template.md", "{{Output}}/summary.html")

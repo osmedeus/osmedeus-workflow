@@ -131,3 +131,5 @@ steps:
 post_run:
   # delete all files in workspaces folder except a file lists in report section
   - Cleaning("{{Output}}/subdomain/")
+  - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
+

@@ -49,3 +49,6 @@ steps:
       - "cat {{Output}}/portscan/{{Workspace}}-http.txt | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/portscan/{{Workspace}}-screenshot >/dev/null 2>&1"
     scripts:
       - ExecCmd("mv {{Output}}/portscan/{{Workspace}}-screenshot/aquatone_report.html {{Output}}/portscan/{{Workspace}}-screenshot/screenshot-{{Workspace}}.html")
+
+post_run:
+  - GenMarkdownReport("{{Data}}/markdown/general-template.md", "{{Output}}/summary.html")

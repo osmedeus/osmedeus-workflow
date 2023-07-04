@@ -72,3 +72,7 @@ steps:
     scripts:
       - "SortU('{{httpFile}}')"
       - "ExecCmd('rm -rf {{permDomainFile}}')"
+
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
+

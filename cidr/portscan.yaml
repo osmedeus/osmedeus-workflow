@@ -54,3 +54,6 @@ steps:
   - scripts:
       - Copy("{{Output}}/portscan/open-ports.txt", "{{Storages}}/ports/{{Workspace}}/portscan-{{Workspace}}.txt")
       - Copy("{{Output}}/portscan/http-running.txt", "{{Storages}}/ports/{{Workspace}}/http-port-{{Workspace}}.txt")
+
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/cidr-template.md", "{{Output}}/summary.html")

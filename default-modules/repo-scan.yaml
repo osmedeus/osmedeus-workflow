@@ -40,3 +40,6 @@ steps:
   # doing static scan
   - commands:
       - "semgrep scan -j {{semgrepThreads}} -q --config auto {{repoFolder}} > {{Output}}/sast/semgrep-{{Workspace}}.txt 2>&1"
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
+

@@ -3,6 +3,9 @@ desc: Performing vulnerability scan and directory scan using the provided Domain
 type: general
 validator: domain-file
 
+usage: |
+    osmedeus scan -f vuln-and-dirb -t list-of-domains-file.txt
+
 routines:
   - flow: 'custom' # override the type: general to look for module in folder custom/skip-subdomain.yaml
     modules:

@@ -62,3 +62,6 @@ steps:
       - "FileLength('{{linkFile}}') < 10000"
     scripts:
       - Cat("{{linkFile}}")
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
+

@@ -2,11 +2,11 @@ name: urls
 desc: Performing vulnerability scan and directory scan using the provided URLs
 type: urls
 
+
 usage: |
-    osmedeus scan -f urls -t urls_file.txt
-    osmedeus scan -f urls -t urls_file.txt -w custom_ws
-    # Change the wordlists
-    osmedeus scan -f urls -t cidr_file.txt -p 'wordlists={{Data}}/wordlists/content/normal.txt'
+    osmedeus scan -f urls -t list-of-urls.txt
+    osmedeus scan -f urls -t list-of-domains.txt -p 'skipSpidering=true'
+    osmedeus scan -f urls -t list-of-IPs.txt -w custom-workspace
 
 routines:
   - modules:

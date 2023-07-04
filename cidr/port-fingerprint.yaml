@@ -33,3 +33,6 @@ steps:
   # do some push
   - scripts:
       - Copy("{{Output}}/portscan/{{Workspace}}-detail.txt", "{{Storages}}/ports/{{Workspace}}/{{Workspace}}-detail.txt")
+
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/cidr-template.md", "{{Output}}/summary.html")

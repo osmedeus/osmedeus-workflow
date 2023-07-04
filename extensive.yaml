@@ -34,3 +34,5 @@ routines:
   - modules:
       - port-fingerprint
       - pvulnscan # doing vulnscan + dirbscan on portscan result too
+  - modules:
+      - summary

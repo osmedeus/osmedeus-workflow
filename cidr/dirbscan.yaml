@@ -37,3 +37,5 @@ steps:
       - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{Output}}/directory/beautify-{{Workspace}}.txt")
       - Cat('{{Output}}/directory/beautify-{{Workspace}}.txt')
+  - scripts:
+      - GenMarkdownReport("{{Data}}/markdown/cidr-template.md", "{{Output}}/summary.html")
