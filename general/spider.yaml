@@ -7,7 +7,7 @@ report:
     - "{{Output}}/linkfinding/trufflehog-{{Workspace}}-output.txt"
 
 params:
-  - httpFile: "{{Output}}/probing/diffhttp-{{Workspace}}.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - linkFile: "{{Output}}/linkfinding/links-{{Workspace}}.txt"
   - httpResponse: "{{Output}}/http-response/"
   - spiderTimeout: "2h"
