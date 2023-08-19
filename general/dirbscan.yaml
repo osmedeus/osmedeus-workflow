@@ -4,7 +4,6 @@ desc: Run directory scan based on http output
 report:
   final:
     - "{{Output}}/directory/beautify-{{Workspace}}.txt"
-    - "{{Output}}/directory/unique-beautify-{{Workspace}}.txt"
     - "{{Storages}}/paths/{{Workspace}}/paths-{{Workspace}}.txt"
     - "{{Storages}}/paths/{{Workspace}}/beautify-{{Workspace}}.csv"
 
@@ -45,6 +44,7 @@ steps:
       - ExecCmd("cat {{Storages}}/paths/{{Workspace}}/paths-{{Workspace}}.csv | {{Binaries}}/csvtk uniq -f 4 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Storages}}/paths/{{Workspace}}/beautify-{{Workspace}}.txt")
       - TeleMessByFile("#dirb", "{{Output}}/directory/beautify-{{Workspace}}.txt")
       - Cat("{{Output}}/directory/beautify-{{Workspace}}.txt")
+      - ExecCmd("cp {{Output}}/directory/beautify-{{Workspace}}.txt {{Output}}/directory/unique-beautify-{{Workspace}}.txt")
 
 post_run:
   - TotalDirb("{{Output}}/directory/beautify-{{Workspace}}.txt")
