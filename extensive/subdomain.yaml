@@ -5,6 +5,7 @@ report:
   final:
     - "{{Output}}/subdomain/final-{{Workspace}}.txt"
     - "{{Output}}/subdomain/more-{{Workspace}}.txt"
+    - "{{Output}}/subdomain/{{Workspace}}-raw-amass.txt"
 
 # {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
 pre_run:
@@ -15,7 +16,7 @@ pre_run:
 params:
   - subfinderThreads: "{{threads * 6}}"
   - amassTimeout: "6h"
-  - amassConfig: "{{Data}}/configs/amass-extensive.ini"
+  - amassConfig: "{{Data}}/amass-config/extensive-config.yaml"
 
 steps:
   - required:
@@ -33,6 +34,7 @@ steps:
 
   # cleaning some result
   - scripts:
+      - ExecCmd("cat {{Output}}/subdomain/{{Workspace}}-raw-amass.txt | grep 'FQDN' | awk '{print $1}' | sort -u | {{Output}}/subdomain/{{Workspace}}-amass.txt")
       - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-amass.txt")
       - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-subfinder.txt")
       - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-assetfinder.txt")
