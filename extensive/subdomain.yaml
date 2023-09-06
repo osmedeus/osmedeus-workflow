@@ -34,7 +34,7 @@ steps:
 
   # cleaning some result
   - scripts:
-      - ExecCmd("cat {{Output}}/subdomain/{{Workspace}}-raw-amass.txt | grep 'FQDN' | awk '{print $1}' | sort -u | {{Output}}/subdomain/{{Workspace}}-amass.txt")
+      - ExecCmd("cat {{Output}}/subdomain/{{Workspace}}-raw-amass.txt | grep 'FQDN' | awk '{print $1}' | sort -u > {{Output}}/subdomain/{{Workspace}}-amass.txt")
       - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-amass.txt")
       - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-subfinder.txt")
       - Append("{{Output}}/subdomain/sum-{{Workspace}}.txt", "{{Output}}/subdomain/{{Workspace}}-assetfinder.txt")
