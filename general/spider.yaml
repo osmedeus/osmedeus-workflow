@@ -42,7 +42,7 @@ steps:
   #     - "{{Binaries}}/katana"
   #     - "{{httpFile}}"
   #   commands:
-  #     - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}}  >> {{linkFile}}"
+  #     - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless --no-sandbox -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}}  >> {{linkFile}}"
   #   scripts:
   #     - SortU("{{linkFile}}")
 
