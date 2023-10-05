@@ -22,7 +22,7 @@ params:
   - customDnsWordlist: "{{Output}}/probing/customDnsWordlist-{{Workspace}}.txt"
   - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
   - bruteWordlist: "{{Data}}/wordlists/dns/all-dns.txt"
-  - resolvers: "{{Data}}/resolvers.txt"
+  - resolvers: "{{Data}}/mics/resolvers.txt"
   - permLimit: "8000"
   - enablePermutation: "true"
   - dnsFile: "{{Output}}/probing/dns-{{Workspace}}.txt"

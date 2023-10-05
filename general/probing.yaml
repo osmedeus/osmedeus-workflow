@@ -18,7 +18,7 @@ params:
   - customDnsWordlist: "{{Output}}/probing/customDnsWordlist-{{Workspace}}.txt"
   - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
   - bruteWordlist: "{{Data}}/wordlists/dns/all-dns.txt"
-  - resolvers: "{{Data}}/resolvers.txt"
+  - resolvers: "{{Data}}/mics/resolvers.txt"
   - permLimit: "8000"
   - enablePermutation: "true"
   - enableDnsBruteFocing: "false"
@@ -83,6 +83,15 @@ steps:
       - "{{Binaries}}/puredns resolve {{rawDnsFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 50 --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
     scripts:
       - "SortU('{{dnsFile}}')"
+
+  # in case we have no DNS result
+  - conditions:
+      - "FileLength('{{dnsFile}}') < 1"
+    commands:
+      - "cat {{rawDnsFile}} | {{Binaries}}/dnsx -silent -a -cname -resp-only -json -r {{resolvers}} -t {{httpThreads}} > {{Output}}/probing/raw-dnsx-{{Workspace}}.txt"
+    scripts:
+      - "CleanJSONDnsx('raw-dnsx-{{Workspace}}.txt', '{{dnsFile}}')"
+
 
   # probing for http
   - required:
