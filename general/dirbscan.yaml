@@ -15,7 +15,7 @@ params:
   - chan: '#mics'
   - ffThreads: '{{ threads }}' # threads for single site
   - dirbThreads: '{{ threads / 3 }}'
-  - ffTimeout: "2h"
+  - ffTimeout: "1h"
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
@@ -36,7 +36,7 @@ steps:
     source: "{{httpFile}}"
     threads: '{{dirbThreads}}'
     commands:
-      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -H '{{defaultUA}}' -se -D -fc '429,404,400' -e 'asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt' -json -w {{wordlists}}:FUZZ -u [[.line]]/FUZZ > {{Output}}/directory/raw-[[._id_]].json"
+      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 12 -H '{{defaultUA}}' -se -D -fc '429,404,400' -e 'asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt' -json -w {{wordlists}}:FUZZ -u [[.line]]/FUZZ > {{Output}}/directory/raw-[[._id_]].json"
   - scripts:
       - ExecCmd("cat {{Output}}/directory/raw-*.json | jq -r '[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.hash,.redirectlocation] | join(\",\")' > {{Output}}/directory/beautify-{{Workspace}}.csv")
       - ExecCmd("rm -rf {{Output}}/directory/raw-*.json")

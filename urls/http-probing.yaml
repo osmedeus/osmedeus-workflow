@@ -15,14 +15,16 @@ params:
   - screenThreads: "{{ threads / 2 }}"
   - httpThreads: "{{ threads * 8}}"
   - httpTimeout: '10'
+  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
+
 pre_run:
   - CreateFolder("{{Output}}/probe")
   - CreateFolder("{{Output}}/screenshot")
 
 steps:
   - commands:
-      - "echo {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
-      - "cat {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
+      - "echo {{inputFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
+      - "cat {{inputFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
     scripts:
       - SortU("{{httpFile}}")
 
@@ -45,7 +47,7 @@ steps:
       - "{{Binaries}}/httpx"
       - "{{inputFile}}"
     commands: 
-      - cat {{inputFile}} | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/probe/http-overview-{{Workspace}}.txt
+      - cat {{inputFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/probe/http-overview-{{Workspace}}.txt
     # change html report name
     scripts:
       - CleanJSONHttpx('{{Output}}/probe/http-overview-{{Workspace}}.txt', '{{Output}}/probe/{{Workspace}}-technologies.txt')

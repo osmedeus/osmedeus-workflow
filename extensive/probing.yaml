@@ -30,6 +30,7 @@ params:
   - dnsThreads: "{{ threads * 25 }}"
   - httpThreads: "{{ threads * 8 }}"
   - dnsxThreads: "{{ threads * 8 }}"
+  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 steps:
   # check if we already scan before
@@ -97,7 +98,7 @@ steps:
   - required:
       - "{{Binaries}}/httprobe"
     commands:
-      - "cat {{rawDnsFile}} {{finalSubdomainFile}} | sort -u | {{Binaries}}/httprobe -c {{httpThreads}} >> {{httpFile}}"
+      - "cat {{rawDnsFile}} {{finalSubdomainFile}} | sort -u | {{Binaries}}/httpx -H '{{defaultUA}}' -silent -t {{httpThreads}} >> {{httpFile}}"
       - "cat {{Output}}/probing/filtered-{{Workspace}}.txt >> {{httpFile}}"
     scripts:
       - "SortU('{{httpFile}}')"
