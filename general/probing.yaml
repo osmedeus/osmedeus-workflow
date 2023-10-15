@@ -20,6 +20,7 @@ params:
   - bruteWordlist: "{{Data}}/wordlists/dns/all-dns.txt"
   - resolvers: "{{Data}}/mics/resolvers.txt"
   - permLimit: "8000"
+  - wildcardLimit: "100000" # if the httpFile is too big, we need to filter it as it might be a wildcard domains
   - enablePermutation: "true"
   - enableDnsBruteFocing: "false"
   - dnsJsonFile: "{{Output}}/probing/dns-json-{{Workspace}}.txt"
@@ -102,7 +103,15 @@ steps:
       - "cat {{Output}}/probing/filtered-{{Workspace}}.txt >> {{httpFile}}"
     scripts:
       - "SortU('{{httpFile}}')"
-      - "ExecCmd('rm -rf {{rawDnsFile}} {{customDnsWordlist}}')"
+      - "ExecCmd('rm -rf {{rawDnsFile}} {{customDnsWordlist}} {{permDomainFile}}')"
+
+  # if the httpFile is too big, we need to filter it as it might be a wildcard domains
+  - conditions:
+      - "FileLength('{{httpFile}}') > {{wildcardLimit}}"
+    scripts:
+      - Printf('HTTP File {{httpFile}} is too big and excess the limit {{wildcardLimit}}. Filtering it...')
+      - ExecCmd("rm -rf {{httpFile}}")
+      - ExecCmd("cat {{dnsFile}} | grep '{{Target}}' | awk '{print $1}' | sed 's/\.$//g' | sort -u | {{Binaries}}/httprobe -c {{httpThreads}} >> {{httpFile}}")
 
   # get IP Address for later modules
   - required:
