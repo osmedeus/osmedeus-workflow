@@ -21,7 +21,7 @@ params:
   - resolvers: "{{Data}}/mics/resolvers.txt"
   - permLimit: "8000"
   - wildcardLimit: "100000" # if the httpFile is too big, we need to filter it as it might be a wildcard domains
-  - enablePermutation: "true"
+  - enablePermutation: "false"
   - enableDnsBruteFocing: "false"
   - dnsJsonFile: "{{Output}}/probing/dns-json-{{Workspace}}.txt"
   - dnsFile: "{{Output}}/probing/dns-{{Workspace}}.txt"
