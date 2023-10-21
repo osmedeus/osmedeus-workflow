@@ -109,7 +109,7 @@ steps:
   - conditions:
       - "FileLength('{{httpFile}}') > {{wildcardLimit}}"
     scripts:
-      - Printf('HTTP File {{httpFile}} is too big and excess the limit {{wildcardLimit}}. Filtering it...')
+      - Warnf('HTTP File {{httpFile}} is too big and excess the limit {{wildcardLimit}}. Filtering it...')
       - ExecCmd("rm -rf {{httpFile}}")
       - ExecCmd("cat {{dnsFile}} | grep '{{Target}}' | awk '{print $1}' | sed 's/\.$//g' | sort -u | {{Binaries}}/httprobe -c {{httpThreads}} >> {{httpFile}}")
 
