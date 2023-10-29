@@ -17,7 +17,7 @@ params:
   - rawDnsFile: "{{Output}}/probing/raw-{{Workspace}}.txt"
   - customDnsWordlist: "{{Output}}/probing/customDnsWordlist-{{Workspace}}.txt"
   - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
-  - bruteWordlist: "{{Data}}/wordlists/dns/all-dns.txt"
+  - bruteWordlist: "{{Data}}/wordlists/dns/small.txt"
   - resolvers: "{{Data}}/mics/resolvers.txt"
   - permLimit: "8000"
   - wildcardLimit: "100000" # if the httpFile is too big, we need to filter it as it might be a wildcard domains

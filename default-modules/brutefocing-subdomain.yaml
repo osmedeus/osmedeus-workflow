@@ -15,7 +15,7 @@ params:
   - permDomainFile: "{{Output}}/probing/permutation-{{Workspace}}.txt"
   - customDnsWordlist: "{{Output}}/probing/customDnsWordlist-{{Workspace}}.txt"
   - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
-  - bruteWordlist: "{{Data}}/wordlists/dns/all-dns.txt"
+  - bruteWordlist: "{{Data}}/wordlists/dns/medium.txt"
   - resolvers: "{{Data}}/mics/resolvers.txt"
   - permLimit: "8000"
   - enablePermutation: "true"
