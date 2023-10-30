@@ -8,7 +8,6 @@ report:
     - "{{Output}}/probing/new-dns-{{Workspace}}.txt"
 
 pre_run:
-  - CreateFolder("{{Storages}}/summary/{{Workspace}}/")
   - CreateFolder("{{Output}}/probing")
   - CreateFolder("{{Output}}/ipspace")
 
@@ -20,10 +19,11 @@ params:
   - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
   - bruteWordlist: "{{Data}}/wordlists/dns/medium.txt"
   - resolvers: "{{Data}}/mics/resolvers.txt"
+  - trustedResolvers: "{{Data}}/mics/trusted-resolvers.txt"
   - permLimit: "8000"
-  - wildcardLimit: "20000" # if the httpFile is too big, we need to filter it as it might be a wildcard domains
-  - enablePermutation: "true"
-  - enableDnsBruteFocing: "true"
+  - wildcardLimit: "100000" # if the httpFile is too big, we need to filter it as it might be a wildcard domains
+  - enablePermutation: "false"
+  - enableDnsBruteFocing: "false"
   - dnsJsonFile: "{{Output}}/probing/dns-json-{{Workspace}}.txt"
   - dnsFile: "{{Output}}/probing/dns-{{Workspace}}.txt"
   - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
@@ -59,7 +59,7 @@ steps:
       - "{{Binaries}}/puredns"
       - "{{Binaries}}/massdns"
     commands:
-      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests 50 -w {{Output}}/probing/subbrute-{{Workspace}}.txt --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
+      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests 10 -w {{Output}}/probing/subbrute-{{Workspace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
     scripts:
       - ExecCmd("cat {{Output}}/probing/subbrute-{{Workspace}}.txt >> {{finalSubdomainFile}}")
       - SortU("{{finalSubdomainFile}}")
@@ -71,7 +71,7 @@ steps:
       - '"{{enableDnsBruteFocing}}" == "true"'
     scripts:
       - Printf("Generating permutation subdomains wordlists which might create a very big file")
-      - ExecCmd("cat {{finalSubdomainFile}} | {{Binaries}}/alterx -silent -enrich >> {{permDomainFile}}")
+      - ExecCmd("cat {{finalSubdomainFile}} | {{Binaries}}/alterx -silent >> {{permDomainFile}}")
       - SortU('{{permDomainFile}}')
   ##### end of DNS Brute Forcing
 
@@ -83,7 +83,7 @@ steps:
       - "{{Binaries}}/massdns"
       - "{{rawDnsFile}}"
     commands:
-      - "{{Binaries}}/puredns resolve {{rawDnsFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 50 --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
+      - "{{Binaries}}/puredns resolve {{rawDnsFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 10 --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
     scripts:
       - "SortU('{{dnsFile}}')"
 
@@ -94,6 +94,7 @@ steps:
       - "cat {{rawDnsFile}} | {{Binaries}}/dnsx -silent -a -cname -resp-only -json -r {{resolvers}} -t {{httpThreads}} > {{Output}}/probing/raw-dnsx-{{Workspace}}.txt"
     scripts:
       - "CleanJSONDnsx('raw-dnsx-{{Workspace}}.txt', '{{dnsFile}}')"
+
 
   # probing for http
   - required:
@@ -136,21 +137,6 @@ steps:
       - ExecCmd("cat {{httpFile}} | anew {{Output}}/probing/bak-http-{{Workspace}}.txt > {{Output}}/probing/new-http-{{Workspace}}.txt")
       - SortU("{{Output}}/probing/new-http-{{Workspace}}.txt")
       - "Printf('New HTTP detected: {{Output}}/probing/new-http-{{Workspace}}.txt')"
-
-  ### for git storage only 
-  # join with old result
-  - required:
-      - "{{httpFile}}"
-    commands:
-      - "cat {{httpFile}} >> {{Storages}}/summary/{{Workspace}}/http-{{Workspace}}.txt"
-      - "cat {{dnsFile}} >> {{Storages}}/summary/{{Workspace}}/dns-{{Workspace}}.txt"
-    scripts:
-      - ExecCmd("cat {{Storages}}/summary/{{Workspace}}/http-{{Workspace}}.txt >> {{httpFile}}")
-      - ExecCmd("cat {{Storages}}/summary/{{Workspace}}/dns-{{Workspace}}.txt >> {{dnsFile}}")
-      - SortU("{{Storages}}/summary/{{Workspace}}/http-{{Workspace}}.txt")
-      - SortU("{{Storages}}/summary/{{Workspace}}/dns-{{Workspace}}.txt")
-      - SortU("{{dnsFile}}")
-      - SortU("{{httpFile}}")
 
   - required:
       - "{{httpFile}}"

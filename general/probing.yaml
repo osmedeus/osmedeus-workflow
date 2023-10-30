@@ -19,6 +19,7 @@ params:
   - permWordlists: "{{Data}}/wordlists/dns/altdns.txt"
   - bruteWordlist: "{{Data}}/wordlists/dns/small.txt"
   - resolvers: "{{Data}}/mics/resolvers.txt"
+  - trustedResolvers: "{{Data}}/mics/trusted-resolvers.txt"
   - permLimit: "8000"
   - wildcardLimit: "100000" # if the httpFile is too big, we need to filter it as it might be a wildcard domains
   - enablePermutation: "false"
@@ -58,7 +59,7 @@ steps:
       - "{{Binaries}}/puredns"
       - "{{Binaries}}/massdns"
     commands:
-      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests 50 -w {{Output}}/probing/subbrute-{{Workspace}}.txt --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
+      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests 10 -w {{Output}}/probing/subbrute-{{Workspace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
     scripts:
       - ExecCmd("cat {{Output}}/probing/subbrute-{{Workspace}}.txt >> {{finalSubdomainFile}}")
       - SortU("{{finalSubdomainFile}}")
@@ -82,7 +83,7 @@ steps:
       - "{{Binaries}}/massdns"
       - "{{rawDnsFile}}"
     commands:
-      - "{{Binaries}}/puredns resolve {{rawDnsFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 50 --rate-limit {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
+      - "{{Binaries}}/puredns resolve {{rawDnsFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 10 --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
     scripts:
       - "SortU('{{dnsFile}}')"
 
