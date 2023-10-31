@@ -31,6 +31,7 @@ params:
   - dnsThreads: "{{ threads * 25 }}"
   - httpThreads: "{{ threads * 8 }}"
   - dnsxThreads: "{{ threads * 8 }}"
+  - wildcardTests: "{{ threads * 3 }}"
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 steps:
@@ -59,7 +60,7 @@ steps:
       - "{{Binaries}}/puredns"
       - "{{Binaries}}/massdns"
     commands:
-      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests 10 -w {{Output}}/probing/subbrute-{{Workspace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
+      - '{{Binaries}}/puredns bruteforce {{customDnsWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests {{wildcardTests}} -w {{Output}}/probing/subbrute-{{Workspace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} --bin {{Binaries}}/massdns'
     scripts:
       - ExecCmd("cat {{Output}}/probing/subbrute-{{Workspace}}.txt >> {{finalSubdomainFile}}")
       - SortU("{{finalSubdomainFile}}")
@@ -83,7 +84,7 @@ steps:
       - "{{Binaries}}/massdns"
       - "{{rawDnsFile}}"
     commands:
-      - "{{Binaries}}/puredns resolve {{rawDnsFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests 10 --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
+      - "{{Binaries}}/puredns resolve {{rawDnsFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{Workspace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{Workspace}}.txt --wildcard-tests {{wildcardTests}} --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} --bin {{Binaries}}/massdns"
     scripts:
       - "SortU('{{dnsFile}}')"
 

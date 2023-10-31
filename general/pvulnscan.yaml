@@ -4,11 +4,11 @@ desc: Run VulnSan & Dirbscan on Portscan result
 report:
   final:
     - "{{Output}}/pdirectory/beautify-{{Workspace}}.txt"
-    - "{{Output}}/vportscan/vuln/jaeles-report.html"
-    - "{{Output}}/vportscan/vuln/jaeles-summary.txt"
+    - "{{Output}}/vportscan/jaeles-report.html"
+    - "{{Output}}/vportscan/jaeles-summary.txt"
     - "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei.html"
-    - "{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt"
-    - "{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei.html"
+    - "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt"
+    - "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei.html"
 
 params:
   - inputFile: "{{Output}}/portscan/{{Workspace}}-http.txt"
@@ -39,12 +39,12 @@ steps:
       - "{{Binaries}}/jaeles"
       - "{{inputFile}}"
     commands:
-      - "timeout -k 1m {{jaelesTimeout}} {{Binaries}}/jaeles scan -c {{jaelesThreads}} -s '{{sign}}' -s '{{sign2}}' -U {{inputFile}} -o {{Output}}/vportscan/vuln/ {{extra}}"
+      - "timeout -k 1m {{jaelesTimeout}} {{Binaries}}/jaeles scan -c {{jaelesThreads}} -s '{{sign}}' -s '{{sign2}}' -U {{inputFile}} -o {{Output}}/vportscan/ {{extra}}"
     pconditions:
-      - "FileLength('{{Output}}/vportscan/vuln/jaeles-summary.txt') > 0"
+      - "FileLength('{{Output}}/vportscan/jaeles-summary.txt') > 0"
     scripts:
-      - TeleMessByFile("#report", "{{Output}}/vportscan/vuln/jaeles-summary.txt")
-      - Cat("{{Output}}/vportscan/vuln/jaeles-summary.txt")
+      - TeleMessByFile("#report", "{{Output}}/vportscan/jaeles-summary.txt")
+      - Cat("{{Output}}/vportscan/jaeles-summary.txt")
 
   # nuclei scan
   - label: 'Run nuclei scan'
@@ -54,17 +54,16 @@ steps:
       - "{{inputFile}}"
       - "{{Binaries}}/nuclei"
     scripts:
-      - "CreateFolder('{{Output}}/vportscan/vuln/nuclei')"
-      - "ExecCmd(\"timeout -k 1m {{nucleiTimeout}} {{Binaries}}/nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t ~/nuclei-templates/ -l {{inputFile}} -irr -o {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt\")"
+      - "CreateFolder('{{Output}}/vportscan/nuclei')"
+      - "ExecCmd(\"timeout -k 1m {{nucleiTimeout}} {{Binaries}}/nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t ~/nuclei-templates/ -l {{inputFile}} -irr -o {{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt\")"
     pconditions:
-      - "FileLength('{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt') > 0"
+      - "FileLength('{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt') > 0"
     pscripts:
-      - GenNucleiReport('{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt', '{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei.html')
+      - GenNucleiReport('{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt', '{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei.html')
       # noti to telegram if anything found
-      - ExecCmd("cat {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\",.\"matched-name\"] | join(\" - \")' > {{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
-      - TeleMessByFile("#sensitive", "{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
-      - Cat("{{Output}}/vportscan/vuln/nuclei/{{Workspace}}-nuclei-scan.txt")
-
+      - ExecCmd("cat {{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\",.\"matched-name\"] | join(\" - \")' > {{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-scan.txt")
+      - TeleMessByFile("#sensitive", "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-scan.txt")
+      - Cat("{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-scan.txt")
 
   - required:
       - "{{Binaries}}/ffuf"
