@@ -49,7 +49,7 @@ steps:
       - "{{Binaries}}/metabigor"
     # assume you run 'osmedeus scan -t example.com' then {{Org}} == 'example'
     commands:
-      - "echo '{{Org}}' | {{Binaries}}/metabigor cert --json -o {{Output}}/subdomain/more-json-{{Workspace}}.txt"
+      - "echo '{{Org}}' | {{Binaries}}/metabigor cert --json -o {{Output}}/subdomain/more-json-{{Workspace}}.txt > /dev/null 2>&1"
     scripts:
       - ExecCmd("cat {{Output}}/subdomain/more-json-{{Workspace}}.txt | jq -r '.Domain' | sed 's/\*.//g' | sort -u > {{Output}}/subdomain/more-{{Workspace}}.txt")
 

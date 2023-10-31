@@ -27,6 +27,6 @@ steps:
       - Cat('{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt')
 
 post_run:
-  - Sort("{{Storages}}/summary/{{Workspace}}/technologies-{{Workspace}}.txt")
+  - SortU("{{Storages}}/summary/{{Workspace}}/technologies-{{Workspace}}.txt")
   - TotalTech("{{Output}}/fingerprint/{{Workspace}}-technologies.txt")
   - GenMarkdownReport("{{Data}}/markdown/general-template.md", "{{Output}}/summary.html")
