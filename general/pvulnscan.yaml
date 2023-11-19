@@ -7,7 +7,7 @@ report:
     - "{{Output}}/vportscan/jaeles-report.html"
     - "{{Output}}/vportscan/jaeles-summary.txt"
     - "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei.html"
-    - "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt"
+    - "{{Output}}/vportscan/nuclei/{{Workspace}}-port-nuclei-json.txt"
     - "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei.html"
 
 params:
@@ -55,15 +55,15 @@ steps:
       - "{{Binaries}}/nuclei"
     scripts:
       - "CreateFolder('{{Output}}/vportscan/nuclei')"
-      - "ExecCmd(\"timeout -k 1m {{nucleiTimeout}} {{Binaries}}/nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t ~/nuclei-templates/ -l {{inputFile}} -irr -o {{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt\")"
+      - "ExecCmd(\"timeout -k 1m {{nucleiTimeout}} {{Binaries}}/nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t ~/nuclei-templates/ -l {{inputFile}} -irr -o {{Output}}/vportscan/nuclei/{{Workspace}}-port-nuclei-json.txt\")"
     pconditions:
-      - "FileLength('{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt') > 0"
+      - "FileLength('{{Output}}/vportscan/nuclei/{{Workspace}}-port-nuclei-json.txt') > 0"
     pscripts:
-      - GenNucleiReport('{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt', '{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei.html')
+      - GenNucleiReport('{{Output}}/vportscan/nuclei/{{Workspace}}-port-nuclei-json.txt', '{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei.html')
       # noti to telegram if anything found
-      - ExecCmd("cat {{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\",.\"matched-name\"] | join(\" - \")' > {{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-scan.txt")
-      - TeleMessByFile("#sensitive", "{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-scan.txt")
-      - Cat("{{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-scan.txt")
+      - ExecCmd("cat {{Output}}/vportscan/nuclei/{{Workspace}}-port-nuclei-json.txt | jq -r '[.info.severity,.\"template-id\",.\"matched-at\",.\"matched-name\"] | join(\" - \")' > {{Output}}/vportscan/nuclei/{{Workspace}}-nuclei-scan.txt")
+      - TeleMessByFile("#sensitive", "{{Output}}/vportscan/nuclei/{{Workspace}}-port-nuclei-scan.txt")
+      - Cat("{{Output}}/vportscan/nuclei/{{Workspace}}-port-nuclei-scan.txt")
 
   - required:
       - "{{Binaries}}/ffuf"
@@ -71,7 +71,7 @@ steps:
     source: "{{inputFile}}"
     threads: '{{dirbThreads}}'
     commands:
-      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -t {{ffThreads}} -H '{{defaultUA}}' -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{Output}}/pdirectory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{wordlists}}:FUZZ >/dev/null 2>&1"
+      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -t {{ffThreads}} -H '{{defaultUA}}' -s -timeout 8 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{Output}}/pdirectory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{wordlists}}:FUZZ >/dev/null 2>&1"
 
   # clean up and generate beautify report
   - scripts:
