@@ -10,7 +10,7 @@ report:
 params:
   - inputFile: "{{Target}}"
   - httpFile: "{{Output}}/fingerprint/http-{{Workspace}}.txt"
-  - httpThreads: '{{ threads * 8 }}'
+  - httpThreads: '{{ threads * 10 }}'
   - screenThreads: '{{ threads / 2 }}'
   - enableSreenshot: 'false'
   - httpTimeout: '10'
@@ -31,9 +31,11 @@ steps:
     commands:
       - cat {{httpFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -t {{httpThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/fingerprint/{{Workspace}}-http-overview.txt
     scripts:
+      # make a header for csv file
+      - ExecCmd("echo 'URL, Title, Tech, Response Hash' > {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt")
       - CleanJSONHttpx('{{Output}}/fingerprint/{{Workspace}}-http-overview.txt', '{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
+      - PrintCSV('{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
       - ExecCmd("cat {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/fingerprint/beautify-{{Workspace}}-http.txt")
-      - Cat('{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt')
 
   # do screenshot
   # skip the screenshot by adding -p 'enableSreenshot=false'
@@ -48,6 +50,7 @@ steps:
       - ExecCmd("mv {{Output}}/probe/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html")
       - ExecCmd("cat {{httpFile}} | {{Binaries}}/goverview screen -c {{threads}} --json -o {{Output}}/screenshot/ > /dev/null 2>&1")
       - ExecCmd("{{Binaries}}/goverview report -o {{Output}}/screenshot/ --report report.html")
+
   - scripts:
       - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
 

@@ -22,9 +22,10 @@ steps:
     commands:
       - cat {{httpFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -t {{overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/fingerprint/{{Workspace}}-http-overview.txt
     scripts:
+      - ExecCmd("echo 'URL, Title, Tech, Response Hash' > {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt")
       - CleanJSONHttpx('{{Output}}/fingerprint/{{Workspace}}-http-overview.txt', '{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
+      - PrintCSV('{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
       - ExecCmd("cat {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/fingerprint/beautify-{{Workspace}}-http.txt")
-      - Cat('{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt')
 
 post_run:
   - SortU("{{Storages}}/summary/{{Workspace}}/technologies-{{Workspace}}.txt")
