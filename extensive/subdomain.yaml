@@ -16,7 +16,8 @@ pre_run:
 params:
   - subfinderThreads: "{{threads * 6}}"
   - amassTimeout: "6h"
-  - amassConfig: "{{Data}}/amass-config/extensive-config.yaml"
+  - amassConfig: "{{Data}}/external-configs/amass-extensive-config.yaml"
+  - subfinderConfig: "{{Data}}/external-configs/subfinder-provider.yaml"
 
 steps:
   - required:
@@ -30,7 +31,7 @@ steps:
   # these two commands will run in parallels
   - commands:
       - "{{Binaries}}/findomain -u {{Output}}/subdomain/{{Workspace}}-findomain.txt -t {{Target}} >/dev/null 2>&1"
-      - "{{Binaries}}/subfinder -d {{Target}} -t {{subfinderThreads}} -o {{Output}}/subdomain/{{Workspace}}-subfinder.txt >/dev/null 2>&1"
+      - "{{Binaries}}/subfinder -provider-config {{subfinderConfig}} -d {{Target}} -t {{subfinderThreads}} -o {{Output}}/subdomain/{{Workspace}}-subfinder.txt >/dev/null 2>&1"
 
   # cleaning some result
   - scripts:
