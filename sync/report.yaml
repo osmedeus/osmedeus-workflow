@@ -7,7 +7,6 @@ report:
     - "{{Output}}/probing/dns-{{Workspace}}.txt"
 
     - "{{Output}}/probing/http-{{Workspace}}.txt"
-    - "{{Output}}/screenshot/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html"
 
     - "{{Output}}/archive/{{Workspace}}-archive.txt"
     - "{{Output}}/archive/{{Workspace}}-interesting.txt"

@@ -1,5 +1,5 @@
 name: content-discovery
-desc: run a content discovery with the supplied inputs
+desc: Running content discovery with the supplied inputs
 validator: file
 
 report:
@@ -9,13 +9,13 @@ report:
 params:
   - inputFile: "{{Target}}"
   - httpFile: "{{Output}}/directory/http-file.txt"
-  - wordlists: "{{Data}}/wordlists/content/medium.txt"
+  - wordlists: "{{Data}}/wordlists/content/small.txt"
   - ffThreads: '{{ threads }}' # threads for single site
   - httpThreads: '{{ threads * 8 }}'
   - dirbThreads: '{{ threads / 3 }}'
   - recursion: '0'
   - httpTimeout: '10'
-  - recursion: '0'
+  - ffTimeout: "2h"
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
@@ -25,9 +25,9 @@ steps:
   - required:
       - "{{Binaries}}/httpx"
     scripts:
-      - Printf('==> Clean up the input first if it hasn't have the prefix http(s)://')
-      - ExecCmd('cat {{inputFile}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} | tee -a {{httpFile}} > /dev/null 2>&1')
-      - SortU('{{httpFile}}')
+      - Printf("==> Clean up the input first if it hasn't have the prefix http(s)://")
+      - ExecCmd("cat {{inputFile}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} | tee -a {{httpFile}} > /dev/null 2>&1")
+      - SortU("{{httpFile}}")
 
   - required:
       - "{{Binaries}}/ffuf"
@@ -35,14 +35,20 @@ steps:
     source: "{{httpFile}}"
     threads: '{{dirbThreads}}'
     commands:
-      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -H '{{defaultUA}}' -se -D -fc '429,404,400' -e 'asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt' -json -w {{wordlists}}:FUZZ -u [[.line]]/FUZZ > {{Output}}/directory/raw-[[._id_]].json"
+      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -se -D -fc '429,404,400' -e 'asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt' -json -H '{{defaultUA}}' -ac -s -fc '429,404,400' -json -u '[[.line]]/FUZZ' -w {{wordlists}}:FUZZ > {{Output}}/directory/raw-[[._id_]].json 2>/dev/null"
   - scripts:
-      - ExecCmd("cat {{Output}}/directory/raw-*.json | jq -r '[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.hash,.redirectlocation] | join(\",\")' > {{Output}}/directory/beautify-{{Workspace}}.csv")
+      - ExecCmd("cat {{Output}}/directory/raw-*.json | jq -r '[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.redirectlocation] | join(\",\")' > {{Output}}/directory/beautify-{{Workspace}}.csv")
+      # get unique the content
+      - ExecCmd("cat {{Output}}/directory/raw-*.json | {{Binaries}}/json-cleaner -f status,words,lines | jq -r '[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.redirectlocation] | join(\",\")' > {{Output}}/directory/unique-beautify-{{Workspace}}.csv")
       - ExecCmd("rm -rf {{Output}}/directory/raw-*.json")
-      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv |  {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
-      - ExecCmd("cat {{Storages}}/paths/{{Workspace}}/paths-{{Workspace}}.csv | {{Binaries}}/csvtk uniq -f 4 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Storages}}/paths/{{Workspace}}/beautify-{{Workspace}}.txt")
-      - TeleMessByFile("#dirb", "{{Output}}/directory/beautify-{{Workspace}}.txt")
-      - Cat("{{Output}}/directory/beautify-{{Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv | {{Binaries}}/csvtk cut -f 1,2,3,4,5,6 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
+      # beautify the CSV result
+      - ExecCmd("cat {{Output}}/directory/unique-beautify-{{Workspace}}.csv | {{Binaries}}/csvtk cut -f 1,2,3,4,5,6 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/unique-beautify-{{Workspace}}.txt")
+      # finally to the notify
+      - TeleMessByFile("#dirb", "{{Output}}/directory/unique-beautify-{{Workspace}}.txt")
+      - Cat("{{Output}}/directory/unique-beautify-{{Workspace}}.txt")
+      - "Printf('==> The unfiltered result can be found at: {{Output}}/directory/beautify-{{Workspace}}.txt')"
+      - ExecCmd("{{Binaries}}/notify -pc {{Data}}/external-configs/notify-provider.yaml -silent -bulk -data {{Output}}/directory/unique-beautify-{{Workspace}}.txt > /dev/null 2>&1 ")
 
   - scripts:
       - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")

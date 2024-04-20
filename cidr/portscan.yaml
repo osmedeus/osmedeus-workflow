@@ -15,9 +15,9 @@ params:
   - httpThreads: "{{ threads * 8 }}"
   - skipPortscan: "false"
   - httpTimeout: "10"
+  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
-  - CreateFolder("{{Storages}}/ports/{{Workspace}}")
   - CreateFolder("{{Output}}/portscan")
 
 steps:
@@ -41,19 +41,13 @@ steps:
   - required:
       - "{{Output}}/portscan/open-ports.txt"
     commands:
-      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -tls-grab -json -tls-probe > {{Output}}/portscan/ssl-info.txt"
-      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/portscan/http-overview-{{Workspace}}.txt"
+      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} -tls-grab -json -tls-probe > {{Output}}/portscan/ssl-info.txt"
+      - "cat {{Output}}/portscan/open-ports.txt | {{Binaries}}/httpx -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/portscan/http-overview-{{Workspace}}.txt"
     scripts:
       - ExecCmd("cat {{Output}}/portscan/http-overview-{{Workspace}}.txt | jq -r '.url'  | sort -u  > {{Output}}/portscan/http-running.txt")
-      - Copy('{{Output}}/portscan/http-running.txt', '{{Storages}}/ports/{{Workspace}}/httpport-{{Workspace}}.txt')
       - CleanJSONHttpx('{{Output}}/portscan/http-overview-{{Workspace}}.txt', '{{Output}}/portscan/{{Workspace}}-overview.txt')
-      - ExecCmd("cat {{Output}}/portscan/{{Workspace}}-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/portscan/beautify-http-{{Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/portscan/{{Workspace}}-overview.txt | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/portscan/beautify-http-{{Workspace}}.txt")
       - Cat('{{Output}}/portscan/beautify-http-{{Workspace}}.txt')
-
-  # backup output to storage
-  - scripts:
-      - Copy("{{Output}}/portscan/open-ports.txt", "{{Storages}}/ports/{{Workspace}}/portscan-{{Workspace}}.txt")
-      - Copy("{{Output}}/portscan/http-running.txt", "{{Storages}}/ports/{{Workspace}}/http-port-{{Workspace}}.txt")
 
   - scripts:
       - GenMarkdownReport("{{Data}}/markdown/cidr-template.md", "{{Output}}/summary.html")

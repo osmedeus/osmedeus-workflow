@@ -7,7 +7,7 @@ report:
     - "{{Output}}/directory/beautify-{{Workspace}}.csv"
 
 params:
-  - httpFile: "{{Output}}/probe/http-{{Workspace}}.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - wordlists: "{{Data}}/wordlists/content/medium.txt"
   - ffThreads: '30' # threads for single site
   - threads: '10'

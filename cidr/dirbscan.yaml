@@ -1,41 +1,52 @@
 name: dirbscan
-desc: Run Dirbscan
+desc: Run directory scan based on http output
 
 report:
   final:
     - "{{Output}}/directory/beautify-{{Workspace}}.txt"
-    - "{{Output}}/directory/beautify-{{Workspace}}.csv"
+    - "{{Output}}/directory/unique-beautify-{{Workspace}}.txt"
 
 params:
-  - httpFile: "{{Output}}/portscan/http-running.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - wordlists: "{{Data}}/wordlists/content/small.txt"
-  - dirbThreads: '30' # threads for single site
+  - dlimit: '50000'
   - recursion: '0'
-  - chan: '#mics'
-  - lines: "30"
   - ffThreads: '{{ threads }}' # threads for single site
   - dirbThreads: '{{ threads / 3 }}'
-  - ffTimeout: "2h"
+  - ffTimeout: "1h"
+  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
-  - CreateFolder("{{Storages}}/paths/{{Workspace}}")
   - CreateFolder("{{Output}}/directory")
 
 steps:
+  # check wildcard before brute force dns. We don't want tons of garbage here
+  - conditions:
+      - "FileLength('{{httpFile}}') > {{dlimit}}"
+    scripts:
+      - ErrPrintf("Filter", "Got input file greater than {{dlimit}} line")
+      - Exit(1)
+
   - required:
       - "{{Binaries}}/ffuf"
       - "{{httpFile}}"
     source: "{{httpFile}}"
     threads: '{{dirbThreads}}'
     commands:
-      - "{{Binaries}}/ffuf -t {{ffThreads}} -s -timeout 15 -ac -fc '429,403,404' -D -e 'asp,aspx,pl,php,html,htm,jsp,cgi' -of json -o {{Output}}/directory/raw-[[._id_]].json -u '[[.line]]/FUZZ' -w {{wordlists}}:FUZZ >/dev/null 2>&1"
+      - "timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -se -D -fc '429,404,400' -e 'asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt' -json -H '{{defaultUA}}' -ac -s -fc '429,404,400' -json -u '[[.line]]/FUZZ' -w {{wordlists}}:FUZZ > {{Output}}/directory/raw-[[._id_]].json 2>/dev/null"
+  - scripts:
+      - ExecCmd("cat {{Output}}/directory/raw-*.json | jq -r '[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.redirectlocation] | join(\",\")' > {{Output}}/directory/beautify-{{Workspace}}.csv")
+      # doing cleaning for the dirb result
+      - ExecCmd("cat {{Output}}/directory/raw-*.json | {{Binaries}}/json-cleaner -f status,words,lines | jq -r '[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.redirectlocation] | join(\",\")' > {{Output}}/directory/unique-beautify-{{Workspace}}.csv")
+      - ExecCmd("rm -rf {{Output}}/directory/raw-*.json")
+      # beautify the result
+      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv | {{Binaries}}/csvtk cut -f 1,2,3,4,5,6 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
+      - ExecCmd("cat {{Output}}/directory/unique-beautify-{{Workspace}}.csv | {{Binaries}}/csvtk cut -f 1,2,3,4,5,6 -I | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/unique-beautify-{{Workspace}}.txt")
+      - TeleMessByFile("#dirb", "{{Output}}/directory/unique-beautify-{{Workspace}}.txt")
+      - Cat("{{Output}}/directory/unique-beautify-{{Workspace}}.txt")
+      - "Printf('==> The unfiltered result can be found at: {{Output}}/directory/beautify-{{Workspace}}.txt')"
+      - ExecCmd("{{Binaries}}/notify -pc {{Data}}/external-configs/notify-provider.yaml -silent -bulk -data {{Output}}/directory/unique-beautify-{{Workspace}}.txt > /dev/null 2>&1 ")
 
-  # clean up and generate beautify report
-  - scripts:
-      - ExecCmd("awk '{print}' {{Output}}/directory/raw-*.json > {{Output}}/directory/summary-json-{{Workspace}}.txt")
-      - CleanFFUFJson("{{Output}}/directory/summary-json-{{Workspace}}.txt", "{{Output}}/directory/beautify-{{Workspace}}.csv")
-      - ExecCmd("cat {{Output}}/directory/beautify-{{Workspace}}.csv | {{Binaries}}/csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/directory/beautify-{{Workspace}}.txt")
-      - TeleMessByFile("#dirb", "{{Output}}/directory/beautify-{{Workspace}}.txt")
-      - Cat('{{Output}}/directory/beautify-{{Workspace}}.txt')
-  - scripts:
-      - GenMarkdownReport("{{Data}}/markdown/cidr-template.md", "{{Output}}/summary.html")
+post_run:
+  - TotalDirb("{{Output}}/directory/unique-beautify-{{Workspace}}.txt")
+  - GenMarkdownReport("{{Data}}/markdown/general-template.md", "{{Output}}/summary.html")

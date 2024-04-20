@@ -8,8 +8,12 @@ report:
     - "{{Output}}/fingerprint/{{Workspace}}-http-overview.txt"
 
 params:
+  - diffHttpFile: "{{Output}}/probing/diffhttp-{{Workspace}}.txt"
+  - finThreads: "{{ threads }}"
+  - overviewThreads: "{{ threads * 5}}"
+  - httpTimeout: "10"
   - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
-  - overviewThreads: "{{ threads * 5 }}"
+  - overviewJsonFile: "{{Output}}/fingerprint/{{Workspace}}-http-overview.txt"
   - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
@@ -20,14 +24,22 @@ steps:
       - "{{Binaries}}/httpx"
       - "{{httpFile}}"
     commands:
-      - cat {{httpFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -t {{overviewThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/fingerprint/{{Workspace}}-http-overview.txt
+      - cat {{httpFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -timeout {{httpTimeout}} -t {{overviewThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain >> {{overviewJsonFile}}
     scripts:
       - ExecCmd("echo 'URL, Title, Tech, Response Hash' > {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt")
-      - CleanJSONHttpx('{{Output}}/fingerprint/{{Workspace}}-http-overview.txt', '{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
-      - PrintCSV('{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
-      - ExecCmd("cat {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/fingerprint/beautify-{{Workspace}}-http.txt")
+      # only get the different HTTP response
+      - ExecCmd("{{overviewJsonFile}} | {{Binaries}}/json-cleaner -f 'hash.body_sha256,words,lines' > {{diffHttpFile}}")
+      - CleanJSONHttpx('{{overviewJsonFile}}', '{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
+      - BeautifyCSV('{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt', '{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt')
+      - Cat("{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt")
+      - "Printf('==> The raw result can be found at: {{overviewJsonFile}}')"
+
+  # in case we mess up this module
+  - conditions:
+    - FileLength('{{diffHttpFile}}') <= 0
+    commands:
+      - "cp {{httpFile}} {{diffHttpFile}}"
 
 post_run:
-  - SortU("{{Storages}}/summary/{{Workspace}}/technologies-{{Workspace}}.txt")
-  - TotalTech("{{Output}}/fingerprint/{{Workspace}}-technologies.txt")
+  - TotalTech("{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt")
   - GenMarkdownReport("{{Data}}/markdown/general-template.md", "{{Output}}/summary.html")

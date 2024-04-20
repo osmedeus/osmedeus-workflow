@@ -20,13 +20,21 @@ pre_run:
   - CreateFolder("{{Output}}/archive")
 
 steps:
+
+  # loop through each domains and get the archive
+  - required:
+      - "{{httpFile}}"
+    commands:
+      - "cat {{httpFile}} | {{Binaries}}/unfurl format %d | sort -u > {{Output}}/archive/{{Workspace}}-domain.txt"
+      - "timeout -k 1m {{archiveTimeout}} {{Binaries}}/katana -silent -no-color -c {{archiveThreads}} -passive -f qurl -u {{Target}} | {{Binaries}}/durl | shuf -n {{alimit}} >> {{archiveFile}}"
+
   - required:
       - "{{Binaries}}/katana"
+      - "{{Binaries}}/durl"
+    source: "{{Output}}/archive/{{Workspace}}-domain.txt"
     commands:
-      - "timeout -k 1m {{archiveTimeout}} {{Binaries}}/katana -silent -no-color -c {{archiveThreads}} -passive -f qurl -u {{Target}} | {{Binaries}}/durl | shuf -n {{alimit}} >> {{archiveFile}}"
-    scripts:
-      - "SortU('{{archiveFile}}')"
-  
+      - "echo '[[.line]]' | timeout -k 1m {{archiveTimeout}} {{Binaries}}/katana -silent -no-color -c {{archiveThreads}} -passive -f qurl | {{Binaries}}/durl | shuf -n {{alimit}} >> {{archiveFile}}"
+
   # beautify the result
   - required:
       - "{{Binaries}}/httpx"

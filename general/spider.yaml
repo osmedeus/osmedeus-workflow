@@ -38,14 +38,6 @@ steps:
     commands:
       - "timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[.line]] | sort -u  >> {{linkFile}}"
 
-  # - required:
-  #     - "{{Binaries}}/katana"
-  #     - "{{httpFile}}"
-  #   commands:
-  #     - "cat {{httpFile}} | timeout -k 1m {{spiderTimeout}} {{Binaries}}/katana -silent -headless --no-sandbox -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}}  >> {{linkFile}}"
-  #   scripts:
-  #     - SortU("{{linkFile}}")
-
   - label: "Getting raw response & scanning for secrets with trufflehog"
     scripts:
       - ExecCmd("cat {{linkFile}} | {{Binaries}}/httpx -silent -nf -no-color -title -t {{httpThreads}} -H '{{defaultUA}}' --store-response-dir {{httpResponse}} ")

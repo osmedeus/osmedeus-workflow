@@ -3,28 +3,29 @@ desc: probing HTTP for the URLs first
 
 report:
   final:
-    - "{{Output}}/probe/http-{{Workspace}}.txt"
-    - "{{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html"
-    - "{{Output}}/screenshot/goverview/report.html"
-    - "{{Output}}/probe/beautify-http-{{Workspace}}.txt"
+    - "{{Output}}/probing/http-{{Workspace}}.txt"
+    - "{{Output}}/probing/beautify-http-{{Workspace}}.txt"
+    - "{{Output}}/screenshot/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html"
+    - "{{Output}}/screenshot/{{Workspace}}-screenshots/index_screenshot.txt"
 
 params:
   - inputFile: "{{Target}}"
-  - httpFile: "{{Output}}/probe/http-{{Workspace}}.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - enableSreenshot: "true"
-  - screenThreads: "{{ threads / 2 }}"
-  - httpThreads: "{{ threads * 8}}"
+  - screenThreads: "{{ threads }}"
+  - httpThreads: "{{ threads * 8 }}"
   - httpTimeout: '10'
-  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
+  - screenThreads: "{{ threads / 2 }}"
+  - screenTimeout: "15"
 
 pre_run:
-  - CreateFolder("{{Output}}/probe")
+  - CreateFolder("{{Output}}/probing")
   - CreateFolder("{{Output}}/screenshot")
 
 steps:
   - commands:
-      - "echo {{inputFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
-      - "cat {{inputFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
+      - "echo {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
+      - "cat {{inputFile}} | {{Binaries}}/httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}"
     scripts:
       - SortU("{{httpFile}}")
 
@@ -33,27 +34,28 @@ steps:
   - conditions:
       - '{{enableSreenshot}} == true'
     required:
-      - "{{Binaries}}/aquatone"
+      - "{{Binaries}}/httpx"
       - "{{httpFile}}"
     commands: 
-      - "cat {{httpFile}} | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/probe/{{Workspace}}-aquatone > /dev/null 2>&1"
+      - "cat {{httpFile}} | {{Binaries}}/httpx -t {{screenThreads}} -no-color -silent -screenshot -screenshot-timeout {{screenTimeout}} -json -store-response-dir {{Output}}/screenshot/{{Workspace}}-screenshots/ > /dev/null 2>&1"
     scripts:
-      - ExecCmd("mv {{Output}}/probe/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html")
-      - ExecCmd("cat {{httpFile}} | {{Binaries}}/goverview screen -c {{threads}} --json -o {{Output}}/screenshot/ > /dev/null 2>&1")
-      - ExecCmd("{{Binaries}}/goverview report -o {{Output}}/screenshot/ --report report.html")
+      - ExecCmd("mv {{Output}}/screenshot/{{Workspace}}-screenshots/screenshot.html {{Output}}/screenshot/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html")
+      - ExecCmd("ls {{Output}}/screenshot/ > {{Output}}/screenshot/number-of-screenshot.txt")
+      - TotalScreenShot('{{Output}}/screenshot/number-of-screenshot.txt')
 
   # do http overview
   - required:
       - "{{Binaries}}/httpx"
       - "{{inputFile}}"
     commands: 
-      - cat {{inputFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/probe/http-overview-{{Workspace}}.txt
+      - cat {{inputFile}} | {{Binaries}}/httpx -t {{httpThreads}} -timeout {{httpTimeout}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain -store-response -store-response-dir raw-data >> {{Output}}/probing/http-overview-{{Workspace}}.txt
     # change html report name
     scripts:
       # make a header for csv file
-      - ExecCmd("echo 'URL, Title, Tech, Response Hash' > {{Output}}/probe/{{Workspace}}-technologies.txt")
-      - CleanJSONHttpx('{{Output}}/probe/http-overview-{{Workspace}}.txt', '{{Output}}/probe/{{Workspace}}-technologies.txt')
-      - PrintCSV('{{Output}}/probe/{{Workspace}}-technologies.txt')
+      - ExecCmd("echo 'URL, Title, Tech, Response Hash' > {{Output}}/probing/{{Workspace}}-technologies.txt")
+      - CleanJSONHttpx('{{Output}}/probing/http-overview-{{Workspace}}.txt', '{{Output}}/probing/{{Workspace}}-technologies.txt')
+      - BeautifyCSV('{{Output}}/probing/{{Workspace}}-technologies.txt', '{{Output}}/probing/beautify-{{Workspace}}-technologies.txt')
+      - Cat('{{Output}}/probing/beautify-{{Workspace}}-technologies.txt')
 
   - scripts:
       - GenMarkdownReport("{{Data}}/markdown/urls-template.md", "{{Output}}/summary.html")

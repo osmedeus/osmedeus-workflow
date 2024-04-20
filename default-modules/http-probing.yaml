@@ -4,19 +4,20 @@ desc: Running HTTP fingerprint technology and response with the supplied inputs
 report:
   final:
     - "{{Output}}/fingerprint/{{Workspace}}-technologies.txt"
-    - "{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt"
-    - "{{Output}}/fingerprint/{{Workspace}}-http-overview.txt"
+    - "{{Output}}/screenshot/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html"
 
 params:
   - inputFile: "{{Target}}"
   - httpFile: "{{Output}}/fingerprint/http-{{Workspace}}.txt"
-  - httpThreads: '{{ threads * 10 }}'
-  - screenThreads: '{{ threads / 2 }}'
-  - enableSreenshot: 'false'
-  - httpTimeout: '10'
+  - httpThreads: "{{ threads * 10 }}"
+  - screenThreads: "{{ threads / 2 }}"
+  - enableSreenshot: "false"
+  - httpTimeout: "10"
+  - defaultUA: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v4; +https://github.com/j3ssie/osmedeus)"
 
 pre_run:
   - CreateFolder("{{Output}}/fingerprint")
+  - CreateFolder("{{Output}}/screenshot")
 
 steps:
   - commands:
@@ -29,28 +30,22 @@ steps:
       - "{{Binaries}}/httpx"
       - "{{httpFile}}"
     commands:
-      - cat {{httpFile}} | {{Binaries}}/httpx -nf -timeout {{httpTimeout}} -t {{httpThreads}} -no-color -json -title -tech-detect -status-code -silent >> {{Output}}/fingerprint/{{Workspace}}-http-overview.txt
+      - cat {{httpFile}} | {{Binaries}}/httpx -H '{{defaultUA}}' -timeout {{httpTimeout}} -t {{httpThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain -store-response -store-response-dir {{Output}}/fingerprint/raw-data >> {{Output}}/fingerprint/{{Workspace}}-http-overview.txt
     scripts:
       # make a header for csv file
       - ExecCmd("echo 'URL, Title, Tech, Response Hash' > {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt")
       - CleanJSONHttpx('{{Output}}/fingerprint/{{Workspace}}-http-overview.txt', '{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
-      - PrintCSV('{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt')
-      - ExecCmd("cat {{Output}}/fingerprint/{{Workspace}}-raw-overview.txt | csvtk pretty --no-header-row -I -s ' | ' -W 75 > {{Output}}/fingerprint/beautify-{{Workspace}}-http.txt")
+      - BeautifyCSV('{{Output}}/fingerprint/{{Workspace}}-raw-overview.txt', '{{Output}}/fingerprint/beautify-{{Workspace}}-http.txt')
+      - Cat('{{Output}}/probe/beautify-{{Workspace}}-technologies.txt')
 
-  # do screenshot
-  # skip the screenshot by adding -p 'enableSreenshot=false'
-  - conditions:
-      - '{{enableSreenshot}} == true'
-    required:
-      - "{{Binaries}}/aquatone"
+  - required:
+      - "{{Binaries}}/httpx"
       - "{{httpFile}}"
-    commands: 
-      - "cat {{httpFile}} | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/probe/{{Workspace}}-aquatone > /dev/null 2>&1"
+    commands:
+      - "cat {{httpFile}} | {{Binaries}}/httpx -t {{screenThreads}} -no-color -silent -screenshot -screenshot-timeout {{screenTimeout}} -json -store-response-dir {{Output}}/screenshot/{{Workspace}}-screenshots/ > /dev/null 2>&1"
     scripts:
-      - ExecCmd("mv {{Output}}/probe/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/probe/{{Workspace}}-aquatone/screenshot-{{Workspace}}.html")
-      - ExecCmd("cat {{httpFile}} | {{Binaries}}/goverview screen -c {{threads}} --json -o {{Output}}/screenshot/ > /dev/null 2>&1")
-      - ExecCmd("{{Binaries}}/goverview report -o {{Output}}/screenshot/ --report report.html")
+      - ExecCmd("mv {{Output}}/screenshot/{{Workspace}}-screenshots/screenshot.html {{Output}}/screenshot/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html")
+      - ExecCmd("ls {{Output}}/screenshot/ > {{Output}}/screenshot/number-of-screenshot.txt")
 
   - scripts:
       - GenMarkdownReport("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")
-

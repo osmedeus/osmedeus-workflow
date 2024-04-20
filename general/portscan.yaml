@@ -6,7 +6,7 @@ report:
     - "{{Output}}/portscan/open-ports.txt"
     - "{{Output}}/portscan/{{Workspace}}-detail.txt"
     - "{{Output}}/portscan/nmap-raw-{{Workspace}}.txt"
-    - "{{Output}}/portscan/{{Workspace}}-screenshot/screenshot-{{Workspace}}.html"
+    - "{{Output}}/portscan/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html"
     - "{{Output}}/portscan/{{Workspace}}-http.txt"
 
 pre_run:
@@ -41,14 +41,15 @@ steps:
     scripts:
       - SortU('{{Output}}/portscan/{{Workspace}}-http.txt')
 
-  # do screenshot on new http running
+
   - required:
-      - "{{Binaries}}/aquatone"
+      - "{{Binaries}}/httpx"
       - "{{Output}}/portscan/{{Workspace}}-http.txt"
-    commands:
-      - "cat {{Output}}/portscan/{{Workspace}}-http.txt | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/portscan/{{Workspace}}-screenshot >/dev/null 2>&1"
+    commands: 
+      - "cat {{Output}}/portscan/{{Workspace}}-http.txt | {{Binaries}}/httpx -t {{screenThreads}} -no-color -silent -screenshot -screenshot-timeout {{screenTimeout}} -json -store-response-dir {{Output}}/portscan/{{Workspace}}-screenshots/ > /dev/null 2>&1"
     scripts:
-      - ExecCmd("mv {{Output}}/portscan/{{Workspace}}-screenshot/aquatone_report.html {{Output}}/portscan/{{Workspace}}-screenshot/screenshot-{{Workspace}}.html")
+      - ExecCmd("mv {{Output}}/portscan/{{Workspace}}-screenshots/screenshot.html {{Output}}/portscan/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html")
+      - ExecCmd("ls {{Output}}/portscan/ > {{Output}}/portscan/number-of-screenshot.txt")
 
 post_run:
   - GenMarkdownReport("{{Data}}/markdown/general-template.md", "{{Output}}/summary.html")

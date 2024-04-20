@@ -13,7 +13,7 @@ report:
     - "{{Output}}/vuln/nuclei/{{Workspace}}-nuclei-scan.txt"
 
 params:
-  - httpFile: "{{Output}}/portscan/http-running.txt"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
   - sign: "~/.jaeles/base-signatures/cves/.*"
   - sign2: "~/.jaeles/base-signatures/common/.*"
   - sign3: "~/.jaeles/base-signatures/sensitive/.*"

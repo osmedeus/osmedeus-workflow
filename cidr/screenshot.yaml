@@ -1,34 +1,30 @@
 name: screenshot
-desc: screenshot on open HTTP port
+desc: Screenshot based on result of probing
 
 report:
   final:
-    - "{{Output}}/portscan/{{Workspace}}-aquatone/portscan-{{Workspace}}.html"
-    - "{{Output}}/portscan/{{Workspace}}-http-overview.txt"
-    - "{{Output}}/portscan/goverview/report.html"
-    - "{{Output}}/portscan/beautify-http-{{Workspace}}.txt"
+    - "{{Output}}/screenshot/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html"
+    - "{{Output}}/screenshot/{{Workspace}}-screenshots/index_screenshot.txt"
 
-# osmedeus scan -m /path/to/this/pws.yaml -t ip-ranges.txt
+
 params:
-  - httpFile: "{{Output}}/portscan/http-running.txt"
-  - screenThreads: "{{ threads }}"
-  - overviewThreads: "{{ threads * 5}}"
+  - httpFile: "{{Output}}/probing/http-{{Workspace}}.txt"
+  - screenThreads: "{{ threads / 2 }}"
+  - screenTimeout: "15"
 
+# {{Output}} == {{Workspaces}} + {{Workspace}} but strip "/" char
 pre_run:
-  - CreateFolder("{{Output}}/portscan")
+  - CreateFolder("{{Output}}/screenshot")
 
 steps:
-  # do screenshot
   - required:
-      - "{{Binaries}}/aquatone"
+      - "{{Binaries}}/httpx"
       - "{{httpFile}}"
     commands: 
-      - "cat {{httpFile}} | {{Binaries}}/aquatone -threads {{screenThreads}} -out {{Output}}/portscan/{{Workspace}}-aquatone > /dev/null 2>&1"
-    # change html report name
+      - "cat {{httpFile}} | {{Binaries}}/httpx -t {{screenThreads}} -no-color -silent -screenshot -screenshot-timeout {{screenTimeout}} -json -store-response-dir {{Output}}/screenshot/{{Workspace}}-screenshots/ > /dev/null 2>&1"
     scripts:
-      - ExecCmd("mv {{Output}}/portscan/{{Workspace}}-aquatone/aquatone_report.html {{Output}}/portscan/{{Workspace}}-aquatone/portscan-{{Workspace}}.html")
+      - ExecCmd("mv {{Output}}/screenshot/{{Workspace}}-screenshots/screenshot.html {{Output}}/screenshot/{{Workspace}}-screenshots/screenshot-{{Workspace}}.html")
+      - ExecCmd("ls {{Output}}/screenshot/ > {{Output}}/screenshot/number-of-screenshot.txt")
 
-  # do screenshot with goverview
-  - scripts:
-      - ExecCmd("cat {{Output}}/portscan/http-running.txt | {{Binaries}}/goverview screen -c {{screenThreads}} --json -o {{Output}}/portscan/goverview/ > /dev/null 2>&1")
-      - ExecCmd("{{Binaries}}/goverview report -o  {{Output}}/portscan/goverview/ --report report.html")
+post_run:
+  - TotalScreenShot('{{Output}}/screenshot/number-of-screenshot.txt')
