@@ -2,7 +2,7 @@
 # Module Workflow: HTTP Fingerprinting
 # =============================================================================
 kind: module
-name: fingerprint
+name: http-fingerprint
 description: Fingerprint HTTP technology and response
 tags: fingerprint, technology, http
 
@@ -103,9 +103,13 @@ steps:
       - jsonl_filter("{{httpInterestingJsonFile}}", "{{httpInterestingFilteredJsonFile}}", "url,title,status_code,content_length,lines,webserver,tech,cdn")
       - 'convert_jsonl_to_markdown("{{httpInterestingFilteredJsonFile}}", "{{httpInterestingMarkdownFile}}")'
 
-  - name: process-fingerprint-results
+  - name: process-fingerprint-in-db
     type: function
-    log: "Processing fingerprint results"
+    log: "Processing fingerprint in-db"
+    pre_condition: 'fileExists("{{httpFingerprintJsonFile}}")'
     functions:
       - 'db_total_urls("{{httpFingerprintJsonFile}}")'
       - 'db_total_assets("{{httpFingerprintJsonFile}}")'
+      - 'db_import_asset_from_file("{{TargetSpace}}", "{{httpFingerprintJsonFile}}")'
+    on_error: 
+      - action: continue # in case of error, continue the workflow

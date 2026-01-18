@@ -2,7 +2,7 @@
 # Flow Workflow: General Reconnaissance
 # =============================================================================
 # Running default reconnaissance routine for domain targets.
-# Executes subdomain enumeration, probing, fingerprinting, screenshots,
+# Executes subdomain-enum enumeration, probing, fingerprinting, screenshots,
 # spidering, vulnerability scanning, directory bruteforcing, and port scanning.
 # =============================================================================
 
@@ -37,18 +37,18 @@ dependencies:
 # -----------------------------------------------------------------------------
 modules:
   # ===========================================================================
-  # Phase 1: Subdomain Enumeration
+  # Phase 1: subdomain-enum Enumeration
   # ===========================================================================
-  - name: subdomain
-    path: common/subdomain.yaml
+  - name: subdomain-enum
+    path: common/subdomain-enum.yaml
 
   # ===========================================================================
   # Phase 2: Probing
   # ===========================================================================
-  - name: probing
-    path: common/probing.yaml
+  - name: dns-probing
+    path: common/dns-probing.yaml
     depends_on:
-      - subdomain
+      - subdomain-enum
 
   # ===========================================================================
   # Phase 3: Fingerprinting
@@ -56,7 +56,7 @@ modules:
   - name: fingerprint
     path: common/fingerprint.yaml
     depends_on:
-      - probing
+      - dns-probing
 
   # ===========================================================================
   # Phase 4: Screenshots
@@ -64,7 +64,7 @@ modules:
   - name: screenshot
     path: common/screenshot.yaml
     depends_on:
-      - fingerprint
+      - http-fingerprint
 
   # ===========================================================================
   # Phase 5: Archiving
@@ -72,7 +72,7 @@ modules:
   - name: archive
     path: common/archive.yaml
     depends_on:
-      - fingerprint
+      - http-fingerprint
 
   # ===========================================================================
   # Phase 6: IP Space Enumeration
@@ -80,23 +80,23 @@ modules:
   - name: ipspace
     path: common/ipspace.yaml
     depends_on:
-      - fingerprint
+      - http-fingerprint
 
   # ===========================================================================
-  # Phase 7: Port Scanning
+  # Phase 7: Vulnerability Scanning
+  # ===========================================================================
+  - name: vulnerability-scan
+    path: common/vulnerability-scan.yaml
+    depends_on:
+      - http-fingerprint
+
+  # ===========================================================================
+  # Phase 8: Port Scanning
   # ===========================================================================
   - name: portscan
     path: common/portscan.yaml
     depends_on:
-      - fingerprint
-
-  # ===========================================================================
-  # Phase 8: Vulnerability Scanning
-  # ===========================================================================
-  - name: vulnscan
-    path: common/vulnscan.yaml
-    depends_on:
-      - fingerprint
+      - http-fingerprint
 
   # ===========================================================================
   # Phase 9: Content Discovery
@@ -104,4 +104,4 @@ modules:
   - name: content-discovery
     path: common/content-discovery.yaml
     depends_on:
-      - fingerprint
+      - http-fingerprint

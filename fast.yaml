@@ -39,8 +39,8 @@ modules:
   # ===========================================================================
   # Phase 1: Subdomain Enumeration
   # ===========================================================================
-  - name: subdomain
-    path: common/subdomain.yaml
+  - name: subdomain-enum
+    path: common/subdomain-enum.yaml
 
   # ===========================================================================
   # Phase 2: Probing
@@ -48,13 +48,13 @@ modules:
   - name: probing
     path: common/probing.yaml
     depends_on:
-      - subdomain
+      - subdomain-enum
 
   # ===========================================================================
   # Phase 3: Fingerprinting
   # ===========================================================================
-  - name: fingerprint
-    path: common/fingerprint.yaml
+  - name: http-fingerprint
+    path: common/http-fingerprint.yaml
     depends_on:
       - probing
 
@@ -64,4 +64,4 @@ modules:
   - name: screenshot
     path: common/screenshot.yaml
     depends_on:
-      - fingerprint
+      - http-fingerprint

@@ -46,12 +46,12 @@ The workflow follows a phased approach to reconnaissance:
     │         │          │           │
     └─────────┴──────────┴───────────┘
               │
-    ┌─────────┴─────────┐
-    ▼                   ▼
-┌─────────┐      ┌───────────┐
-│Vulnscan │      │ Content   │  Final: Vulnerability and content discovery
-│         │      │ Discovery │
-└─────────┘      └───────────┘
+    ┌─────────┴───────────────┐
+    ▼                         ▼
+┌─────────────────┐      ┌───────────┐
+│Vulnerability    │      │ Content   │  Final: Vulnerability and content discovery
+│ Scanning        │      │ Discovery │
+└─────────────────┘      └───────────┘
 ```
 
 ## Available Workflows

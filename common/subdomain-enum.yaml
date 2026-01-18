@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: subdomain
+name: subdomain-enum
 description: Scanning for subdomain
 tags: subdomain, enumeration, discovery, dns
 

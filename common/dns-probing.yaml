@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: probing
+name: dns-probing
 description: Examining the DNS and HTTP host of the target
 tags: dns, probing, http, resolution
 
