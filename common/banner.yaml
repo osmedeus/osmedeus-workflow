@@ -1,0 +1,21 @@
+kind: module
+name: banner
+description: Print start banner
+tags: banner, info
+
+dependencies:
+  variables:
+    - name: Target
+      type: domain
+      required: true
+
+steps:
+  - name: print-banner
+    type: bash
+    log: "Starting fast reconnaissance for {{Target}}"
+    commands:
+      - 'echo "========================================"'
+      - 'echo " Osmedeus Fast Scan"'
+      - 'echo " Target: {{Target}}"'
+      - 'echo "========================================"'
+
