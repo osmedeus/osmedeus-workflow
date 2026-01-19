@@ -3,11 +3,8 @@
 # =============================================================================
 
 kind: module
-
 name: portscan
-
 description: Quick port scan for all ports
-
 tags: portscan, rustscan, network
 
 # -----------------------------------------------------------------------------

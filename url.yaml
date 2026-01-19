@@ -28,7 +28,7 @@ params:
 dependencies:
   variables:
     - name: Target
-      type: domain
+      type: url
       required: true
 
 # -----------------------------------------------------------------------------
@@ -45,8 +45,8 @@ modules:
   # ===========================================================================
   # Phase 2: Probing
   # ===========================================================================
-  - name: dns-probing
-    path: common/dns-probing.yaml
+  - name: probing
+    path: common/probing.yaml
     depends_on:
       - subdomain-enum
 
@@ -56,4 +56,4 @@ modules:
   - name: http-fingerprint
     path: common/http-fingerprint.yaml
     depends_on:
-      - dns-probing
+      - probing
