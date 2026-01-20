@@ -102,8 +102,8 @@ steps:
     type: function
     log: "Creating output folders"
     functions:
-      - 'createFolder("{{Output}}/probing")'
-      - 'createFolder("{{Output}}/ipspace")'
+      - 'create_folder("{{Output}}/probing")'
+      - 'create_folder("{{Output}}/ipspace")'
 
   # ---------------------------------------------------------------------------
   # Resolve DNS first based on the subdomain output
@@ -111,7 +111,7 @@ steps:
   - name: resolve-dns
     type: bash
     log: "Resolving DNS with puredns"
-    pre_condition: 'fileExists("{{finalSubdomainFile}}")'
+    pre_condition: 'file_exists("{{finalSubdomainFile}}")'
     command: 'puredns resolve {{finalSubdomainFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{TargetSpace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{TargetSpace}}.txt --wildcard-tests {{wildcardTests}} --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1'
 
   # ---------------------------------------------------------------------------
@@ -134,12 +134,12 @@ steps:
   - name: generate-permutations
     type: function
     log: "Generating permutation subdomains"
-    pre_condition: 'fileLength("{{finalSubdomainFile}}") <= {{permLimit}} && {{enablePermutation}} && {{enableDnsBruteFocing}} && !{{TargetIsWildcard}}'
+    pre_condition: 'file_length("{{finalSubdomainFile}}") <= {{permLimit}} && {{enablePermutation}} && {{enableDnsBruteFocing}} && !{{TargetIsWildcard}}'
     functions:
       - 'printf("Generating permutation subdomains wordlists which might create a very big file")'
       - exec_cmd("cat {{finalSubdomainFile}} | alterx -silent  >> {{permDomainFile}}")
       # - exec_cmd("cat {{finalSubdomainFile}} | alterx -enrich -silent >> {{permDomainFile}}") # this is generate a lot more
-      - 'sortUnix("{{permDomainFile}}")'
+      - 'sort_unix("{{permDomainFile}}")'
       - 'exec_cmd("puredns resolve {{permDomainFile}} {{Target}} -r {{resolvers}} --wildcard-tests {{wildcardTests}} -w {{Output}}/probing/permutations-{{TargetSpace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1" )'
       - 'exec_cmd("rm -rf {{permDomainFile}}")' # clean up the data first as it might be a big file
     on_error: 
@@ -148,7 +148,7 @@ steps:
   - name: merge-existing-dns
     type: function
     log: "Merging existing dns"
-    pre_condition: 'fileLength("{{Output}}/probing/permutations-{{TargetSpace}}.txt") > 1 && fileLength("{{Output}}/probing/subbrute-{{TargetSpace}}.txt") > 1'
+    pre_condition: 'file_length("{{Output}}/probing/permutations-{{TargetSpace}}.txt") > 1 && file_length("{{Output}}/probing/subbrute-{{TargetSpace}}.txt") > 1'
     functions:
       - 'exec_cmd("cat {{Output}}/probing/subbrute-{{TargetSpace}}.txt {{Output}}/probing/permutations-{{TargetSpace}}.txt  >> {{dnsFile}}")'
       - 'exec_cmd("{{dnsFile}}")'
@@ -159,13 +159,13 @@ steps:
   - name: fallback-dnsx-resolve
     type: bash
     log: "Fallback: resolving DNS with dnsx"
-    pre_condition: 'fileExists("{{rawDnsFile}}")'
+    pre_condition: 'file_exists("{{rawDnsFile}}")'
     command: 'cat {{rawDnsFile}} | {{Binaries}}/dnsx -silent -a -cname -resp-only -json -r {{resolvers}} -t {{httpThreads}} > {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt'
 
   - name: clean-dnsx-results
     type: bash
     log: "Cleaning dnsx results"
-    pre_condition: 'fileExists("{{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt") && fileLength("{{dnsFile}}") < 1'
+    pre_condition: 'file_exists("{{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt") && file_length("{{dnsFile}}") < 1'
     commands:
       - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '.host as $f | (.a // [])[] | \"($f) A (. )\" > {{dnsFile}}"
       - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '.host as $f | (.cname // [])[] | \"($f) CNAME (. )\" > {{dnsFile}}"
@@ -189,7 +189,7 @@ steps:
     type: function
     log: "Cleaning up and sorting HTTP results"
     functions:
-      - 'sortUnix("{{httpFile}}")'
+      - 'sort_unix("{{httpFile}}")'
       - 'exec_cmd("rm -rf {{rawDnsFile}} {{customDnsWordlist}} {{permDomainFile}}")'
     on_error: 
       - action: continue
@@ -201,7 +201,7 @@ steps:
   - name: filter-wildcard-http
     type: function
     log: "Filtering wildcard HTTP results in case it is too big"
-    pre_condition: 'fileExists("{{httpFile}}") && fileLength("{{httpFile}}") > {{wildcardLimit}}'
+    pre_condition: 'file_exists("{{httpFile}}") && file_length("{{httpFile}}") > {{wildcardLimit}}'
     functions:
       - 'log_warn("HTTP File {{httpFile}} is too big and excess the limit {{wildcardLimit}}. Filtering it...")'
       - 'exec_cmd("rm -rf {{httpFile}}")'
@@ -215,10 +215,10 @@ steps:
   - name: extract-ip-addresses
     type: function
     log: "Extracting IP addresses from DNS results"
-    pre_condition: 'fileExists("{{dnsFile}}")'
+    pre_condition: 'file_exists("{{dnsFile}}")'
     functions:
       - exec_cmd("cat {{dnsFile}} | grep ' A ' | awk '{print $3}' | sort -u >> {{Output}}/ipspace/{{TargetSpace}}-ip.txt")
-      - sortUnix("{{Output}}/ipspace/{{TargetSpace}}-ip.txt")
+      - sort_unix("{{Output}}/ipspace/{{TargetSpace}}-ip.txt")
     on_error: 
       - action: continue
 
@@ -228,9 +228,9 @@ steps:
   - name: probing-summary
     type: function
     log: "Generating probing summary"
-    pre_condition: 'fileExists("{{httpFile}}")'
+    pre_condition: 'file_exists("{{httpFile}}")'
     functions:
       - 'db_total_subdomains("{{dnsFile}}")'
       - 'db_total_assets("{{dnsFile}}")'
-    exports:
-      total_dns: "fileLength('{{dnsFile}}')"
+    # exports:
+    #   total_dns: "file_length('{{dnsFile}}')"

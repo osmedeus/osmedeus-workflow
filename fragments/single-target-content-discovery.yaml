@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: content-discovery
+name: single-target-content-discovery
 description: Run directory scan based on http output
 tags: directory, bruteforce, content-discovery
 
@@ -25,10 +25,8 @@ params:
 
   - name: contentDiscoverWordlist
     default: "{{ExternalData}}/wordlists/content/small.txt"
-  - name: dirLimit
-    default: "20000"
   - name: recursion
-    default: "0"
+    default: "1"
   - name: ffThreads
     default: "{{ threads }}"
   - name: dirbThreads
@@ -77,16 +75,6 @@ steps:
     type: function
     log: "Creating content-discovery output folder"
     function: 'create_folder("{{Output}}/content-discovery")'
-  # ---------------------------------------------------------------------------
-  # Check input file size limit
-  # ---------------------------------------------------------------------------
-  - name: check-input-limit
-    type: function
-    log: "Checking input file size"
-    pre_condition: 'file_length("{{httpFile}}") > {{dirLimit}}'
-    functions:
-      - 'log_error("Filter", "Got input file greater than {{dirLimit}} line")'
-      - 'exit(1)'
 
   # ---------------------------------------------------------------------------
   # Directory bruteforce with ffuf

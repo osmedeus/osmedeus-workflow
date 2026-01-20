@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: spider
+name: single-target-spider
 description: Crawling links in http site
 tags: spider, crawl, links, secrets
 
@@ -13,6 +13,10 @@ tags: spider, crawl, links, secrets
 params:
   - name: httpInterestingFile
     default: "{{Output}}/fingerprint/http-interesting-{{TargetSpace}}.txt"
+
+  - name: httpFile
+    default: "{{Output}}/probing/http-{{TargetSpace}}.txt"
+
 
   - name: linkFile
     default: "{{Output}}/links/links-{{TargetSpace}}.txt"
@@ -49,6 +53,7 @@ dependencies:
   commands:
     - katana
     - httpx
+    - trufflehog
 
   variables:
     - name: Target
@@ -84,46 +89,40 @@ steps:
       - 'create_folder("{{Output}}/secrets")'
 
   # ---------------------------------------------------------------------------
-  # Check skip condition
-  # ---------------------------------------------------------------------------
-  - name: check-skip-spidering
-    type: function
-    log: "Checking if spidering should be skipped"
-    pre_condition: '"{{skipSpidering}}" == "true"'
-    functions:
-      - 'log_error("Filter", "Skipping spidering")'
-      - 'exit(1)'
-
-  # ---------------------------------------------------------------------------
   # Web crawling with Katana
   # ---------------------------------------------------------------------------
   - name: web-crawling
     type: foreach
     log: "Crawling web pages with Katana"
-    pre_condition: 'file_exists("{{httpInterestingFile}}")'
-    input: "{{httpInterestingFile}}"
+    pre_condition: 'file_exists("{{httpFile}}")'
+    input: "{{httpFile}}"
     variable: line
     threads: "{{spiderPrallel}}"
     step:
       name: katana-single-target
       type: bash
-      command: 'timeout -k 1m {{spiderTimeout}} katana -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
+      command: 'timeout -k 1m {{spiderTimeout}} katana -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
 
-  # # ---------------------------------------------------------------------------
-  # # Get HTTP responses and scan for secrets
-  # # ---------------------------------------------------------------------------
-  # - name: fetch-responses-and-scan-secrets
-  #   type: bash
-  #   log: "Fetching HTTP responses and scanning for secrets with trufflehog"
-  #   commands:
-  #     - "cat {{linkFile}} | {{Binaries}}/httpx -silent -nf -no-color -title -t {{httpThreads}} -H '{{defaultUA}}' --store-response-dir {{httpResponse}}"
-  #     - "trufflehog --concurrency={{trufflehogThreads}} filesystem {{httpResponse}} > {{Output}}/secrets/trufflehog-{{TargetSpace}}-output.txt 2>&1"
 
-  # # ---------------------------------------------------------------------------
-  # # Print results if not too large
-  # # ---------------------------------------------------------------------------
-  # - name: print-results
-  #   type: function
-  #   log: "Printing link results"
-  #   pre_condition: 'file_length("{{linkFile}}") < 10000'
-  #   function: 'cat("{{linkFile}}")'
+  - name: web-crawling-with-headless-browser
+    type: foreach
+    log: "Crawling web pages with Katana Headless Browser"
+    pre_condition: 'file_exists("{{httpFile}}")'
+    input: "{{httpFile}}"
+    variable: line
+    threads: "{{spiderPrallel}}"
+    step:
+      name: katana-single-target
+      type: bash
+      command: 'timeout -k 1m {{spiderTimeout}} katana -depth {{spiderDepth}} -headless -system-chrome -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
+
+
+  # ---------------------------------------------------------------------------
+  # Get HTTP responses and scan for secrets
+  # ---------------------------------------------------------------------------
+  - name: fetch-responses-and-scan-secrets
+    type: bash
+    log: "Fetching HTTP responses and scanning for secrets with trufflehog"
+    commands:
+      - "cat {{linkFile}} | {{Binaries}}/httpx -silent -nf -no-color -title -t {{httpThreads}} -H '{{defaultUA}}' --store-response-dir {{httpResponse}}"
+      - "trufflehog --concurrency={{trufflehogThreads}} filesystem {{httpResponse}} > {{Output}}/secrets/trufflehog-{{TargetSpace}}-output.txt 2>&1"

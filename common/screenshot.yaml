@@ -65,7 +65,7 @@ steps:
     type: function
     log: "Creating screenshot output folder"
     functions:
-      - 'createFolder("{{Output}}/screenshots/{{TargetSpace}}-screenshots")'
+      - 'create_folder("{{Output}}/screenshots/{{TargetSpace}}-screenshots")'
 
   # ---------------------------------------------------------------------------
   # Take screenshots with httpx
@@ -73,7 +73,7 @@ steps:
   - name: capture-screenshots
     type: bash
     log: "Capturing screenshots with httpx"
-    pre_condition: 'fileExists("{{httpInterestingFile}}")'
+    pre_condition: 'file_exists("{{httpInterestingFile}}")'
     command: 'cat {{httpInterestingFile}} | {{Binaries}}/httpx -t {{screenshotThreads}} -no-color -silent -screenshot -screenshot-timeout {{screenTimeout}} -json -system-chrome -store-response-dir {{Output}}/screenshots/{{TargetSpace}}-screenshots/ >> {{screenshotHttpJsonlFile}}'
     on_error: 
       - action: continue # expected error if there is no chrome installed
@@ -81,15 +81,15 @@ steps:
   - name: process-screenshots
     type: function
     log: "Processing screenshot results"
-    pre_condition: 'fileExists("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot.html")'
+    pre_condition: 'file_exists("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot.html")'
     functions:
-      - 'moveFile("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot.html", "{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot-{{TargetSpace}}.html")'
+      - 'move_file("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot.html", "{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot-{{TargetSpace}}.html")'
+    exports:
+      total_screenshots: "dir_length('{{Output}}/screenshots/{{TargetSpace}}-screenshots/')"
 
   # ---------------------------------------------------------------------------
   # Summary
   # ---------------------------------------------------------------------------
   - name: screenshot-summary
     type: function
-    function: 'printf("Calculating total screenshots")'
-    exports:
-      total_screenshots: "dirLength('{{Output}}/screenshots/{{TargetSpace}}-screenshots/')"
+    function: 'printf("Total screenshots {{total_screenshots}}")'

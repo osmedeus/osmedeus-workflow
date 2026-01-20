@@ -1,0 +1,29 @@
+kind: flow
+name: cidr-scan
+description: Running fast reconnaissance routine
+tags: web, recon, domain, url
+
+dependencies:
+  variables:
+    - name: Target
+      type: url
+      required: true
+
+modules:
+  - name: single-target-port-scan
+    path: fragments/single-target-port-scan.yaml
+
+  - name: single-target-spider
+    path: fragments/single-target-spider.yaml
+    depends_on:
+      - single-target-http-fingerprint
+
+  - name: single-target-vuln-scan
+    path: fragments/single-target-vuln-scan.yaml
+    depends_on:
+      - single-target-http-fingerprint
+
+  - name: single-target-content-discovery
+    path: fragments/single-target-content-discovery.yaml
+    depends_on:
+      - single-target-http-fingerprint

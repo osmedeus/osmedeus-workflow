@@ -65,7 +65,7 @@ steps:
   - name: create-output-folder
     type: function
     log: "Creating ipspace output folder"
-    function: 'createFolder("{{Output}}/ipspace")'
+    function: 'create_folder("{{Output}}/ipspace")'
 
   # ---------------------------------------------------------------------------
   # ASN and IP range discovery
@@ -81,26 +81,22 @@ steps:
   - name: process-cdn-results
     type: function
     log: "Processing cdn results from HTTP Data"
-    pre_condition: 'fileExists("{{httpFingerprintJsonFile}}")'
+    pre_condition: 'file_exists("{{httpFingerprintJsonFile}}")'
     functions:
       - exec_cmd("cat {{httpFingerprintJsonFile}}  | jq '[.cdn_name, .cdn_type, .host_ip] | join(\" - \")' >> {{rawIPSpace}}")
-      - sortUnix("{{rawIPSpace}}")
+      - sort_unix("{{rawIPSpace}}")
       # just simply grep out the cdn IP
       - exec_cmd("cat {{rawIPSpace}} | grep -v '{{cdnTag}}' >> {{nonCdnIPFile}}")
-      - sortUnix("{{nonCdnIPFile}}")
+      - sort_unix("{{nonCdnIPFile}}")
 
   - name: process-ip-results
     type: function
     log: "Processing IP results from HTTP Data and DNS Data"
-    pre_condition: 'fileExists("{{httpFingerprintJsonFile}}")'
+    pre_condition: 'file_exists("{{httpFingerprintJsonFile}}")'
     functions:
       # grepping IP from DNS data
       - exec_cmd("cat {{dnsFile}}  | grep ' A ' | awk '{print $3}' | sort -u >> {{ipFile}}")
       - exec_cmd("cat {{httpFingerprintJsonFile}}  | jq -r '.a[]' | sort -u >> {{ipFile}}")
-      - sortUnix("{{ipFile}}")
-
-  - name: process-ip-results
-    type: function
-    log: "Processing IP results"
-    functions:
+      - sort_unix("{{ipFile}}")
+      # count total ips
       - 'db_total_ips("{{ipFile}}")'

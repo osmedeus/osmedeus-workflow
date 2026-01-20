@@ -1,11 +1,7 @@
-# =============================================================================
-# Module Workflow: Subdomain Enumeration
-# =============================================================================
-
 kind: module
-name: subdomain-enum
-description: Scanning for subdomain
-tags: subdomain, enumeration, discovery, dns
+name: subdomain-enum-fragment
+description: Subdomain enumeration using multiple tools
+hidden: true
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
@@ -19,27 +15,6 @@ params:
   - name: enable_amass
     type: bool
     default: false
-
-# -----------------------------------------------------------------------------
-# DEPENDENCIES SECTION
-# -----------------------------------------------------------------------------
-dependencies:
-  commands:
-    - subfinder
-    - findomain
-  variables:
-    - name: Target
-      type: string
-      required: true
-
-# -----------------------------------------------------------------------------
-# REPORTS SECTION
-# -----------------------------------------------------------------------------
-reports:
-  - name: final-subdomains
-    path: "{{Output}}/subdomain/final-{{TargetSpace}}.txt"
-    type: text
-    description: Final list of subdomains
 
 # -----------------------------------------------------------------------------
 # STEPS SECTION
@@ -105,5 +80,3 @@ steps:
     functions: 
       - 'clean_sub("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Target}}")'
       - 'sort_unix("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt")'
-
-

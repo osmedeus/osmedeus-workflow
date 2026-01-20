@@ -1,11 +1,6 @@
-# =============================================================================
-# Module Workflow: Vulnerability Scanning
-# =============================================================================
-
 kind: module
-name: vulnerability-scan
-description: Run vulnerability scan on all HTTP hosts
-tags: vulnerability, security, nuclei
+name: single-target-vuln-scan
+description: Vulnerability scanning with parallel nuclei templates
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
@@ -35,9 +30,6 @@ params:
 
   - name: extraNuclei
     default: " "
-
-  - name: vulnLimit
-    default: "10000"
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
@@ -83,17 +75,6 @@ steps:
       - 'create_folder("{{Output}}/vulnscan")'
 
   # ---------------------------------------------------------------------------
-  # Check input file limit
-  # ---------------------------------------------------------------------------
-  - name: check-input-limit
-    type: function
-    log: "Checking input file size limit"
-    pre_condition: 'file_length("{{httpFile}}") > {{vulnLimit}}'
-    functions:
-      - 'log_error("Got {{file_length("{{httpFile}}")}} lines in input file, which is greater than {{vulnLimit}} line")'
-      - 'exit(1)'
-
-  # ---------------------------------------------------------------------------
   # Nuclei vulnerability scan
   # ---------------------------------------------------------------------------
   - name: nuclei-scan
@@ -111,10 +92,10 @@ steps:
       - jsonl_filter("{{nucleiOutputJsonl}}", "{{nucleiCleanOutputJsonl}}", "template-id,info.name,info.severity,matched-at,matched-name")
       - sort_unix("{{nucleiCleanOutputJsonl}}")
 
-
   # ---------------------------------------------------------------------------
   # Generate vulnerability markdown report
   # ---------------------------------------------------------------------------
+
   - name: generate-vuln-md-report
     type: function
     log: "Generating vulnerability markdown report"

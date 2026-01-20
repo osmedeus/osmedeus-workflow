@@ -93,7 +93,7 @@ steps:
   - name: create-output-folder
     type: function
     log: "Creating archive output folder"
-    function: 'createFolder("{{Output}}/archive")'
+    function: 'create_folder("{{Output}}/archive")'
 
   # ---------------------------------------------------------------------------
   # Passive archive URL discovery using urlfinder
@@ -109,7 +109,7 @@ steps:
     functions:
       - 'exec_cmd("cat {{archiveJsonFile}} | jq -r \".url\" > {{archiveUrlFile}}")'
       - 'interesting_urls("{{archiveUrlFile}}", "{{archiveInterestingUrlFile}}")'
-      - 'sortUnix("{{archiveInterestingUrlFile}}")'
+      - 'sort_unix("{{archiveInterestingUrlFile}}")'
 
   # ---------------------------------------------------------------------------
   # Beautify results with HTTP probing
@@ -117,13 +117,13 @@ steps:
   - name: probe-archive-urls
     type: bash
     log: "Probing archive URLs with httpx"
-    pre_condition: 'fileExists("{{archiveInterestingUrlFile}}")'
+    pre_condition: 'file_exists("{{archiveInterestingUrlFile}}")'
     command: 'cat {{archiveInterestingUrlFile}} | {{Binaries}}/httpx -H "{{defaultUA}}" -timeout 10 -t {{archiveHttpThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain >> {{httpArchiveJsonFile}}'
 
   - name: beautify-archive-results
     type: function
     log: "Beautifying archive results"
-    pre_condition: 'fileLength("{{httpArchiveJsonFile}}") > 1'
+    pre_condition: 'file_length("{{httpArchiveJsonFile}}") > 1'
     functions:
       - jsonl_filter("{{httpArchiveJsonFile}}", "{{httpArchiveCleanJsonFile}}", "url,status,length,words,redirectlocation")
       - 'convert_jsonl_to_markdown("{{httpArchiveCleanJsonFile}}", "{{httpArchiveCleanMarkdownFile}}")'

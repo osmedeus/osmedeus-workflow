@@ -123,6 +123,10 @@ steps:
     command: 'tool1 -t {{Target}} -o {{Output}}/results.txt'
 ```
 
+## More Examples
+
+For additional workflow examples and patterns, see the [test workflows](https://github.com/j3ssie/osmedeus/tree/main/test/testdata/workflows) in the main Osmedeus repository.
+
 ## Documentation
 
 - [Osmedeus Documentation](https://docs.osmedeus.org/)

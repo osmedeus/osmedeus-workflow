@@ -1,10 +1,6 @@
-# =============================================================================
-# Module Workflow: HTTP Fingerprinting
-# =============================================================================
 kind: module
-name: http-fingerprint
-description: Fingerprint HTTP technology and response
-tags: fingerprint, technology, http
+name: single-target-http-fingerprint
+description: Vulnerability scanning with parallel nuclei templates
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
@@ -19,8 +15,8 @@ params:
   - name: httpFingerprintJsonFile
     default: "{{Output}}/fingerprint/http-fingerprint-{{TargetSpace}}.jsonl"
 
-  - name: httpInterestingJsonFile
-    default: "{{Output}}/fingerprint/http-interesting-{{TargetSpace}}.jsonl"
+  # - name: httpInterestingJsonFile
+  #   default: "{{Output}}/fingerprint/http-interesting-{{TargetSpace}}.jsonl"
 
   - name: httpInterestingFilteredJsonFile
     default: "{{Output}}/fingerprint/http-interesting-filtered-{{TargetSpace}}.jsonl"
@@ -70,7 +66,16 @@ steps:
   - name: create-output-folder
     type: function
     log: "Creating fingerprint output folder"
-    function: 'create_folder("{{Output}}/fingerprint")'
+    functions:
+      - 'create_folder("{{Output}}/fingerprint")'
+      - 'create_folder("{{Output}}/probing")'
+
+  - name: generate-input-file
+    type: function
+    log: "Generating input file"
+    functions:
+      - exec_cmd("echo {{Target}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
+      - exec_cmd("cat {{Target}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
 
   # ---------------------------------------------------------------------------
   # HTTP fingerprinting with httpx
@@ -78,29 +83,16 @@ steps:
   - name: http-fingerprint
     type: bash
     log: "Fingerprinting HTTP hosts with httpx"
-    pre_condition: 'file_exists("{{httpFile}}")'
-    command: 'cat {{httpFile}} | httpx -H "{{defaultUA}}" -timeout {{httpTimeout}} -t {{httpThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain >> {{httpFingerprintJsonFile}}'
-
-  - name: create-unique-jsonl
-    type: function
-    log: "Creating unique HTTP file based on host, status code, and body SHA256"
-    functions:
-      - jsonl_unique("{{httpFingerprintJsonFile}}", "{{httpInterestingJsonFile}}", "host,status,hash.body_sha256")
-      - exec_cmd("cat {{httpInterestingJsonFile}} | jq -r '.url' > {{httpInterestingFile}}")
-
-  - name: fallback-interesting-http
-    type: function
-    log: "Creating HTTP interesting if we can't unique the hash"
-    pre_condition: '!file_exists("{{httpInterestingFile}}")'
-    functions:
-      - exec_cmd("cp {{httpFile}} {{httpInterestingFile}}")
+    # pre_condition: 'file_exists("{{httpFile}}")'
+    commands:
+      - 'cat {{httpFile}} | httpx -H "{{defaultUA}}" -timeout {{httpTimeout}} -t {{httpThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain >> {{httpFingerprintJsonFile}}'
 
   - name: beautify-interesting-http-results
     type: function
     log: "Beautifying interesting HTTP results"
-    pre_condition: 'file_exists("{{httpInterestingJsonFile}}")'
+    pre_condition: 'file_exists("{{httpFingerprintJsonFile}}")'
     functions:
-      - jsonl_filter("{{httpInterestingJsonFile}}", "{{httpInterestingFilteredJsonFile}}", "url,title,status_code,content_length,lines,webserver,tech,cdn")
+      - jsonl_filter("{{httpFingerprintJsonFile}}", "{{httpInterestingFilteredJsonFile}}", "url,title,status_code,content_length,lines,webserver,tech,cdn")
       - 'convert_jsonl_to_markdown("{{httpInterestingFilteredJsonFile}}", "{{httpInterestingMarkdownFile}}")'
 
   - name: process-fingerprint-in-db
