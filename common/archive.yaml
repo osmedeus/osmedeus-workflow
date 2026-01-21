@@ -123,7 +123,7 @@ steps:
   - name: beautify-archive-results
     type: function
     log: "Beautifying archive results"
-    pre_condition: 'file_length("{{httpArchiveJsonFile}}") > 1'
+    pre_condition: 'file_length("{{httpArchiveJsonFile}}") > 0'
     functions:
       - jsonl_filter("{{httpArchiveJsonFile}}", "{{httpArchiveCleanJsonFile}}", "url,status,length,words,redirectlocation")
       - 'convert_jsonl_to_markdown("{{httpArchiveCleanJsonFile}}", "{{httpArchiveCleanMarkdownFile}}")'

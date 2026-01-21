@@ -148,7 +148,7 @@ steps:
   - name: merge-existing-dns
     type: function
     log: "Merging existing dns"
-    pre_condition: 'file_length("{{Output}}/probing/permutations-{{TargetSpace}}.txt") > 1 && file_length("{{Output}}/probing/subbrute-{{TargetSpace}}.txt") > 1'
+    pre_condition: 'file_length("{{Output}}/probing/permutations-{{TargetSpace}}.txt") > 0 && file_length("{{Output}}/probing/subbrute-{{TargetSpace}}.txt") > 0'
     functions:
       - 'exec_cmd("cat {{Output}}/probing/subbrute-{{TargetSpace}}.txt {{Output}}/probing/permutations-{{TargetSpace}}.txt  >> {{dnsFile}}")'
       - 'exec_cmd("{{dnsFile}}")'

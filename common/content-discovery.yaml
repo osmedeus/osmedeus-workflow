@@ -109,7 +109,7 @@ steps:
   - name: process-results
     type: function
     log: "Processing and beautifying scan results"
-    pre_condition: 'dir_length("{{Output}}/content-discovery/") > 1'
+    pre_condition: 'dir_length("{{Output}}/content-discovery/") > 0'
     functions:
       - 'exec_cmd("cat {{Output}}/content-discovery/raw-*.json | jq -r ''[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.redirectlocation] | join(\",\")'' > {{contentDiscoverFile}}")'
       # clean up raw json files

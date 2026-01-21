@@ -16,14 +16,14 @@ modules:
   - name: single-target-spider
     path: fragments/single-target-spider.yaml
     depends_on:
-      - single-target-http-fingerprint
+      - single-target-port-scan
 
   - name: single-target-vuln-scan
     path: fragments/single-target-vuln-scan.yaml
     depends_on:
-      - single-target-http-fingerprint
+      - single-target-port-scan
 
   - name: single-target-content-discovery
     path: fragments/single-target-content-discovery.yaml
     depends_on:
-      - single-target-http-fingerprint
+      - single-target-port-scan
