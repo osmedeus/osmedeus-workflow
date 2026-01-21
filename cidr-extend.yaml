@@ -1,0 +1,10 @@
+kind: flow
+name: cidr-scan
+description: Running reconnaissance routine on a CIDR range or IP address with all ports
+tags: web, recon, ip, cidr
+extends: cidr
+
+override:
+  params:
+    commonHttpPorts: "1-65535"
+    commonHttpsPort: "1-65535"

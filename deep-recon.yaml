@@ -1,0 +1,12 @@
+kind: flow
+name: deep-recon
+description: Running deep reconnaissance on a target
+tags: recon, domain, deep, extend
+extends: general
+
+override:
+  params:
+    enableDnsBruteFocing: true
+    enablePermutation: true
+    commonHttpsPort: "1-65535"
+    commonHttpPorts: "1-65535"

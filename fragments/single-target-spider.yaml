@@ -101,7 +101,7 @@ steps:
     step:
       name: katana-single-target
       type: bash
-      command: 'timeout -k 1m {{spiderTimeout}} katana -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
+      command: 'timeout -k 1m {{spiderTimeout}} katana -silent -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
 
 
   - name: web-crawling-with-headless-browser
@@ -114,7 +114,7 @@ steps:
     step:
       name: katana-single-target
       type: bash
-      command: 'timeout -k 1m {{spiderTimeout}} katana -depth {{spiderDepth}} -headless -system-chrome -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
+      command: 'timeout -k 1m {{spiderTimeout}} katana -silent -depth {{spiderDepth}} -headless -system-chrome -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
 
 
   # ---------------------------------------------------------------------------
