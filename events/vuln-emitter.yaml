@@ -4,6 +4,7 @@ name: vuln-emitter
 kind: module
 description: Simulates a vulnerability scanner emitting finding events
 tags: event,emitter,vulnerability,example
+hidden: true
 
 params:
   - name: target

@@ -4,6 +4,7 @@ name: filtered-receiver
 kind: module
 description: Workflow with filtered event triggers and complex input extraction
 tags: event,receiver,filter,example
+hidden: true
 
 trigger:
   # Only trigger on high/critical severity findings

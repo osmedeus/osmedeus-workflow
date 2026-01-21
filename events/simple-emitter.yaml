@@ -4,6 +4,7 @@ name: simple-emitter
 kind: module
 description: Simple workflow that emits events for discovered assets
 tags: event,emitter,example
+hidden: true
 
 params:
   - name: target

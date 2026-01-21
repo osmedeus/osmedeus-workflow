@@ -4,6 +4,7 @@ name: dedupe-receiver
 kind: module
 description: Workflow with event deduplication to avoid processing duplicates
 tags: event,receiver,dedupe,example
+hidden: true
 
 trigger:
   # Deduplicate events by URL within a 5 minute window

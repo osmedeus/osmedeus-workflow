@@ -4,6 +4,7 @@ name: simple-receiver
 kind: module
 description: Simple workflow that receives and processes events
 tags: event,receiver,trigger,example
+hidden: true
 
 trigger:
   # Trigger on new asset discovery events

@@ -101,7 +101,7 @@ steps:
     step:
       name: ffuf-single-target
       type: bash
-      command: 'timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -se -D -fc "429,404,400" -e "asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt" -json -H "{{defaultUA}}" -ac -s -fc "429,404,400" -json -u "[[line]]/FUZZ" -w {{wordlists}}:FUZZ > {{Output}}/content-discovery/raw-[[_id_]].json 2>/dev/null'
+      command: 'timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -se -D -fc "429,404,400" -e "asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt" -json -H "{{defaultUA}}" -ac -s -fc "429,404,400" -json -u "[[line]]/FUZZ" -w {{contentDiscoverWordlist}}:FUZZ > {{Output}}/content-discovery/raw-[[_id_]].json 2>/dev/null'
 
   # ---------------------------------------------------------------------------
   # Process and beautify results
