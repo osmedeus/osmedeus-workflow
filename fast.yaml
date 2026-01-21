@@ -1,18 +1,6 @@
-# =============================================================================
-# Flow Workflow: General Reconnaissance
-# =============================================================================
-# Running default reconnaissance routine for domain targets.
-# Executes subdomain enumeration, probing, fingerprinting, screenshots,
-# spidering, vulnerability scanning, directory bruteforcing, and port scanning.
-# =============================================================================
-
-# -----------------------------------------------------------------------------
-# WORKFLOW-LEVEL FIELDS
-# -----------------------------------------------------------------------------
-
 kind: flow
 name: fast
-description: Running fast reconnaissance routine
+description: Running fast reconnaissance routine for a quick data collection
 tags: fast, recon, domain
 
 # -----------------------------------------------------------------------------

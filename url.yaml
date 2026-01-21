@@ -1,0 +1,4 @@
+kind: flow
+name: url
+description: Serving as an alias for web-analysis flow
+extends: web-analysis

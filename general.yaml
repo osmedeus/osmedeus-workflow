@@ -11,9 +11,9 @@
 # -----------------------------------------------------------------------------
 
 kind: flow
-name: fast
-description: Running fast reconnaissance routine
-tags: fast, recon, domain
+name: general
+description: Running full reconnaissance routine
+tags: recon, domain
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION

@@ -1,12 +1,12 @@
 kind: flow
 name: web-analysis
-description: Running fast reconnaissance routine
+description: Running reconnaissance routine on a single target
 tags: web, recon, domain, url
 
 dependencies:
   variables:
     - name: Target
-      type: url
+      type: url,domain
       required: true
 
 modules:

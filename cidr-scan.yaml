@@ -1,12 +1,12 @@
 kind: flow
 name: cidr-scan
-description: Running fast reconnaissance routine
-tags: web, recon, domain, url
+description: Running reconnaissance routine on a CIDR range or IP address
+tags: web, recon, ip, cidr
 
 dependencies:
   variables:
     - name: Target
-      type: url
+      type: cidr,ip
       required: true
 
 modules:
