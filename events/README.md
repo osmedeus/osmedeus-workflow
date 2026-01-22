@@ -2,6 +2,18 @@
 
 This folder contains sample workflows demonstrating the event trigger and generation system.
 
+## Running Examples
+
+```bash
+
+# The receiver will automatically process events if registered with the scheduler
+osmedeus serve -F ./events/
+
+# Run the emitter to generate events
+osmedeus run -m simple-emitter -t example.com
+
+```
+
 ## Workflows
 
 ### Emitters (Event Generators)
@@ -86,14 +98,4 @@ trigger:
       field: "value"
       name: target
     enabled: true
-```
-
-## Running Examples
-
-```bash
-# Run the emitter to generate events
-osmedeus run -m simple-emitter -t example.com
-
-# The receiver will automatically process events if registered with the scheduler
-osmedeus run -m simple-receiver -t example.com
 ```

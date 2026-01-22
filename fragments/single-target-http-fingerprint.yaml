@@ -1,6 +1,6 @@
 kind: module
 name: single-target-http-fingerprint
-description: Vulnerability scanning with parallel nuclei templates
+description: Fingerprint a single host - tech stack, CDN, TLS, and response hashes
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION

@@ -3,7 +3,7 @@
 # =============================================================================
 kind: module
 name: http-fingerprint
-description: Fingerprint HTTP technology and response
+description: Detect web technologies, CDN, TLS info, and response signatures
 tags: fingerprint, technology, http
 
 # -----------------------------------------------------------------------------

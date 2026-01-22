@@ -16,6 +16,10 @@ osmedeus install workflow https://github.com/osmedeus/osmedeus-workflow.git
 
 See [Osmedeus documentation](https://docs.osmedeus.org/workflows/overview) for more details.
 
+## More Examples
+
+For additional workflow examples and patterns, see the [test workflows](https://github.com/j3ssie/osmedeus/tree/main/test/testdata/workflows) in the main Osmedeus repository.
+
 ## Reconnaissance Methodology
 
 The workflow follows a phased approach to reconnaissance:
@@ -123,9 +127,6 @@ steps:
     command: 'tool1 -t {{Target}} -o {{Output}}/results.txt'
 ```
 
-## More Examples
-
-For additional workflow examples and patterns, see the [test workflows](https://github.com/j3ssie/osmedeus/tree/main/test/testdata/workflows) in the main Osmedeus repository.
 
 ## Documentation
 

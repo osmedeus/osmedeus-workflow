@@ -4,7 +4,7 @@
 
 kind: module
 name: single-target-content-discovery
-description: Run directory scan based on http output
+description: Bruteforce directories and files on a single target
 tags: directory, bruteforce, content-discovery
 
 # -----------------------------------------------------------------------------

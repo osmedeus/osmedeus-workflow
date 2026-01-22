@@ -1,6 +1,6 @@
 kind: flow
 name: fast
-description: Running fast reconnaissance routine for a quick data collection
+description: Quick recon - subdomain discovery and HTTP fingerprinting only
 tags: fast, recon, domain
 
 # -----------------------------------------------------------------------------

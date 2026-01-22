@@ -1,6 +1,6 @@
 kind: flow
-name: cidr-scan
-description: Running reconnaissance routine on a CIDR range or IP address with all ports
+name: cidr-extend
+description: IP/CIDR deep scan - all 65535 ports with full analysis
 tags: web, recon, ip, cidr
 extends: cidr
 

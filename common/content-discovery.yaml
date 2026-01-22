@@ -4,7 +4,7 @@
 
 kind: module
 name: content-discovery
-description: Run directory scan based on http output
+description: Bruteforce directories and files with ffuf
 tags: directory, bruteforce, content-discovery
 
 # -----------------------------------------------------------------------------

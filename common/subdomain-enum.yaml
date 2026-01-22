@@ -4,7 +4,7 @@
 
 kind: module
 name: subdomain-enum
-description: Scanning for subdomain
+description: Enumerate subdomains via subfinder, amass, assetfinder, and findomain
 tags: subdomain, enumeration, discovery, dns
 
 # -----------------------------------------------------------------------------

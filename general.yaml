@@ -12,7 +12,7 @@
 
 kind: flow
 name: general
-description: Running full reconnaissance routine
+description: Full-spectrum recon - subdomains, fingerprints, vulns, and more
 tags: recon, domain
 
 # -----------------------------------------------------------------------------

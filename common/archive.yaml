@@ -11,7 +11,7 @@
 
 kind: module
 name: archive
-description: Finding archive URLs using passive reconnaissance and beautifying results
+description: Mine historical URLs from Wayback Machine and CommonCrawl
 tags: archive, recon, passive
 
 # -----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 kind: module
 name: subdomain-enum-fragment
-description: Subdomain enumeration using multiple tools
+description: Multi-source subdomain discovery fragment
 hidden: true
 
 # -----------------------------------------------------------------------------

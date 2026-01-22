@@ -4,7 +4,7 @@
 
 kind: module
 name: ipspace
-description: Discovery IP Space of the target
+description: Map IP ranges, ASN ownership, and filter CDN addresses
 tags: ipspace, network, asn, cidr
 
 # -----------------------------------------------------------------------------

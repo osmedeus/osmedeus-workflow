@@ -3,8 +3,8 @@
 # =============================================================================
 
 kind: module
-name: portscan
-description: Quick port scan for all ports
+name: single-target-port-scan
+description: Probe HTTP services across common ports on a single target
 tags: portscan, rustscan, network
 
 # -----------------------------------------------------------------------------
@@ -108,7 +108,7 @@ steps:
     on_error: 
       - action: continue # expected error if no port found
 
-  - name: sort-http-results
+  - name: http-probe-ports-for-open-port
     type: bash
     log: "Probing for HTTP services on open ports"
     pre_condition: 'file_exists("{{httpFile}}")'

@@ -1,6 +1,6 @@
 kind: flow
 name: deep-recon
-description: Running deep reconnaissance on a target
+description: Exhaustive recon - full port range with DNS bruteforce and permutations
 tags: recon, domain, deep, extend
 extends: general
 

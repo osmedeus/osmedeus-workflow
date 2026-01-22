@@ -1,6 +1,6 @@
 kind: flow
-name: cidr-scan
-description: Running reconnaissance routine on a CIDR range or IP address
+name: cidr
+description: IP/CIDR recon - port scan, spider, vuln scan, and content discovery
 tags: web, recon, ip, cidr
 
 dependencies:

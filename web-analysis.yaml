@@ -1,6 +1,6 @@
 kind: flow
 name: web-analysis
-description: Running reconnaissance routine on a single target
+description: Single-target deep dive - fingerprint, spider, scan, and discover
 tags: web, recon, domain, url
 
 dependencies:

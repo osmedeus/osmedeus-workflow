@@ -1,6 +1,6 @@
 kind: module
 name: single-target-vuln-scan
-description: Vulnerability scanning with parallel nuclei templates
+description: Hunt vulnerabilities on a single target with Nuclei
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION

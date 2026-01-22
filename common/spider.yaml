@@ -4,7 +4,7 @@
 
 kind: module
 name: spider
-description: Crawling links in http site
+description: Crawl web pages with Katana and hunt for secrets
 tags: spider, crawl, links, secrets
 
 # -----------------------------------------------------------------------------

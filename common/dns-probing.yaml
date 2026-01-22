@@ -4,7 +4,7 @@
 
 kind: module
 name: dns-probing
-description: Examining the DNS and HTTP host of the target
+description: Resolve DNS records, bruteforce subdomains, and probe HTTP endpoints
 tags: dns, probing, http, resolution
 
 # -----------------------------------------------------------------------------

@@ -4,7 +4,7 @@
 
 kind: module
 name: screenshot
-description: Screenshot based on result of probing
+description: Capture visual snapshots of discovered web assets
 tags: screenshot, visual, http
 
 # -----------------------------------------------------------------------------

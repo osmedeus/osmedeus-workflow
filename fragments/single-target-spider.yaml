@@ -4,7 +4,7 @@
 
 kind: module
 name: single-target-spider
-description: Crawling links in http site
+description: Crawl and extract secrets from a single web target
 tags: spider, crawl, links, secrets
 
 # -----------------------------------------------------------------------------
