@@ -2,16 +2,14 @@
 
 This folder contains sample workflows demonstrating the event trigger and generation system.
 
-## Running Examples
+## Quick Start
 
 ```bash
+# Start the server with event receiver
+osmedeus server -F events/vuln-scan-receiver.yaml
 
-# The receiver will automatically process events if registered with the scheduler
-osmedeus serve -F ./events/
-
-# Run the emitter to generate events
-osmedeus run -m simple-emitter -t example.com
-
+# Generate a sample event
+osmedeus eval 'generate_event("hackerone.com", "test.asset.vars", "cli", "subdomain", "docs.hackerone.com")'
 ```
 
 ## Workflows
@@ -21,81 +19,91 @@ osmedeus run -m simple-emitter -t example.com
 | File | Description |
 |------|-------------|
 | `simple-emitter.yaml` | Basic event emission with `generate_event` and `generate_event_from_file` |
-| `vuln-emitter.yaml` | Simulates a vulnerability scanner emitting structured finding events |
 
 ### Receivers (Event Triggers)
 
 | File | Description |
 |------|-------------|
-| `simple-receiver.yaml` | Basic event trigger that listens for discovery events |
-| `filtered-receiver.yaml` | Advanced filtering with severity checks and jq extraction |
-| `dedupe-receiver.yaml` | Event deduplication to prevent duplicate processing |
+| `simple-receiver.yaml` | Basic event trigger with filters and deduplication |
+| `vuln-scan-receiver.yaml` | HTTP fingerprinting and Nuclei vulnerability scan on received events |
 
 ## Event Functions
 
 ### generate_event(workspace, topic, source, data_type, data)
-Emit a single event with optional structured data. The workspace parameter identifies the target space for the event.
+
+Emit a single event with optional structured data.
 
 ```yaml
 - type: function
   function: |
-    generate_event("{{Workspace}}", "discovery.asset", "my-scanner", "subdomain", "api.example.com")
+    generate_event("{{TargetSpace}}", "discovery.asset", "my-scanner", "subdomain", "api.example.com")
 ```
 
 ### generate_event_from_file(workspace, topic, source, data_type, file_path)
+
 Emit one event per line from a file. Returns the count of events emitted.
 
 ```yaml
 - type: function
   functions:
-    - 'generate_event_from_file("{{Workspace}}", "discovery.asset", "my-scanner", "subdomain", "{{Output}}/subdomains.txt")'
+    - 'generate_event_from_file("{{TargetSpace}}", "discovery.asset", "my-scanner", "subdomain", "{{Output}}/subdomains.txt")'
 ```
 
 ## Trigger Configuration
 
 ### Basic Event Trigger
+
 ```yaml
-trigger:
+triggers:
   - name: on-new-asset
     on: event
     event:
       topic: "discovery.asset"
     input:
-      type: event_data
-      field: "value"
-      name: target
+      Target: event_data.value
     enabled: true
 ```
 
-### Filtered Event Trigger
+### Filtered Event Trigger with Deduplication
+
 ```yaml
-trigger:
-  - name: on-high-severity
+triggers:
+  - name: on-new-asset
     on: event
     event:
-      topic: "scan.finding"
+      topic: "discovery.asset"
       filters:
-        - "event.data.severity == 'high'"
-        - "event.data.confirmed == true"
+        - "event.source == 'simple-emitter'"
+        - "event.data_type == 'subdomain'"
+      dedupe_key: "{{event.source}}-{{event.data}}"
+      dedupe_window: 10s
     input:
-      type: function
-      function: 'jq("{{event.data}}", ".url")'
-      name: target
+      target: event_data.value
     enabled: true
 ```
 
-### Deduplicated Event Trigger
+### Advanced Input Extraction
+
 ```yaml
-trigger:
-  - name: on-url-dedupe
+triggers:
+  - name: on-asset-vars
     on: event
     event:
-      topic: "crawler.url"
-      dedupe_key: "{{event.data.url}}"
-      dedupe_window: "5m"
+      topic: "*"
     input:
-      type: event_data
-      field: "value"
-      name: target
+      Target: pick_valid(event_data.sample, event_data.value)
+      RawData: event.data
+      asset_type: event.type
+      source: event.source
+      description: trim_left(event.topic, 'test.')
     enabled: true
+```
+
+### Disabling Manual CLI Execution
+
+```yaml
+triggers:
+  - name: manual-trigger
+    on: manual
+    enabled: false
 ```

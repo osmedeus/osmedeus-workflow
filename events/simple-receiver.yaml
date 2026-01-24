@@ -6,7 +6,7 @@ description: Simple workflow that receives and processes events
 tags: event,receiver,trigger,example
 hidden: true
 
-trigger:
+triggers:
   # Trigger on new asset discovery events
   - name: on-new-asset
     on: event
@@ -15,11 +15,13 @@ trigger:
       filters:
         - "event.source == 'simple-emitter'"
         - "event.data_type == 'subdomain'"
+      dedupe_key: "{{event.source}}-{{event.data}}"
+      dedupe_window: 10s
     input:
-      type: event_data
-      field: "value"
-      name: target
+      target: event_data.value
     enabled: true
+
+  # this is to disable the workflow to run from CLI
   - name: manual-trigger
     on: manual
     enabled: false
@@ -44,3 +46,14 @@ steps:
     type: function
     functions:
       - 'print_green("Processed: {{target}}")'
+
+  - name: verify-vars
+    type: bash
+    commands:
+      - 'echo "Target={{Target}}"'
+      - 'echo "TargetSpace={{TargetSpace}}"'
+      - 'echo "Output={{Output}}"'
+      - 'echo "RunUUID={{RunUUID}}"'
+      - 'echo "asset_type={{asset_type}}"'
+      - 'echo "source={{source}}"'
+      - 'echo "description={{description}}"'

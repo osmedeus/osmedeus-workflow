@@ -66,21 +66,45 @@ The workflow follows a phased approach to reconnaissance:
 |----------|-------------|
 | `general.yaml` | Full reconnaissance pipeline with all phases |
 | `fast.yaml` | Quick reconnaissance with essential phases only |
+| `deep-recon.yaml` | Deep reconnaissance with extended analysis |
+| `cidr.yaml` | CIDR/IP range reconnaissance |
+| `cidr-extend.yaml` | Extended CIDR reconnaissance with additional phases |
+| `url.yaml` | URL-based reconnaissance workflow |
+| `web-analysis.yaml` | Web application analysis workflow |
 
 ### Module Workflows (common/)
 
 | Module | Description |
 |--------|-------------|
-| `subdomain.yaml` | Subdomain enumeration (subfinder, findomain, assetfinder) |
-| `probing.yaml` | DNS resolution and HTTP probing |
-| `fingerprint.yaml` | Technology fingerprinting |
+| `subdomain-enum.yaml` | Subdomain enumeration (subfinder, findomain, assetfinder) |
+| `dns-probing.yaml` | DNS resolution and probing |
+| `http-fingerprint.yaml` | HTTP fingerprinting and technology detection |
 | `screenshot.yaml` | Visual screenshots of discovered assets |
 | `archive.yaml` | Archive/wayback machine data collection |
 | `ipspace.yaml` | IP space enumeration |
 | `portscan.yaml` | Port scanning |
-| `vulnscan.yaml` | Vulnerability scanning |
+| `vulnerability-scan.yaml` | Vulnerability scanning |
 | `content-discovery.yaml` | Directory and content bruteforcing |
 | `spider.yaml` | Web spidering/crawling |
+
+### Event Workflows (events/)
+
+| Event | Description |
+|-------|-------------|
+| `simple-emitter.yaml` | Simple event emitter example |
+| `simple-receiver.yaml` | Simple event receiver example |
+| `vuln-scan-receiver.yaml` | Vulnerability scan event receiver |
+
+### Fragments (fragments/)
+
+| Fragment | Description |
+|----------|-------------|
+| `subdomain-enum-fragment.yaml` | Subdomain enumeration fragment |
+| `single-target-content-discovery.yaml` | Content discovery for single target |
+| `single-target-vuln-scan.yaml` | Vulnerability scan for single target |
+| `single-target-spider.yaml` | Spider for single target |
+| `single-target-port-scan.yaml` | Port scan for single target |
+| `single-target-http-fingerprint.yaml` | HTTP fingerprint for single target |
 
 ## Usage
 
@@ -92,7 +116,7 @@ osmedeus run -f general -t example.com
 osmedeus run -f fast -t example.com
 
 # Run a specific module
-osmedeus run -m subdomain -t example.com
+osmedeus run -m subdomain-enum -t example.com
 
 # Dry-run to preview execution
 osmedeus run -f general -t example.com --dry-run
