@@ -88,10 +88,10 @@ steps:
     type: function
     log: "Merging subdomain sources"
     functions:
-      - 'appendFile("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-subfinder.txt")'
-      - 'appendFile("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-amass.txt")'
-      - 'appendFile("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-assetfinder.txt")'
-      - 'appendFile("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-findomain.txt")'
+      - 'append_file("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-subfinder.txt")'
+      - 'append_file("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-amass.txt")'
+      - 'append_file("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-assetfinder.txt")'
+      - 'append_file("{{Output}}/subdomain/subdomain-{{TargetSpace}}.txt", "{{Output}}/subdomain/{{TargetSpace}}-findomain.txt")'
       - 'exec_cmd("rm -rf {{Output}}/subdomain/{{TargetSpace}}-*.txt")'
     on_error: 
       - action: continue # expected error as some subdomain sources may not be available
