@@ -53,8 +53,8 @@ modules:
   # ===========================================================================
   # Phase 3: Fingerprinting
   # ===========================================================================
-  - name: fingerprint
-    path: common/fingerprint.yaml
+  - name: http-fingerprint
+    path: common/http-fingerprint.yaml
     depends_on:
       - dns-probing
 
