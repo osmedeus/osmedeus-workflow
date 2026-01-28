@@ -111,5 +111,6 @@ steps:
       - 'db_total_urls("{{httpFingerprintJsonFile}}")'
       - 'db_total_assets("{{httpFingerprintJsonFile}}")'
       - 'db_import_asset_from_file("{{TargetSpace}}", "{{httpFingerprintJsonFile}}")'
+      - 'send_telegram_file("{{httpInterestingMarkdownFile}}", "HTTP Fingerprint Results")'
     on_error: 
       - action: continue # in case of error, continue the workflow

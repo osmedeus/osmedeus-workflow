@@ -123,3 +123,4 @@ steps:
       - log_info("Filtering unique results based on status,words,lines which might contain interesting content")
       - jsonl_unique("{{contentDiscoverFile}}", "{{contentDiscoverFilteredFile}}", "status,words,lines")
       - 'convert_jsonl_to_markdown("{{contentDiscoverFilteredFile}}", "{{contentDiscoverMarkdownFile}}")'
+      - 'send_telegram_file("{{contentDiscoverMarkdownFile}}", "Content Discovery Results")'
