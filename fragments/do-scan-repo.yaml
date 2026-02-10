@@ -59,7 +59,7 @@ params:
 # -----------------------------------------------------------------------------
 dependencies:
   commands:
-    - semgrep
+    # - semgrep
     - kingfisher
     - trivy
     # - bearer
@@ -227,16 +227,17 @@ steps:
     on_error:
       - action: continue
 
-  # # ---------------------------------------------------------------------------
-  # # Bearer SAST scan
-  # # ---------------------------------------------------------------------------
-  # - name: bearer-scan
-  #   type: bash
-  #   log: "Running bearer SAST scan"
-  #   commands:
-  #     - "bearer --quiet scan {{repoFolder}} --format sarif --output {{bearerSarif}}"
-  #   on_error:
-  #     - action: continue
+  # ---------------------------------------------------------------------------
+  # Bearer SAST scan
+  # ---------------------------------------------------------------------------
+  - name: bearer-scan
+    type: bash
+    log: "Running bearer SAST scan if semgrep did not produce results"
+    pre_condition: '!file_exists("{{semgrepSarif}}")'
+    commands:
+      - "bearer --quiet scan {{repoFolder}} --format sarif --output {{bearerSarif}}"
+    on_error:
+      - action: continue
 
   # ---------------------------------------------------------------------------
   # Import SARIF results into database
@@ -268,14 +269,14 @@ steps:
     on_error:
       - action: continue
 
-  # - name: import-bearer-sarif
-  #   type: function
-  #   log: "Importing bearer SARIF results into database"
-  #   pre_condition: 'file_exists("{{bearerSarif}}")'
-  #   functions:
-  #     - 'db_import_sarif("{{Workspace}}", "{{bearerSarif}}")'
-  #   on_error:
-  #     - action: continue
+  - name: import-bearer-sarif
+    type: function
+    log: "Importing bearer SARIF results into database"
+    pre_condition: 'file_exists("{{bearerSarif}}")'
+    functions:
+      - 'db_import_sarif("{{Workspace}}", "{{bearerSarif}}")'
+    on_error:
+      - action: continue
 
   # ---------------------------------------------------------------------------
   # Convert SARIF results to markdown reports
@@ -307,11 +308,11 @@ steps:
     on_error:
       - action: continue
 
-  # - name: bearer-markdown-report
-  #   type: function
-  #   log: "Converting bearer SARIF to markdown report"
-  #   pre_condition: 'file_exists("{{bearerSarif}}")'
-  #   functions:
-  #     - 'convert_sarif_to_markdown("{{bearerSarif}}", "{{bearerMarkdown}}")'
-  #   on_error:
-  #     - action: continue
+  - name: bearer-markdown-report
+    type: function
+    log: "Converting bearer SARIF to markdown report"
+    pre_condition: 'file_exists("{{bearerSarif}}")'
+    functions:
+      - 'convert_sarif_to_markdown("{{bearerSarif}}", "{{bearerMarkdown}}")'
+    on_error:
+      - action: continue
