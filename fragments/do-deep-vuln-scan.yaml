@@ -1,0 +1,91 @@
+kind: module
+name: do-scan-vuln
+description: Hunt vulnerabilities on a single target with Nuclei
+tags: vuln,nuclei,security,scanning
+
+# -----------------------------------------------------------------------------
+# PARAMS SECTION
+# -----------------------------------------------------------------------------
+params:
+  - name: httpFile
+    default: "{{Output}}/probing/http-{{TargetSpace}}.txt"
+
+  - name: virterumJsonOutput
+    default: "{{Output}}/vulnscan/virterum-{{TargetSpace}}.jsonl"
+
+  - name: virterumPrallel
+    default: 5
+# -----------------------------------------------------------------------------
+# DEPENDENCIES SECTION
+# -----------------------------------------------------------------------------
+dependencies:
+  commands:
+    - virterum
+
+  variables:
+    - name: Target
+      type: string
+      required: true
+
+# -----------------------------------------------------------------------------
+# REPORTS SECTION
+# -----------------------------------------------------------------------------
+reports:
+  - name: virterum-jsonl
+    path: "{{virterumJsonOutput}}"
+    type: jsonl
+    description: Virterum deep vulnerability scan results in JSONL format
+
+# -----------------------------------------------------------------------------
+# STEPS SECTION
+# -----------------------------------------------------------------------------
+steps:
+  # ---------------------------------------------------------------------------
+  # Setup: Create output folders
+  # ---------------------------------------------------------------------------
+  - name: create-output-folders
+    type: function
+    log: "Creating output folders"
+    functions:
+      - 'create_folder("{{Output}}/vulnscan")'
+
+  # ---------------------------------------------------------------------------
+  # Web crawling with Katana
+  # ---------------------------------------------------------------------------
+  - name: virterum-deep-vuln-scan
+    type: foreach
+    log: "Running Virterum deep vulnerability scan on discovered URLs"
+    pre_condition: 'file_exists("{{httpFile}}")'
+    input: "{{httpFile}}"
+    variable: line
+    threads: "{{virterumPrallel}}"
+    step:
+      name: virterum-single-target
+      type: bash
+      command: 'virterum scan -u [[line]] -o results.json'
+
+
+  # ---------------------------------------------------------------------------
+  # Generate vulnerability markdown report
+  # ---------------------------------------------------------------------------
+
+  # - name: generate-vuln-md-report
+  #   type: function
+  #   log: "Generating vulnerability markdown report"
+  #   pre_condition: 'file_length("{{nucleiCleanOutputJsonl}}") > 0'
+  #   functions:
+  #     - 'convert_jsonl_to_markdown("{{nucleiCleanOutputJsonl}}", "{{nucleiMarkdownReport}}")'
+  #     # render markdown report
+  #     - render_markdown_report("{{ExternalMarkdowns}}/sample-report-template-filesystem.md", "{{Output}}/security-report.md")
+  #     - register_artifact("{{Output}}/security-report.md", "md")
+
+  # - name: process-vulnerability-in-db
+  #   type: function
+  #   log: "Processing vulnerability in-db"
+  #   pre_condition: 'file_exists("{{nucleiOutputJsonl}}")'
+  #   functions:
+  #     # updating total vulnerabilities count in db
+  #     - db_total_vulns("{{nucleiCleanOutputJsonl}}")
+  #     - 'db_import_vuln_from_file("{{TargetSpace}}", "{{nucleiOutputJsonl}}")'
+  #   on_error: 
+  #     - action: continue # in case of error, continue the workflow

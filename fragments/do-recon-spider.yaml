@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: single-target-spider
+name: do-recon-spider
 description: Crawl and extract secrets from a single web target
 tags: spider, crawl, links, secrets
 

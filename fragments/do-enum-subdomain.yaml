@@ -1,6 +1,7 @@
 kind: module
-name: subdomain-enum-fragment
-description: Multi-source subdomain discovery fragment
+name: do-enum-subdomain
+description: Multi-source subdomain discovery using subfinder, amass, assetfinder, and findomain
+tags: subdomain,enumeration,recon
 hidden: true
 
 # -----------------------------------------------------------------------------

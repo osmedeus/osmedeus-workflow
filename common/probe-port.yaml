@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: portscan
+name: probe-port
 description: Scan common HTTP/HTTPS ports and fingerprint services
 tags: portscan, rustscan, network
 
@@ -39,7 +39,6 @@ params:
     default: "15"
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
   # - name: screenThreads
   #   default: "{{ threads * 2}}"
   # - name: skipPortScreenShot

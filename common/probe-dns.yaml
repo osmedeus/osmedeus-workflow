@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: dns-probing
+name: probe-dns
 description: Resolve DNS records, bruteforce subdomains, and probe HTTP endpoints
 tags: dns, probing, http, resolution
 
@@ -61,7 +61,6 @@ params:
   # mics params
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------

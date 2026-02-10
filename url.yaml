@@ -1,4 +1,29 @@
 kind: flow
-name: url
-description: Alias for web-analysis workflow
-extends: web-analysis
+name: web-analysis
+description: Single URL analysis - fingerprint, spider, scan, and discover
+tags: recon, url, standard
+
+dependencies:
+  variables:
+    - name: Target
+      type: url,domain
+      required: true
+
+modules:
+  - name: do-recon-http-fp
+    path: fragments/do-recon-http-fp.yaml
+
+  - name: do-recon-spider
+    path: fragments/do-recon-spider.yaml
+    depends_on:
+      - do-recon-http-fp
+
+  - name: do-scan-vuln
+    path: fragments/do-scan-vuln.yaml
+    depends_on:
+      - do-recon-http-fp
+
+  - name: do-scan-content
+    path: fragments/do-scan-content.yaml
+    depends_on:
+      - do-recon-http-fp

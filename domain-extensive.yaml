@@ -1,8 +1,8 @@
 kind: flow
-name: deep-recon
+name: domain-extensive
 description: Exhaustive recon - full port range with DNS bruteforce and permutations
-tags: recon, domain, deep, extend
-extends: general
+tags: recon, domain, extensive
+extends: domain-standard
 
 override:
   params:

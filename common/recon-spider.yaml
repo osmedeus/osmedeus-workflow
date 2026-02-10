@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: spider
+name: recon-spider
 description: Crawl web pages with Katana and hunt for secrets
 tags: spider, crawl, links, secrets
 

@@ -1,0 +1,5 @@
+kind: flow
+name: repo
+description: Alias for sast workflow
+extends: sast
+tags: recon, url, standard

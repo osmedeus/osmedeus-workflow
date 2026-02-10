@@ -1,7 +1,7 @@
 kind: flow
-name: fast
+name: domain-lite
 description: Quick recon - subdomain discovery and HTTP fingerprinting only
-tags: fast, recon, domain
+tags: recon, domain, lite
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
@@ -27,21 +27,21 @@ modules:
   # ===========================================================================
   # Phase 1: Subdomain Enumeration
   # ===========================================================================
-  - name: subdomain-enum
-    path: common/subdomain-enum.yaml
+  - name: enum-subdomain
+    path: common/enum-subdomain.yaml
 
   # ===========================================================================
   # Phase 2: Probing
   # ===========================================================================
-  - name: dns-probing
-    path: common/dns-probing.yaml
+  - name: probe-dns
+    path: common/probe-dns.yaml
     depends_on:
-      - subdomain-enum
+      - enum-subdomain
 
   # ===========================================================================
   # Phase 3: Fingerprinting
   # ===========================================================================
-  - name: http-fingerprint
-    path: common/http-fingerprint.yaml
+  - name: recon-http-fp
+    path: common/recon-http-fp.yaml
     depends_on:
-      - dns-probing
+      - probe-dns

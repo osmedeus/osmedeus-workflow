@@ -1,7 +1,7 @@
 kind: flow
 name: cidr
 description: IP/CIDR recon - port scan, spider, vuln scan, and content discovery
-tags: web, recon, ip, cidr
+tags: recon, cidr, standard
 
 dependencies:
   variables:
@@ -10,20 +10,20 @@ dependencies:
       required: true
 
 modules:
-  - name: single-target-port-scan
-    path: fragments/single-target-port-scan.yaml
+  - name: do-probe-port
+    path: fragments/do-probe-port.yaml
 
-  - name: single-target-spider
-    path: fragments/single-target-spider.yaml
+  - name: do-recon-spider
+    path: fragments/do-recon-spider.yaml
     depends_on:
-      - single-target-port-scan
+      - do-probe-port
 
-  - name: single-target-vuln-scan
-    path: fragments/single-target-vuln-scan.yaml
+  - name: do-scan-vuln
+    path: fragments/do-scan-vuln.yaml
     depends_on:
-      - single-target-port-scan
+      - do-probe-port
 
-  - name: single-target-content-discovery
-    path: fragments/single-target-content-discovery.yaml
+  - name: do-scan-content
+    path: fragments/do-scan-content.yaml
     depends_on:
-      - single-target-port-scan
+      - do-probe-port

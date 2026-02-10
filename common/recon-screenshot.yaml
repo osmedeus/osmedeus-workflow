@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: screenshot
+name: recon-screenshot
 description: Capture visual snapshots of discovered web assets
 tags: screenshot, visual, http
 
@@ -27,7 +27,6 @@ params:
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------

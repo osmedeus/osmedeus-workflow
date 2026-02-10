@@ -1,11 +1,7 @@
-# =============================================================================
-# Module Workflow: Vulnerability Scanning
-# =============================================================================
-
 kind: module
-name: vulnerability-scan
-description: Hunt vulnerabilities with Nuclei templates across all HTTP hosts
-tags: vulnerability, security, nuclei
+name: do-scan-vuln
+description: Hunt vulnerabilities on a single target with Nuclei
+tags: vuln,nuclei,security,scanning
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
@@ -36,12 +32,8 @@ params:
   - name: extraNuclei
     default: " "
 
-  - name: vulnLimit
-    default: "10000"
-
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
@@ -83,17 +75,6 @@ steps:
       - 'create_folder("{{Output}}/vulnscan")'
 
   # ---------------------------------------------------------------------------
-  # Check input file limit
-  # ---------------------------------------------------------------------------
-  - name: check-input-limit
-    type: function
-    log: "Checking input file size limit"
-    pre_condition: 'file_length("{{httpFile}}") > {{vulnLimit}}'
-    functions:
-      - 'log_error("Got {{file_length("{{httpFile}}")}} lines in input file, which is greater than {{vulnLimit}} line")'
-      - 'exit(1)'
-
-  # ---------------------------------------------------------------------------
   # Nuclei vulnerability scan
   # ---------------------------------------------------------------------------
   - name: nuclei-scan
@@ -111,10 +92,10 @@ steps:
       - jsonl_filter("{{nucleiOutputJsonl}}", "{{nucleiCleanOutputJsonl}}", "template-id,info.name,info.severity,matched-at,matched-name")
       - sort_unix("{{nucleiCleanOutputJsonl}}")
 
-
   # ---------------------------------------------------------------------------
   # Generate vulnerability markdown report
   # ---------------------------------------------------------------------------
+
   - name: generate-vuln-md-report
     type: function
     log: "Generating vulnerability markdown report"
@@ -124,7 +105,6 @@ steps:
       # render markdown report
       - render_markdown_report("{{ExternalMarkdowns}}/sample-report-template-filesystem.md", "{{Output}}/security-report.md")
       - register_artifact("{{Output}}/security-report.md", "md")
-      - 'send_telegram_file("{{nucleiMarkdownReport}}", "Vulnerability Scan Results")'
 
   - name: process-vulnerability-in-db
     type: function
@@ -132,7 +112,7 @@ steps:
     pre_condition: 'file_exists("{{nucleiOutputJsonl}}")'
     functions:
       # updating total vulnerabilities count in db
-      - 'db_total_vulns("{{nucleiCleanOutputJsonl}}")'
+      - db_total_vulns("{{nucleiCleanOutputJsonl}}")
       - 'db_import_vuln_from_file("{{TargetSpace}}", "{{nucleiOutputJsonl}}")'
     on_error: 
       - action: continue # in case of error, continue the workflow

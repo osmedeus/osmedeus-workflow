@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: subdomain-enum
+name: enum-subdomain
 description: Enumerate subdomains via subfinder, amass, assetfinder, and findomain
 tags: subdomain, enumeration, discovery, dns
 

@@ -1,29 +1,5 @@
 kind: flow
 name: web-analysis
-description: Single-target deep dive - fingerprint, spider, scan, and discover
-tags: web, recon, domain, url
-
-dependencies:
-  variables:
-    - name: Target
-      type: url,domain
-      required: true
-
-modules:
-  - name: single-target-http-fingerprint
-    path: fragments/single-target-http-fingerprint.yaml
-
-  - name: single-target-spider
-    path: fragments/single-target-spider.yaml
-    depends_on:
-      - single-target-http-fingerprint
-
-  - name: single-target-vuln-scan
-    path: fragments/single-target-vuln-scan.yaml
-    depends_on:
-      - single-target-http-fingerprint
-
-  - name: single-target-content-discovery
-    path: fragments/single-target-content-discovery.yaml
-    depends_on:
-      - single-target-http-fingerprint
+description: Alias for url workflow
+extends: url
+tags: recon, url, standard

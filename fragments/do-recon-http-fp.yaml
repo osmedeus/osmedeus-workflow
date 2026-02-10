@@ -1,6 +1,7 @@
 kind: module
-name: single-target-http-fingerprint
+name: do-recon-http-fp
 description: Fingerprint a single host - tech stack, CDN, TLS, and response hashes
+tags: fingerprint,http,tech-detect,cdn,tls
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
@@ -32,7 +33,6 @@ params:
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
@@ -74,8 +74,9 @@ steps:
     type: function
     log: "Generating input file"
     functions:
-      - exec_cmd("echo {{Target}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
-      - exec_cmd("cat {{Target}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
+      - exec_cmd("echo {{Target}} | httpx -silent -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
+      - exec_cmd("cat {{Target}} | httpx -silent -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
+      - sort_unix("{{httpFile}}")
 
   # ---------------------------------------------------------------------------
   # HTTP fingerprinting with httpx

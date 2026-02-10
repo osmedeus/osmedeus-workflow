@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 
 kind: module
-name: archive
+name: util-archive
 description: Mine historical URLs from Wayback Machine and CommonCrawl
 tags: archive, recon, passive
 
@@ -48,7 +48,6 @@ params:
     default: "{{ threads * 5 }}"
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION

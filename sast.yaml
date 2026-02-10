@@ -1,0 +1,16 @@
+kind: flow
+name: sast
+description: Analyze a single URL by fingerprinting, crawling, scanning, and discovering
+tags: recon, sast, standard
+
+dependencies:
+  variables:
+    - name: Target
+      type: string
+      required: true
+
+modules:
+
+
+  - name: do-scan-repo
+    path: fragments/do-scan-repo.yaml

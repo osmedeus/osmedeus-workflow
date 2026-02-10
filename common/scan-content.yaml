@@ -3,9 +3,10 @@
 # =============================================================================
 
 kind: module
-name: content-discovery
+name: scan-content
 description: Bruteforce directories and files with ffuf
 tags: directory, bruteforce, content-discovery
+
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION

@@ -1,0 +1,10 @@
+kind: flow
+name: cidr-extensive
+description: IP/CIDR extensive scan - all 65535 ports with full analysis
+tags: recon, cidr, extensive
+extends: cidr-standard
+
+override:
+  params:
+    commonHttpPorts: "1-65535"
+    commonHttpsPort: "1-65535"

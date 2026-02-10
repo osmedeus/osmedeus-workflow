@@ -1,0 +1,161 @@
+# =============================================================================
+# Module Workflow: Directory Scanning
+# =============================================================================
+
+kind: module
+name: do-scan-content
+description: Bruteforce directories and files on a single target
+tags: directory, bruteforce, content-discovery
+
+# -----------------------------------------------------------------------------
+# PARAMS SECTION
+# -----------------------------------------------------------------------------
+params:
+  - name: httpFile
+    default: "{{Output}}/probing/http-{{TargetSpace}}.txt"
+
+  # speed tuning params
+  - name: deparosMaxtime
+    default: "1h"
+  - name: deparosParallel
+    default: "10"
+
+  - name: deparosThreads
+    default: "40"
+  - name: deparosTimeout
+    default: "1h"
+
+  - name: deparosSessionName
+    default: "{{Today}}" # 2026-01-30
+  - name: tempDir
+    default: "{{Output}}/content-discovery"
+  - name: deparosDBDir
+    default: "{{Output}}/deparos-dbs"
+
+  # output reports
+  - name: deparosHTMLReport
+    default: "{{Output}}/content-discovery/deparos-{{TargetSpace}}.html"
+  - name: contentDiscoveryJsonlFile
+    default: "{{Output}}/content-discovery/deparos-{{TargetSpace}}.jsonl"
+  - name: contentDiscoverMarkdownFile
+    default: "{{Output}}/content-discovery/content-discovery-report-{{TargetSpace}}.md"
+
+  # wordlists
+  - name: shortFileWordlist
+    default: "{{Data}}/wordlists/content/file-short.txt"
+  - name: longFileWordlist
+    default: "{{Data}}/wordlists/content/file-long.txt"
+  - name: shortDirWordlist
+    default: "{{Data}}/wordlists/content/dir-short.txt"
+  - name: longDirWordlist
+    default: "{{Data}}/wordlists/content/dir-long.txt"
+
+  - name: deparosConfig
+    default: "{{ExternalConfigs}}/deparosConfig-config.yaml"
+
+
+# -----------------------------------------------------------------------------
+# DEPENDENCIES SECTION
+# -----------------------------------------------------------------------------
+dependencies:
+  commands:
+    - ffuf
+    - jq
+
+# -----------------------------------------------------------------------------
+# REPORTS SECTION
+# -----------------------------------------------------------------------------
+reports:
+  - name: beautify-content-discovery-results
+    path: "{{deparosHTMLReport}}"
+    type: html
+    description: Beautified content discovery results
+
+  - name: content-discovery-markdown-report
+    path: "{{contentDiscoverMarkdownFile}}"
+    type: md
+    description: Markdown report of interesting content discovery results
+
+# -----------------------------------------------------------------------------
+# STEPS SECTION
+# -----------------------------------------------------------------------------
+steps:
+  # ---------------------------------------------------------------------------
+  # Setup: Create output folder
+  # ---------------------------------------------------------------------------
+  - name: create-output-folder
+    type: function
+    log: "Creating content-discovery output folder"
+    functions:
+      - 'create_folder("{{Output}}/content-discovery")'
+      - 'create_folder("{{deparosDBDir}}")'
+
+  # ---------------------------------------------------------------------------
+  # Directory bruteforce with ffuf
+  # ---------------------------------------------------------------------------
+  - name: directory-bruteforce
+    type: foreach
+    log: "Running directory bruteforce with deparos"
+    pre_condition: 'file_exists("{{httpFile}}")'
+    input: "{{httpFile}}"
+    variable: line # this is the variable name for each line in the input file [[line]]
+    threads: "{{deparosParallel}}"
+    step:
+      name: deparos-single-target
+      type: bash
+      command: "timeout -k 1m {{deparosTimeout}} deparos discover -silent -threads {{deparosThreads}} -u '[[line]]' -d {{deparosDBDir}}/deparos_{{TargetSpace}}.db --session-name {{deparosSessionName}} --max-time {{deparosMaxtime}}"
+      # with custom wordlists
+      # command: "timeout -k 1m {{deparosTimeout}} deparos discover -u '[[line]]' -d {{deparosDBDir}}/deparos_{{TargetSpace}}.db --session-name {{deparosSessionName}} --max-time {{deparosMaxtime}} -short-file-wordlist='{{shortFileWordlist}}' -short-dir-wordlist='{{shortDirWordlist}}' -long-dir-wordlist='{{longDirWordlist}}' -long-file-wordlist='{{longFileWordlist}}'"
+
+  - name: "generate-deparos-reports"
+    type: bash
+    log: "Generate deparos HTML report for session {{deparosSessionName}}" 
+    pre_condition: 'file_exists("{{deparosDBDir}}/deparos_{{TargetSpace}}.db")'
+    commands:
+      - "deparos export -d {{deparosDBDir}}/deparos_{{TargetSpace}}.db -all -f html -o {{deparosHTMLReport}}"
+      - "deparos export -d {{deparosDBDir}}/deparos_{{TargetSpace}}.db -all -f jsonl -o {{contentDiscoveryJsonlFile}}"
+      # just to save space, remove the deparos db after report generation
+      - "rm -rf {{deparosDBDir}}/deparos_{{TargetSpace}}.db"
+
+  - name: deparos-beautify-interesting-content-results
+    type: function
+    log: "Beautifying interesting content results"
+    pre_condition: 'file_exists("{{contentDiscoveryJsonlFile}}")'
+    functions:
+      - 'convert_jsonl_to_markdown("{{contentDiscoveryJsonlFile}}", "{{contentDiscoverMarkdownFile}}")'
+
+
+  ### Fallback ffuf method if the deparos method having error ###
+
+  # - name: directory-bruteforce
+  #   type: foreach
+  #   log: "Running directory bruteforce with ffuf"
+  #   pre_condition: 'file_exists("{{httpFile}}")'
+  #   input: "{{httpFile}}"
+  #   variable: line
+  #   threads: "{{dirbThreads}}"
+  #   step:
+  #     name: ffuf-single-target
+  #     type: bash
+  #     command: 'timeout -k 1m {{ffTimeout}} {{Binaries}}/ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -se -D -fc "429,404,400" -e "asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt" -json -H "{{defaultUA}}" -ac -s -fc "429,404,400" -json -u "[[line]]/FUZZ" -w {{contentDiscoverWordlist}}:FUZZ > {{Output}}/content-discovery/raw-[[_id_]].json 2>/dev/null'
+
+  # # ---------------------------------------------------------------------------
+  # # Process and beautify results
+  # # ---------------------------------------------------------------------------
+  # - name: process-results
+  #   type: function
+  #   log: "Processing and beautifying scan results"
+  #   pre_condition: 'dir_length("{{Output}}/content-discovery/") > 0'
+  #   functions:
+  #     - 'exec_cmd("cat {{Output}}/content-discovery/raw-*.json | jq -r ''[.url,(.status|tostring),(.length|tostring),(.words|tostring),(.lines|tostring),.redirectlocation] | join(\",\")'' > {{contentDiscoverFile}}")'
+  #     # clean up raw json files
+  #     - 'exec_cmd("rm -rf {{Output}}/content-discovery/raw-*.json")'
+
+  # - name: beautify-interesting-content-results
+  #   type: function
+  #   log: "Beautifying interesting content results"
+  #   pre_condition: 'file_exists("{{contentDiscoverFile}}")'
+  #   functions:
+  #     - log_info("Filtering unique results based on status,words,lines which might contain interesting content")
+  #     - jsonl_unique("{{contentDiscoverFile}}", "{{contentDiscoverFilteredFile}}", "status,words,lines")
+  #     - 'convert_jsonl_to_markdown("{{contentDiscoverFilteredFile}}", "{{contentDiscoverMarkdownFile}}")'

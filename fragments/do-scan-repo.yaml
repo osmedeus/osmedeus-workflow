@@ -1,0 +1,151 @@
+kind: module
+name: do-scan-repo
+description: Static vulnerability scan and secret detection on git repositories
+tags: sast,secrets,repository,trufflehog,semgrep
+
+# -----------------------------------------------------------------------------
+# PARAMS SECTION
+# -----------------------------------------------------------------------------
+params:
+  - name: repoFolder
+    default: "{{Output}}/source-repo"
+
+  - name: semgrepThreads
+    default: "{{ threads * 3 }}"
+
+  - name: trufflehogThreads
+    default: "{{ threads * 3 }}"
+
+  - name: gitDepth
+    default: "1000"
+
+  - name: crawlingTime
+    default: "2m"
+
+  - name: crawlingDepth
+    default: "3"
+
+  - name: trufflehogOutput
+    default: "{{Output}}/secret/trufflehog-{{Workspace}}.txt"
+
+  - name: semgrepOutput
+    default: "{{Output}}/sast/semgrep-{{Workspace}}.txt"
+
+# -----------------------------------------------------------------------------
+# DEPENDENCIES SECTION
+# -----------------------------------------------------------------------------
+dependencies:
+  commands:
+    - trufflehog
+    - semgrep
+    - katana
+
+  variables:
+    - name: Target
+      type: string
+      required: true
+
+# -----------------------------------------------------------------------------
+# REPORTS SECTION
+# -----------------------------------------------------------------------------
+reports:
+  - name: gitleaks-results
+    path: "{{gitleaksOutput}}"
+    type: text
+    description: Gitleaks secret scan results
+
+  - name: trufflehog-results
+    path: "{{trufflehogOutput}}"
+    type: text
+    description: Trufflehog secret scan results
+
+  - name: semgrep-results
+    path: "{{semgrepOutput}}"
+    type: text
+    description: Semgrep static analysis results
+
+# -----------------------------------------------------------------------------
+# STEPS SECTION
+# -----------------------------------------------------------------------------
+steps:
+  # ---------------------------------------------------------------------------
+  # Setup: Create output folders
+  # ---------------------------------------------------------------------------
+  - name: create-output-folders
+    type: function
+    log: "Creating output folders for SAST and secret scanning"
+    functions:
+      - 'create_folder("{{Output}}/sast")'
+      - 'create_folder("{{Output}}/secret")'
+
+  # ---------------------------------------------------------------------------
+  # Clean and clone repository
+  # ---------------------------------------------------------------------------
+  - name: clean-repo-folder
+    type: bash
+    log: "Cleaning existing repo folder"
+    commands:
+      - "rm -rf {{repoFolder}}"
+
+  - name: clone-repository
+    type: bash
+    log: "Cloning repository with depth {{gitDepth}}"
+    commands:
+      - "git clone --depth={{gitDepth}} {{Target}} {{repoFolder}}"
+    on_error:
+      - action: continue
+
+  # ---------------------------------------------------------------------------
+  # Handle folder input: Copy local folder to repoFolder
+  # ---------------------------------------------------------------------------
+  - name: handle-folder-input
+    type: function
+    log: "Checking if input is a local folder and copying it"
+    pre_condition: 'folder_length("{{Target}}") > 0'
+    functions:
+      - 'printf("=> Looks like the input is a folder, copying it to {{repoFolder}}")'
+      - 'exec_cmd("rm -rf {{repoFolder}}")'
+      - 'exec_cmd("cp -r {{Target}} {{repoFolder}}")'
+
+  # ---------------------------------------------------------------------------
+  # Handle URL input: Download web content with katana
+  # ---------------------------------------------------------------------------
+  - name: handle-url-input
+    type: function
+    log: "Downloading HTML response for standard URL input"
+    pre_condition: 'folder_length("{{repoFolder}}") <= 0'
+    functions:
+      - 'printf("=> It appears that the input is a standard URL. Downloading the HTML response instead")'
+      - 'exec_cmd("rm -rf {{repoFolder}}")'
+      - 'exec_cmd("{{Binaries}}/katana -u {{Target}} -silent -headless --no-sandbox -depth {{crawlingDepth}} -jc -crawl-duration {{crawlingTime}} -store-response-dir {{repoFolder}}")'
+
+  # ---------------------------------------------------------------------------
+  # Secret scanning
+  # ---------------------------------------------------------------------------
+  - name: trufflehog-scan
+    type: bash
+    log: "Running trufflehog secret scan"
+    commands:
+      - "{{Binaries}}/trufflehog --concurrency={{trufflehogThreads}} filesystem {{repoFolder}} > {{trufflehogOutput}} 2>&1"
+    on_error:
+      - action: continue
+
+  # ---------------------------------------------------------------------------
+  # Static analysis scanning
+  # ---------------------------------------------------------------------------
+  - name: semgrep-scan
+    type: bash
+    log: "Running semgrep static analysis"
+    commands:
+      - "{{Binaries}}/semgrep scan -j {{semgrepThreads}} -q --config auto {{repoFolder}} > {{semgrepOutput}} 2>&1"
+    on_error:
+      - action: continue
+
+  # ---------------------------------------------------------------------------
+  # Generate report
+  # ---------------------------------------------------------------------------
+  - name: generate-markdown-report
+    type: function
+    log: "Generating markdown summary report"
+    functions:
+      - 'gen_markdown_report("{{Data}}/markdown/simple-template.md", "{{Output}}/summary.html")'

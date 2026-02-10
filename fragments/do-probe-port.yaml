@@ -3,7 +3,7 @@
 # =============================================================================
 
 kind: module
-name: single-target-port-scan
+name: do-probe-port
 description: Probe HTTP services across common ports on a single target
 tags: portscan, rustscan, network
 
@@ -40,7 +40,6 @@ params:
     default: "15"
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
   # disable this by default as it alert a lot of Cloud Provider
   - name: enable_rustscan 
     type: bool
@@ -91,8 +90,8 @@ steps:
     type: function
     log: "Generating input file"
     functions:
-      - exec_cmd("echo {{Target}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
-      - exec_cmd("cat {{Target}} | httpx -silent -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
+      - exec_cmd("echo {{Target}} | httpx -silent -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
+      - exec_cmd("cat {{Target}} | httpx -silent -H '{{defaultUA}}' -t {{httpThreads}} -nf -timeout {{httpTimeout}} >> {{httpFile}}")
 
 
   # ---------------------------------------------------------------------------

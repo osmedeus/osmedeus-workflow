@@ -11,7 +11,7 @@
 # -----------------------------------------------------------------------------
 
 kind: flow
-name: general
+name: domain-standard
 description: Standard recon - subdomains, fingerprints, vulns, and more
 tags: recon, domain, standard
 

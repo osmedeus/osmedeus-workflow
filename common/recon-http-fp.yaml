@@ -2,7 +2,7 @@
 # Module Workflow: HTTP Fingerprinting
 # =============================================================================
 kind: module
-name: http-fingerprint
+name: recon-http-fp
 description: Detect web technologies, CDN, TLS info, and response signatures
 tags: fingerprint, technology, http
 
@@ -36,7 +36,6 @@ params:
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
-
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
