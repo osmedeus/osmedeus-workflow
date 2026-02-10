@@ -20,6 +20,25 @@ See [Osmedeus documentation](https://docs.osmedeus.org/workflows/overview) for m
 
 For additional workflow examples and patterns, see the [test workflows](https://github.com/j3ssie/osmedeus/tree/main/test/testdata/workflows) in the main Osmedeus repository.
 
+## Folder Structure
+
+```
+.
+├── common/              # Reusable module workflows
+├── events/              # Event-driven workflows
+├── fragments/           # Fragments used by workflows
+├── cidr.yaml            # CIDR/IP range workflow
+├── cidr-extensive.yaml  # Extended CIDR workflow
+├── domain-lite.yaml     # Lightweight domain recon
+├── domain-standard.yaml # Standard domain recon
+├── domain-extensive.yaml# Extended domain recon
+├── general.yaml         # Full reconnaissance flow
+├── repo.yaml            # Repository scanning flow
+├── sast.yaml            # SAST scanning flow
+├── url.yaml             # URL-based recon flow
+└── web-analysis.yaml    # Web analysis flow
+```
+
 ## Reconnaissance Methodology
 
 The workflow follows a phased approach to reconnaissance:
@@ -65,27 +84,31 @@ The workflow follows a phased approach to reconnaissance:
 | Workflow | Description |
 |----------|-------------|
 | `general.yaml` | Full reconnaissance pipeline with all phases |
-| `fast.yaml` | Quick reconnaissance with essential phases only |
-| `deep-recon.yaml` | Deep reconnaissance with extended analysis |
+| `domain-lite.yaml` | Lightweight domain reconnaissance |
+| `domain-standard.yaml` | Standard domain reconnaissance |
+| `domain-extensive.yaml` | Extended domain reconnaissance |
 | `cidr.yaml` | CIDR/IP range reconnaissance |
-| `cidr-extend.yaml` | Extended CIDR reconnaissance with additional phases |
+| `cidr-extensive.yaml` | Extended CIDR reconnaissance with additional phases |
 | `url.yaml` | URL-based reconnaissance workflow |
 | `web-analysis.yaml` | Web application analysis workflow |
+| `repo.yaml` | Source repository scanning workflow |
+| `sast.yaml` | Static application security testing workflow |
 
 ### Module Workflows (common/)
 
 | Module | Description |
 |--------|-------------|
-| `subdomain-enum.yaml` | Subdomain enumeration (subfinder, findomain, assetfinder) |
-| `dns-probing.yaml` | DNS resolution and probing |
-| `http-fingerprint.yaml` | HTTP fingerprinting and technology detection |
-| `screenshot.yaml` | Visual screenshots of discovered assets |
-| `archive.yaml` | Archive/wayback machine data collection |
-| `ipspace.yaml` | IP space enumeration |
-| `portscan.yaml` | Port scanning |
-| `vulnerability-scan.yaml` | Vulnerability scanning |
-| `content-discovery.yaml` | Directory and content bruteforcing |
-| `spider.yaml` | Web spidering/crawling |
+| `enum-subdomain.yaml` | Subdomain enumeration (subfinder, findomain, assetfinder) |
+| `probe-dns.yaml` | DNS resolution and probing |
+| `recon-http-fp.yaml` | HTTP fingerprinting and technology detection |
+| `recon-screenshot.yaml` | Visual screenshots of discovered assets |
+| `util-archive.yaml` | Archive/wayback machine data collection |
+| `enum-ipspace.yaml` | IP space enumeration |
+| `probe-port.yaml` | Port scanning |
+| `probe-port-fp.yaml` | Port scanning with fingerprinting |
+| `scan-vuln.yaml` | Vulnerability scanning |
+| `scan-content.yaml` | Directory and content bruteforcing |
+| `recon-spider.yaml` | Web spidering/crawling |
 
 ### Event Workflows (events/)
 
@@ -99,12 +122,16 @@ The workflow follows a phased approach to reconnaissance:
 
 | Fragment | Description |
 |----------|-------------|
-| `subdomain-enum-fragment.yaml` | Subdomain enumeration fragment |
-| `single-target-content-discovery.yaml` | Content discovery for single target |
-| `single-target-vuln-scan.yaml` | Vulnerability scan for single target |
-| `single-target-spider.yaml` | Spider for single target |
-| `single-target-port-scan.yaml` | Port scan for single target |
-| `single-target-http-fingerprint.yaml` | HTTP fingerprint for single target |
+| `do-enum-subdomain.yaml` | Subdomain enumeration flow fragment |
+| `do-recon-http-fp.yaml` | HTTP fingerprinting fragment |
+| `do-recon-spider.yaml` | Web spidering fragment |
+| `do-probe-port.yaml` | Port scan fragment |
+| `do-scan-content.yaml` | Content discovery fragment |
+| `do-scan-vuln.yaml` | Vulnerability scan fragment |
+| `do-deep-vuln-scan.yaml` | Deep vulnerability scan fragment |
+| `do-scan-repo.yaml` | Repository scanning fragment |
+| `do-util-normalize.yaml` | Normalization utility fragment |
+| `do-util-prepare-repo.yaml` | Repository preparation utility fragment |
 
 ## Usage
 

@@ -10,7 +10,5 @@ dependencies:
       required: true
 
 modules:
-
-
   - name: do-scan-repo
     path: fragments/do-scan-repo.yaml
