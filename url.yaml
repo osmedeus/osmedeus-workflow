@@ -2,6 +2,9 @@ kind: flow
 name: web-analysis
 description: Single URL analysis - fingerprint, spider, scan, and discover
 tags: recon, url, standard
+help:
+  example_targets: ['https://example.com', 'https://httpbin.org', 'example.com']
+  usage: osmedeus run -f url -t https://example.com
 
 dependencies:
   variables:

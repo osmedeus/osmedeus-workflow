@@ -14,6 +14,9 @@ kind: flow
 name: general
 description: Standard recon - subdomains, fingerprints, vulns, and more
 tags: recon, domain, standard
+help:
+  example_targets: ['example.com', 'hackerone.com']
+  usage: osmedeus run -f general -t example.com
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION

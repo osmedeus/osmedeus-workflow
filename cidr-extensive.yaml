@@ -3,6 +3,9 @@ name: cidr-extensive
 description: IP/CIDR extensive scan - all 65535 ports with full analysis
 tags: recon, cidr, extensive
 extends: cidr-standard
+help:
+  example_targets: ['1.2.3.4/24', '10.0.0.0/16']
+  usage: osmedeus run -f cidr-extensive -t 1.2.3.4/24
 
 override:
   params:

@@ -3,6 +3,9 @@ name: domain-extensive
 description: Exhaustive recon - full port range with DNS bruteforce and permutations
 tags: recon, domain, extensive
 extends: domain-standard
+help:
+  example_targets: ['example.com', 'hackerone.com']
+  usage: osmedeus run -f domain-extensive -t example.com
 
 override:
   params:

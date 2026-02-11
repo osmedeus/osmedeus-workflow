@@ -92,6 +92,7 @@ reports:
     path: "{{bearerSarif}}"
     type: text
     description: Bearer SARIF results
+    optional: true
 
   - name: semgrep-markdown
     path: "{{semgrepMarkdown}}"

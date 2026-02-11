@@ -2,6 +2,9 @@ kind: flow
 name: cidr
 description: IP/CIDR recon - port scan, spider, vuln scan, and content discovery
 tags: recon, cidr, standard
+help:
+  example_targets: ['1.2.3.4/24', '10.0.0.0/16', '192.168.1.1']
+  usage: osmedeus run -f cidr -t 1.2.3.4/24
 
 dependencies:
   variables:

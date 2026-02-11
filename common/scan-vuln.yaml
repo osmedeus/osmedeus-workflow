@@ -62,11 +62,13 @@ reports:
     path: "{{nucleiOutputJsonl}}"
     type: jsonl
     description: Nuclei scan results JSON
+    optional: true # optional as not every scan will have vulnerabilities
 
   - name: nuclei-markdown-report
     path: "{{nucleiMarkdownReport}}"
     type: markdown
     description: Nuclei scan results Markdown report
+    optional: true # optional as not every scan will have vulnerabilities
 
 # -----------------------------------------------------------------------------
 # STEPS SECTION

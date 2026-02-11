@@ -2,6 +2,9 @@ kind: flow
 name: domain-lite
 description: Quick recon - subdomain discovery and HTTP fingerprinting only
 tags: recon, domain, lite
+help:
+  example_targets: ['example.com', 'hackerone.com']
+  usage: osmedeus run -f domain-lite -t example.com
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
