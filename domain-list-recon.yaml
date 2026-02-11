@@ -1,29 +1,17 @@
-# =============================================================================
-# Flow Workflow: Domain Reconnaissance
-# =============================================================================
-# Running default reconnaissance routine for domain targets.
-# Executes subdomain enumeration, probing, fingerprinting, screenshots,
-# spidering, vulnerability scanning, directory bruteforcing, and port scanning.
-# =============================================================================
-
-# -----------------------------------------------------------------------------
-# WORKFLOW-LEVEL FIELDS
-# -----------------------------------------------------------------------------
-
 kind: flow
-name: domain-standard
-description: Standard recon - subdomains, fingerprints, vulns, and more
+name: domain-list-recon
+description: Standard recon workflow for a list of domain targets
 tags: recon, domain, standard
 help:
-  example_targets: ['example.com', 'hackerone.com']
-  usage: osmedeus run -f domain-standard -t example.com
+  example_targets: ['list-of-domains.txt']
+  usage: osmedeus run -f domain-list-recon -t list-of-domains.txt
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
 # -----------------------------------------------------------------------------
-params:
-  - name: enableDnsBruteFocing
-    default: false
+# params:
+#   - name: enableDnsBruteFocing
+#     default: true
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
@@ -31,7 +19,7 @@ params:
 dependencies:
   variables:
     - name: Target
-      type: domain
+      type: file
       required: true
 
 # -----------------------------------------------------------------------------
@@ -40,29 +28,21 @@ dependencies:
 # -----------------------------------------------------------------------------
 modules:
   # ===========================================================================
-  # Phase 1: Subdomain Enumeration
+  # Phase 1: Prepare Target
   # ===========================================================================
-  - name: enum-subdomain
-    path: common/enum-subdomain.yaml
+  - name: normalize-http-probing
+    path: fragments/do-util-normalize.yaml
 
   # ===========================================================================
-  # Phase 2: Probing
-  # ===========================================================================
-  - name: probe-dns
-    path: common/probe-dns.yaml
-    depends_on:
-      - enum-subdomain
-
-  # ===========================================================================
-  # Phase 3: Fingerprinting
+  # Phase 2: Fingerprinting
   # ===========================================================================
   - name: recon-http-fp
     path: common/recon-http-fp.yaml
     depends_on:
-      - probe-dns
+      - normalize-http-probing
 
   # ===========================================================================
-  # Phase 4: Screenshots
+  # Phase 3: Screenshots
   # ===========================================================================
   - name: recon-screenshot
     path: common/recon-screenshot.yaml
@@ -70,7 +50,7 @@ modules:
       - recon-http-fp
 
   # ===========================================================================
-  # Phase 5: Archiving
+  # Phase 4: Archiving
   # ===========================================================================
   - name: util-archive
     path: common/util-archive.yaml
@@ -78,7 +58,7 @@ modules:
       - recon-http-fp
 
   # ===========================================================================
-  # Phase 6: IP Space Enumeration
+  # Phase 5: IP Space Enumeration
   # ===========================================================================
   - name: enum-ipspace
     path: common/enum-ipspace.yaml
@@ -86,7 +66,7 @@ modules:
       - recon-http-fp
 
   # ===========================================================================
-  # Phase 7: Vulnerability Scanning
+  # Phase 6: Vulnerability Scanning
   # ===========================================================================
   - name: scan-vuln
     path: common/scan-vuln.yaml
@@ -94,7 +74,7 @@ modules:
       - recon-http-fp
 
   # ===========================================================================
-  # Phase 8: Port Scanning
+  # Phase 7: Port Scanning
   # ===========================================================================
   - name: probe-port
     path: common/probe-port.yaml
@@ -102,7 +82,7 @@ modules:
       - recon-http-fp
 
   # ===========================================================================
-  # Phase 9: Content Discovery
+  # Phase 8: Content Discovery
   # ===========================================================================
   - name: scan-content
     path: common/scan-content.yaml
