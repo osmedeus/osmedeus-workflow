@@ -20,13 +20,14 @@ params:
     default: "{{Output}}/fingerprint/http-interesting-{{TargetSpace}}.txt"
 
   - name: screenshotHttpJsonlFile
-    default: "{{Output}}/fingerprint/http-fingerprint-{{TargetSpace}}.jsonl"
+    default: "{{Output}}/screenshots/http-fingerprint-{{TargetSpace}}.jsonl"
 
   - name: screenshotHTMLFile
     default: "{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot-{{TargetSpace}}.html"
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
+
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
@@ -73,7 +74,7 @@ steps:
     type: bash
     log: "Capturing screenshots with httpx"
     pre_condition: 'file_exists("{{httpInterestingFile}}")'
-    command: 'cat {{httpInterestingFile}} | {{Binaries}}/httpx -t {{screenshotThreads}} -no-color -silent -screenshot -screenshot-timeout {{screenTimeout}} -json -system-chrome -store-response-dir {{Output}}/screenshots/{{TargetSpace}}-screenshots/ >> {{screenshotHttpJsonlFile}}'
+    command: 'cat {{httpInterestingFile}} | httpx -t {{screenshotThreads}} -no-color -silent -screenshot -screenshot-timeout {{screenTimeout}} -json -system-chrome -store-response-dir {{Output}}/screenshots/{{TargetSpace}}-screenshots/ >> {{screenshotHttpJsonlFile}}'
     on_error: 
       - action: continue # expected error if there is no chrome installed
 

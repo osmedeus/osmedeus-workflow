@@ -43,7 +43,7 @@ params:
     default: false
   - name: enableDnsBruteFocing
     type: bool
-    default: true
+    default: false
 
   # threads control params
   - name: massdnsRateBrute
@@ -61,6 +61,7 @@ params:
   # mics params
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
+
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
@@ -159,7 +160,7 @@ steps:
     type: bash
     log: "Fallback: resolving DNS with dnsx"
     pre_condition: 'file_exists("{{rawDnsFile}}")'
-    command: 'cat {{rawDnsFile}} | {{Binaries}}/dnsx -silent -a -cname -resp-only -json -r {{resolvers}} -t {{httpThreads}} > {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt'
+    command: 'cat {{rawDnsFile}} | dnsx -silent -a -cname -resp-only -json -r {{resolvers}} -t {{httpThreads}} > {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt'
 
   - name: clean-dnsx-results
     type: bash
@@ -179,17 +180,30 @@ steps:
     log: "Probing HTTP endpoints"
     commands:
       - 'cat {{dnsFile}} | awk -F ". " "{print $1}" | sort -u > {{httpFile}}-tmp'
-      - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u | {{Binaries}}/httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}'
+      - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u | httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}'
       - 'rm -rf {{httpFile}}-tmp'
     on_error: 
       - action: continue
+
+  - name: fallback-http-probe
+    type: bash
+    log: "As a fallback, use the http probe in case the binary folder is corrupted"
+    pre_condition: 'file_length("{{httpFile}}") < 1'
+    commands:
+      - 'cat {{dnsFile}} | awk -F ". " "{print $1}" | sort -u > {{httpFile}}-tmp'
+      - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u | httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}'
+      - 'rm -rf {{httpFile}}-tmp'
+    on_error: 
+      - action: continue
+
 
   - name: cleanup-and-sort-http
     type: function
     log: "Cleaning up and sorting HTTP results"
     functions:
-      - 'sort_unix("{{httpFile}}")'
-      - 'exec_cmd("rm -rf {{rawDnsFile}} {{customDnsWordlist}} {{permDomainFile}}")'
+      - sort_unix("{{httpFile}}")
+      - sort_unix("{{dnsFile}}")
+      - exec_cmd("rm -rf {{rawDnsFile}} {{customDnsWordlist}} {{permDomainFile}}")
     on_error: 
       - action: continue
   
@@ -204,7 +218,7 @@ steps:
     functions:
       - 'log_warn("HTTP File {{httpFile}} is too big and excess the limit {{wildcardLimit}}. Filtering it...")'
       - 'exec_cmd("rm -rf {{httpFile}}")'
-      - 'exec_cmd("cat {{dnsFile}} | grep ''{{Target}}'' | awk ''{print $1}'' | sed ''s/\\.$//g'' | sort -u | {{Binaries}}/httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}")'
+      - 'exec_cmd("cat {{dnsFile}} | grep ''{{Target}}'' | awk ''{print $1}'' | sed ''s/\\.$//g'' | sort -u | httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}")'
     on_error: 
       - action: continue
 

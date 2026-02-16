@@ -59,10 +59,8 @@ params:
 # -----------------------------------------------------------------------------
 dependencies:
   commands:
-    # - semgrep
     - kingfisher
     - trivy
-    # - bearer
 
   variables:
     - name: Target
@@ -160,7 +158,7 @@ steps:
     functions:
       - 'printf("=> It appears that the input is a standard URL. Downloading the HTML response instead")'
       - 'exec_cmd("rm -rf {{repoFolder}}")'
-      - 'exec_cmd("{{Binaries}}/katana -u {{Target}} -silent -headless --no-sandbox -depth {{crawlingDepth}} -jc -crawl-duration {{crawlingTime}} -store-response-dir {{repoFolder}}")'
+      - 'exec_cmd("katana -u {{Target}} -silent -headless --no-sandbox -depth {{crawlingDepth}} -jc -crawl-duration {{crawlingTime}} -store-response-dir {{repoFolder}}")'
 
 
   # ---------------------------------------------------------------------------

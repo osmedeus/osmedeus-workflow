@@ -39,6 +39,7 @@ params:
     default: "15"
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
+
   # - name: screenThreads
   #   default: "{{ threads * 2}}"
   # - name: skipPortScreenShot
@@ -89,7 +90,7 @@ steps:
   #   type: bash
   #   log: "Running port scan with rustscan"
   #   pre_condition: 'file_exists("{{nonCdnFile}}")'
-  #   command: '{{Binaries}}/rustscan --timeout 3000 -b {{rateRustScan}} --scripts None --range {{ports}} -a {{nonCdnFile}} -g >> {{Output}}/portscan/raw-open-ports.txt'
+  #   command: 'rustscan --timeout 3000 -b {{rateRustScan}} --scripts None --range {{ports}} -a {{nonCdnFile}} -g >> {{Output}}/portscan/raw-open-ports.txt'
   # - name: clean-rustscan-results
   #   type: function
   #   log: "Cleaning rustscan results"

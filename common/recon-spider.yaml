@@ -13,6 +13,8 @@ tags: spider, crawl, links, secrets
 params:
   - name: httpInterestingFile
     default: "{{Output}}/fingerprint/http-interesting-{{TargetSpace}}.txt"
+  - name: httpFile
+    default: "{{Output}}/probing/http-{{TargetSpace}}.txt"
 
   - name: linkFile
     default: "{{Output}}/links/links-{{TargetSpace}}.txt"
@@ -21,6 +23,7 @@ params:
 
   - name: spiderTimeout
     default: "2h"
+
   - name: spiderThreads
     default: "{{ threads }}"
   - name: spiderPrallel
@@ -29,6 +32,9 @@ params:
     default: "3"
   - name: crawlingTime
     default: "30"
+
+  - name: spiderLimit
+    default: "10000"
 
   - name: skipSpidering
     type: bool
@@ -67,6 +73,7 @@ reports:
   - name: trufflehog-output
     path: "{{Output}}/secrets/trufflehog-{{TargetSpace}}-output.txt"
     type: text
+    optional: true
     description: Trufflehog secrets scan output
 
 # -----------------------------------------------------------------------------
@@ -92,7 +99,18 @@ steps:
     pre_condition: '"{{skipSpidering}}" == "true"'
     functions:
       - 'log_error("Filter", "Skipping spidering")'
-      - 'exit(1)'
+      - 'skip()'
+
+  # ---------------------------------------------------------------------------
+  # Check input file size limit
+  # ---------------------------------------------------------------------------
+  - name: check-input-limit
+    type: function
+    log: "Checking input file size"
+    pre_condition: 'file_length("{{httpFile}}") > {{spiderLimit}}'
+    functions:
+      - 'log_error("Filter", "Got input file greater than {{spiderLimit}} line")'
+      - 'skip()'
 
   # ---------------------------------------------------------------------------
   # Web crawling with Katana
@@ -109,6 +127,12 @@ steps:
       type: bash
       command: 'timeout -k 1m {{spiderTimeout}} katana -silent -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
 
+  - name: unique-crawled-links
+    type: function
+    log: "Sorting and uniquifying crawled links"
+    functions:
+      - db_total_links("{{linkFile}}")
+
   # # ---------------------------------------------------------------------------
   # # Get HTTP responses and scan for secrets
   # # ---------------------------------------------------------------------------
@@ -116,14 +140,6 @@ steps:
   #   type: bash
   #   log: "Fetching HTTP responses and scanning for secrets with trufflehog"
   #   commands:
-  #     - "cat {{linkFile}} | {{Binaries}}/httpx -silent -nf -no-color -title -t {{httpThreads}} -H '{{defaultUA}}' --store-response-dir {{httpResponse}}"
-  #     - "trufflehog --concurrency={{trufflehogThreads}} filesystem {{httpResponse}} > {{Output}}/secrets/trufflehog-{{TargetSpace}}-output.txt 2>&1"
+  #     - "sort -u {{linkFile}} -o {{linkFile}}"
+  #     - "cat {{linkFile}} | httpx -silent -nf -no-color -title -t {{httpThreads}} -H '{{defaultUA}}' --store-response-dir {{httpResponse}}"
 
-  # # ---------------------------------------------------------------------------
-  # # Print results if not too large
-  # # ---------------------------------------------------------------------------
-  # - name: print-results
-  #   type: function
-  #   log: "Printing link results"
-  #   pre_condition: 'file_length("{{linkFile}}") < 10000'
-  #   function: 'cat("{{linkFile}}")'

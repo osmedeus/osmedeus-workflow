@@ -43,7 +43,8 @@ steps:
     type: bash
     pre_condition: "{{enable_amass}}"
     log: "Running amass subdomain enumeration (This may take a while)"
-    command: 'amass enum -active -d {{Target}} -o {{Output}}/subdomain/{{TargetSpace}}-amass.txt >/dev/null 2>&1'
+    commands:
+      - 'amass enum -active -d {{Target}} -o {{Output}}/subdomain/{{TargetSpace}}-amass.txt >/dev/null 2>&1'
 
   # ---------------------------------------------------------------------------
   # Additional subdomain sources

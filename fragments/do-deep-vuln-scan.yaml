@@ -10,17 +10,17 @@ params:
   - name: httpFile
     default: "{{Output}}/probing/http-{{TargetSpace}}.txt"
 
-  - name: virterumJsonOutput
-    default: "{{Output}}/vulnscan/virterum-{{TargetSpace}}.jsonl"
+  - name: vigeniumJsonOutput
+    default: "{{Output}}/vulnscan/vigenium-{{TargetSpace}}.jsonl"
 
-  - name: virterumPrallel
+  - name: vigeniumPrallel
     default: 5
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
 dependencies:
   commands:
-    - virterum
+    - vigenium
 
   variables:
     - name: Target
@@ -31,10 +31,10 @@ dependencies:
 # REPORTS SECTION
 # -----------------------------------------------------------------------------
 reports:
-  - name: virterum-jsonl
-    path: "{{virterumJsonOutput}}"
+  - name: vigenium-jsonl
+    path: "{{vigeniumJsonOutput}}"
     type: jsonl
-    description: Virterum deep vulnerability scan results in JSONL format
+    description: vigenium deep vulnerability scan results in JSONL format
 
 # -----------------------------------------------------------------------------
 # STEPS SECTION
@@ -52,17 +52,17 @@ steps:
   # ---------------------------------------------------------------------------
   # Web crawling with Katana
   # ---------------------------------------------------------------------------
-  - name: virterum-deep-vuln-scan
+  - name: vigenium-deep-vuln-scan
     type: foreach
-    log: "Running Virterum deep vulnerability scan on discovered URLs"
+    log: "Running vigenium deep vulnerability scan on discovered URLs"
     pre_condition: 'file_exists("{{httpFile}}")'
     input: "{{httpFile}}"
     variable: line
-    threads: "{{virterumPrallel}}"
+    threads: "{{vigeniumPrallel}}"
     step:
-      name: virterum-single-target
+      name: vigenium-single-target
       type: bash
-      command: 'virterum scan -u [[line]] -o results.json'
+      command: 'vigenium scan -u [[line]] -o results.json'
 
 
   # ---------------------------------------------------------------------------

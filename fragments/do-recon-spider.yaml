@@ -17,7 +17,6 @@ params:
   - name: httpFile
     default: "{{Output}}/probing/http-{{TargetSpace}}.txt"
 
-
   - name: linkFile
     default: "{{Output}}/links/links-{{TargetSpace}}.txt"
   - name: httpResponse
@@ -31,6 +30,7 @@ params:
     default: "{{ threads / 2 }}"
   - name: spiderDepth
     default: "3"
+
   - name: crawlingTime
     default: "30"
 
@@ -53,7 +53,7 @@ dependencies:
   commands:
     - katana
     - httpx
-    - trufflehog
+    # - trufflehog
 
   variables:
     - name: Target
@@ -103,26 +103,17 @@ steps:
       type: bash
       command: 'timeout -k 1m {{spiderTimeout}} katana -silent -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
 
+  - name: unique-crawled-links
+    type: function
+    log: "Sorting and uniquifying crawled links"
+    functions:
+      - db_total_links("{{linkFile}}")
 
-  - name: web-crawling-with-headless-browser
-    type: foreach
-    log: "Crawling web pages with Katana Headless Browser"
-    pre_condition: 'file_exists("{{httpFile}}")'
-    input: "{{httpFile}}"
-    variable: line
-    threads: "{{spiderPrallel}}"
-    step:
-      name: katana-single-target
-      type: bash
-      command: 'timeout -k 1m {{spiderTimeout}} katana -silent -depth {{spiderDepth}} -headless -system-chrome -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
-
-
-  # ---------------------------------------------------------------------------
-  # Get HTTP responses and scan for secrets
-  # ---------------------------------------------------------------------------
-  - name: fetch-responses-and-scan-secrets
-    type: bash
-    log: "Fetching HTTP responses and scanning for secrets with trufflehog"
-    commands:
-      - "cat {{linkFile}} | {{Binaries}}/httpx -silent -nf -no-color -title -t {{httpThreads}} -H '{{defaultUA}}' --store-response-dir {{httpResponse}}"
-      - "trufflehog --concurrency={{trufflehogThreads}} filesystem {{httpResponse}} > {{Output}}/secrets/trufflehog-{{TargetSpace}}-output.txt 2>&1"
+  # # ---------------------------------------------------------------------------
+  # # Get HTTP responses and scan for secrets
+  # # ---------------------------------------------------------------------------
+  # - name: fetch-responses-and-scan-secrets
+  #   type: bash
+  #   log: "Fetching HTTP responses and scanning for secrets with trufflehog"
+  #   commands:
+  #     - "cat {{linkFile}} | httpx -silent -nf -no-color -title -t {{httpThreads}} -H '{{defaultUA}}' --store-response-dir {{httpResponse}}"

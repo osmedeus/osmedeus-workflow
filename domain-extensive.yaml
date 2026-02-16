@@ -7,6 +7,17 @@ help:
   example_targets: ['example.com', 'hackerone.com']
   usage: osmedeus run -f domain-extensive -t example.com
 
+## this hooks will run before and after the flow, you can use it to do some custom steps or cleanup
+hooks:
+  pre_scan_steps:
+    - name: flow-pre-init
+      type: bash
+      command: echo "[FLOW-HOOK-PRE] Initializing flow for {{Target}}"
+  post_scan_steps:
+    - name: flow-post-cleanup
+      type: bash
+      command: echo "[FLOW-HOOK-POST] Flow completed for {{Target}}"
+
 override:
   params:
     enableDnsBruteFocing: true

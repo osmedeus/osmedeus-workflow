@@ -34,6 +34,7 @@ params:
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
+
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
@@ -82,7 +83,7 @@ steps:
     log: "Running Nuclei vulnerability scan"
     pre_condition: 'file_exists("{{httpFile}}")'
     commands:
-      - "timeout -k 1m {{nucleiTimeout}} {{Binaries}}/nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t {{nucleiTemplateConfig}} -l {{httpFile}} -irr -o {{nucleiOutputJsonl}} {{extraNuclei}} > /dev/null 2>&1"
+      - "timeout -k 1m {{nucleiTimeout}} nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t {{nucleiTemplateConfig}} -l {{httpFile}} -irr -o {{nucleiOutputJsonl}} {{extraNuclei}} > /dev/null 2>&1"
 
   - name: nuclei-report-processing
     type: function
@@ -113,6 +114,6 @@ steps:
     functions:
       # updating total vulnerabilities count in db
       - db_total_vulns("{{nucleiCleanOutputJsonl}}")
-      - 'db_import_vuln_from_file("{{TargetSpace}}", "{{nucleiOutputJsonl}}")'
+      - db_import_vuln_from_file("{{TargetSpace}}", "{{nucleiOutputJsonl}}")
     on_error: 
       - action: continue # in case of error, continue the workflow

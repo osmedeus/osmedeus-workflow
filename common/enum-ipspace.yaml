@@ -74,7 +74,7 @@ steps:
     type: bash
     log: "Discovering ASN and IP ranges based on Target Second Level Domain"
     commands:
-      - 'echo "{{Org}}" | timeout -k 1m {{ipTimeout}} {{Binaries}}/metabigor netd --org -o {{Output}}/ipspace/{{TargetSpace}}-range.txt >/dev/null 2>&1'
+      - 'echo "{{Org}}" | timeout -k 1m {{ipTimeout}} metabigor netd --org -o {{Output}}/ipspace/{{TargetSpace}}-range.txt >/dev/null 2>&1'
     on_error: 
       - action: continue # expected error as sometimes we don't want to do permutation
 
