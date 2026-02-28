@@ -29,7 +29,7 @@ params:
     default: "{{Output}}/fingerprint/http-interesting-filtered-{{TargetSpace}}.md"
 
   - name: httpThreads
-    default: "{{ threads * 2 }}"
+    default: "{{ threads * 4 }}"
 
   - name: httpTimeout
     default: "15"

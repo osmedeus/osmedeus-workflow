@@ -28,8 +28,8 @@ params:
     default: "{{ExternalData}}/wordlists/dns/altdns.txt"
   - name: permDomainFile
     default: "{{Output}}/probing/permutation-{{TargetSpace}}.txt"
-  # - name: customDnsWordlist
-    # default: "{{ExternalData}}/wordlists/dns/small.txt"
+  - name: customDnsWordlist
+    default: "{{ExternalData}}/wordlists/dns/small.txt"
   - name: dnsBruteForceWordlist
     default: "{{ExternalData}}/wordlists/dns/small.txt"
   - name: resolvers
@@ -112,7 +112,7 @@ steps:
     type: bash
     log: "Resolving DNS with puredns"
     pre_condition: 'file_exists("{{finalSubdomainFile}}")'
-    command: 'puredns resolve {{finalSubdomainFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{TargetSpace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{TargetSpace}}.txt --wildcard-tests {{wildcardTests}} --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1'
+    command: 'puredns resolve {{finalSubdomainFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{TargetSpace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{TargetSpace}}.txt --wildcard-tests {{wildcardTests}} --resolvers-trusted {{trustedResolvers}} --rate-limit {{massdnsRateBrute}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1'
 
   # ---------------------------------------------------------------------------
   # DNS bruteforce (optional)
@@ -124,7 +124,7 @@ steps:
     commands:
       # simple string replace 
       # - sed_string_replace("s/{{Target}}/{{Target}}/g", "{{finalSubdomainFile}}", "{{customDnsWordlist}}")
-      - 'puredns bruteforce {{dnsBruteForceWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests {{wildcardTests}} -w {{Output}}/probing/subbrute-{{TargetSpace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1'
+      - 'puredns bruteforce {{dnsBruteForceWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests {{wildcardTests}} -w {{Output}}/probing/subbrute-{{TargetSpace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit {{massdnsRateBrute}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1'
     on_error: 
       - action: continue # expected error as sometimes we don't want to do permutation
 
