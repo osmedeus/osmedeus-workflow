@@ -203,7 +203,7 @@ steps:
     functions:
       - sort_unix("{{httpFile}}")
       - sort_unix("{{dnsFile}}")
-      - exec_cmd("rm -rf {{rawDnsFile}} {{customDnsWordlist}} {{permDomainFile}}")
+      - exec_cmd("rm -rf {{rawDnsFile}} {{permDomainFile}}")
     on_error: 
       - action: continue
   
