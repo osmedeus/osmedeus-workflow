@@ -110,22 +110,24 @@ steps:
   # ---------------------------------------------------------------------------
   - name: resolve-dns
     type: bash
-    log: "Resolving DNS with puredns"
+    log: "Resolving DNS with dnsx"
     pre_condition: 'file_exists("{{finalSubdomainFile}}")'
-    command: 'puredns resolve {{finalSubdomainFile}} -r {{resolvers}} --write {{Output}}/probing/nonwild-{{TargetSpace}}.txt --write-massdns {{dnsFile}} --write-wildcards {{Output}}/probing/wildcards-{{TargetSpace}}.txt --wildcard-tests {{wildcardTests}} --resolvers-trusted {{trustedResolvers}} --rate-limit {{massdnsRateBrute}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1'
+    commands:
+      - 'dnsx -l {{finalSubdomainFile}} -a -cname -resp -silent -r {{resolvers}} -t {{dnsThreads}} -o {{dnsFile}}'
+      - 'cat {{dnsFile}} | awk -F" " "{print $1}" | sort -u > {{Output}}/probing/nonwild-{{TargetSpace}}.txt'
 
   # ---------------------------------------------------------------------------
   # DNS bruteforce (optional)
   # ---------------------------------------------------------------------------
   - name: dns-bruteforce
     type: bash
-    log: "Running DNS bruteforce with puredns"
-    pre_condition: "{{enableDnsBruteFocing}}"
+    log: "Running DNS bruteforce with dnsx"
+    pre_condition: "{{enableDnsBruteFocing}} && !{{TargetIsWildcard}}"
     commands:
-      # simple string replace 
-      # - sed_string_replace("s/{{Target}}/{{Target}}/g", "{{finalSubdomainFile}}", "{{customDnsWordlist}}")
-      - 'puredns bruteforce {{dnsBruteForceWordlist}} {{Target}} -r {{resolvers}} --wildcard-tests {{wildcardTests}} -w {{Output}}/probing/subbrute-{{TargetSpace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit {{massdnsRateBrute}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1'
-    on_error: 
+      - 'cat {{dnsBruteForceWordlist}} | sed "s/$/.{{Target}}/" > {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
+      - 'dnsx -l {{Output}}/probing/brute-input-{{TargetSpace}}.txt -a -resp -silent -r {{resolvers}} -t {{dnsThreads}} -o {{Output}}/probing/subbrute-{{TargetSpace}}.txt'
+      - 'rm -rf {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
+    on_error:
       - action: continue # expected error as sometimes we don't want to do permutation
 
   # ---------------------------------------------------------------------------
