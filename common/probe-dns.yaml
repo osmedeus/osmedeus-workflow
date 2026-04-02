@@ -68,9 +68,9 @@ params:
 dependencies:
   commands:
     - puredns
-    - massdns
     - httpx
     - dnsx
+    - jq
 
   variables:
     - name: Target
@@ -113,8 +113,10 @@ steps:
     log: "Resolving DNS with dnsx"
     pre_condition: 'file_exists("{{finalSubdomainFile}}")'
     commands:
-      - 'dnsx -l {{finalSubdomainFile}} -a -cname -resp -silent -r {{resolvers}} -t {{dnsThreads}} -o {{dnsFile}}'
-      - 'cat {{dnsFile}} | awk -F" " "{print $1}" | sort -u > {{Output}}/probing/nonwild-{{TargetSpace}}.txt'
+      - 'dnsx -silent -json -l {{finalSubdomainFile}} -a -cname -resp -silent -r {{resolvers}} -t {{dnsThreads}} | grep "NOERROR" >> {{dnsJsonFile}}'
+      - "cat {{dnsJsonFile}} | jq -r '(.host) as $h | (.a // [])[] | \"\\($h) A \\(.)\"' >> {{dnsFile}}"
+      - "cat {{dnsJsonFile}} | jq -r '(.host) as $h | (.cname // [])[] | \"\\($h) CNAME \\(.)\"' >> {{dnsFile}}"
+      - 'cat {{dnsFile}} | awk "{print $1}" | sort -u > {{Output}}/probing/nonwild-{{TargetSpace}}.txt'
 
   # ---------------------------------------------------------------------------
   # DNS bruteforce (optional)
@@ -124,9 +126,10 @@ steps:
     log: "Running DNS bruteforce with dnsx"
     pre_condition: "{{enableDnsBruteFocing}} && !{{TargetIsWildcard}}"
     commands:
-      - 'cat {{dnsBruteForceWordlist}} | sed "s/$/.{{Target}}/" > {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
-      - 'dnsx -l {{Output}}/probing/brute-input-{{TargetSpace}}.txt -a -resp -silent -r {{resolvers}} -t {{dnsThreads}} -o {{Output}}/probing/subbrute-{{TargetSpace}}.txt'
-      - 'rm -rf {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
+      # - 'cat {{dnsBruteForceWordlist}} | sed "s/$/.{{Target}}/" > {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
+      # - 'dnsx -silent -json -d {{Target}} -w {{dnsBruteForceWordlist}} '
+      - "dnsx -silent -json -auto-wildcard -d {{Target}} -w {{dnsBruteForceWordlist}} -a -resp -silent -r {{resolvers}} -t {{dnsThreads*2}} -o {{Output}}/probing/subbrute-{{TargetSpace}}.txt"
+      # - 'rm -rf {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
     on_error:
       - action: continue # expected error as sometimes we don't want to do permutation
 
@@ -144,7 +147,7 @@ steps:
       - 'sort_unix("{{permDomainFile}}")'
       - 'exec_cmd("puredns resolve {{permDomainFile}} {{Target}} -r {{resolvers}} --wildcard-tests {{wildcardTests}} -w {{Output}}/probing/permutations-{{TargetSpace}}.txt --resolvers-trusted {{trustedResolvers}} --rate-limit-trusted {{massdnsRateBrute}} >/dev/null 2>&1" )'
       - 'exec_cmd("rm -rf {{permDomainFile}}")' # clean up the data first as it might be a big file
-    on_error: 
+    on_error:
       - action: continue # expected error as sometimes we don't want to do permutation
 
   - name: merge-existing-dns
@@ -155,23 +158,14 @@ steps:
       - 'exec_cmd("cat {{Output}}/probing/subbrute-{{TargetSpace}}.txt {{Output}}/probing/permutations-{{TargetSpace}}.txt  >> {{dnsFile}}")'
       - 'exec_cmd("{{dnsFile}}")'
 
-  # ---------------------------------------------------------------------------
-  # Fallback DNS resolution with dnsx
-  # ---------------------------------------------------------------------------
-  - name: fallback-dnsx-resolve
-    type: bash
-    log: "Fallback: resolving DNS with dnsx"
-    pre_condition: 'file_exists("{{rawDnsFile}}")'
-    command: 'cat {{rawDnsFile}} | dnsx -silent -a -cname -resp-only -json -r {{resolvers}} -t {{httpThreads}} > {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt'
-
   - name: clean-dnsx-results
     type: bash
     log: "Cleaning dnsx results"
     pre_condition: 'file_exists("{{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt") && file_length("{{dnsFile}}") < 1'
     commands:
-      - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '.host as $f | (.a // [])[] | \"($f) A (. )\" > {{dnsFile}}"
-      - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '.host as $f | (.cname // [])[] | \"($f) CNAME (. )\" > {{dnsFile}}"
-    on_error: 
+      - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '(.host) as $h | (.a // [])[] | \"\\($h) A \\(.)\"' >> {{dnsFile}}"
+      - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '(.host) as $h | (.cname // [])[] | \"\\($h) CNAME \\(.)\"' >> {{dnsFile}}"
+    on_error:
       - action: continue # expected error as sometimes we don't want to do permutation
 
   # ---------------------------------------------------------------------------
@@ -183,8 +177,8 @@ steps:
     commands:
       - 'cat {{dnsFile}} | awk -F ". " "{print $1}" | sort -u > {{httpFile}}-tmp'
       - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u | httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}'
-      - 'rm -rf {{httpFile}}-tmp'
-    on_error: 
+      - "rm -rf {{httpFile}}-tmp"
+    on_error:
       - action: continue
 
   - name: fallback-http-probe
@@ -194,10 +188,9 @@ steps:
     commands:
       - 'cat {{dnsFile}} | awk -F ". " "{print $1}" | sort -u > {{httpFile}}-tmp'
       - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u | httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}'
-      - 'rm -rf {{httpFile}}-tmp'
-    on_error: 
+      - "rm -rf {{httpFile}}-tmp"
+    on_error:
       - action: continue
-
 
   - name: cleanup-and-sort-http
     type: function
@@ -206,9 +199,8 @@ steps:
       - sort_unix("{{httpFile}}")
       - sort_unix("{{dnsFile}}")
       - exec_cmd("rm -rf {{rawDnsFile}} {{permDomainFile}}")
-    on_error: 
+    on_error:
       - action: continue
-  
 
   # ---------------------------------------------------------------------------
   # Filter wildcard domains
@@ -221,7 +213,7 @@ steps:
       - 'log_warn("HTTP File {{httpFile}} is too big and excess the limit {{wildcardLimit}}. Filtering it...")'
       - 'exec_cmd("rm -rf {{httpFile}}")'
       - 'exec_cmd("cat {{dnsFile}} | grep ''{{Target}}'' | awk ''{print $1}'' | sed ''s/\\.$//g'' | sort -u | httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}")'
-    on_error: 
+    on_error:
       - action: continue
 
   # ---------------------------------------------------------------------------
@@ -230,11 +222,11 @@ steps:
   - name: extract-ip-addresses
     type: function
     log: "Extracting IP addresses from DNS results"
-    pre_condition: 'file_exists("{{dnsFile}}")'
+    pre_condition: 'file_exists("{{dnsJsonFile}}")'
     functions:
-      - exec_cmd("cat {{dnsFile}} | grep ' A ' | awk '{print $3}' | sort -u >> {{Output}}/ipspace/{{TargetSpace}}-ip.txt")
+      - exec_cmd("cat {{dnsJsonFile}} | jq -r '(.a // [])[]' | sort -u >> {{Output}}/ipspace/{{TargetSpace}}-ip.txt")
       - sort_unix("{{Output}}/ipspace/{{TargetSpace}}-ip.txt")
-    on_error: 
+    on_error:
       - action: continue
 
   # ---------------------------------------------------------------------------

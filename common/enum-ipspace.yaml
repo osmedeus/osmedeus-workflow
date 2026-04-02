@@ -31,7 +31,6 @@ params:
   - name: httpFingerprintJsonFile
     default: "{{Output}}/fingerprint/http-fingerprint-{{TargetSpace}}.jsonl"
 
-
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
@@ -54,7 +53,6 @@ reports:
     type: text
     description: List of discovered non-cdn IP addresses
 
-
 # -----------------------------------------------------------------------------
 # STEPS SECTION
 # -----------------------------------------------------------------------------
@@ -73,9 +71,10 @@ steps:
   - name: asn-discovery
     type: bash
     log: "Discovering ASN and IP ranges based on Target Second Level Domain"
+    pre_condition: '"{{Org}}" != ""'
     commands:
-      - 'echo "{{Org}}" | timeout -k 1m {{ipTimeout}} metabigor netd --org -o {{Output}}/ipspace/{{TargetSpace}}-range.txt >/dev/null 2>&1'
-    on_error: 
+      - 'echo "{{Org}}" | timeout -k 1m {{ipTimeout}} metabigor net -o {{Output}}/ipspace/{{TargetSpace}}-range.txt >/dev/null 2>&1'
+    on_error:
       - action: continue # expected error as sometimes we don't want to do permutation
 
   - name: process-cdn-results
