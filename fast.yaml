@@ -13,6 +13,9 @@ params:
   - name: enableDnsBruteFocing
     default: "false"
 
+  - name: enableStoreHTTPResponse
+    default: "true"
+
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
