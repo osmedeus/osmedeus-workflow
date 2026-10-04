@@ -72,7 +72,9 @@ params:
 dependencies:
   commands:
     - katana
+    - vigolium
     - pd-httpx
+    - jq
 
   variables:
     - name: Target
@@ -160,7 +162,9 @@ steps:
       type: bash
       # stateless run writes each target's records straight to a per-iteration jsonl ([[_id_]] keeps parallel runs from clobbering each other)
       commands:
-        - "timeout -k 1m {{spitolasTimeout}} vigolium scan --only spidering --db-isolate --soft-fail --silent -H \"{{vigoliumDefaultUA}}\" --concurrency {{spitolasConcurrency}} --max-per-host {{spitolasMaxPerHost}} --spider-max-time {{spitolasCrawlingTime}} --stateless --format jsonl --omit-response -o {{Output}}/links/spitolas-raw-[[_id_]].jsonl --target '[[line]]'"
+        - "timeout -k 1m {{spitolasTimeout}} vigolium scan --only spidering --soft-fail --silent -H \"{{vigoliumDefaultUA}}\" --concurrency {{spitolasConcurrency}} --max-per-host {{spitolasMaxPerHost}} --spider-max-time {{spitolasCrawlingTime}} --stateless --format jsonl --omit-response -o {{Output}}/links/spitolas-raw-[[_id_]].jsonl --target '[[line]]'"
+      on_error:
+        - action: continue # in case of error with Spitolas, we continue with the next target
 
   - name: generate-crawling-data
     type: function

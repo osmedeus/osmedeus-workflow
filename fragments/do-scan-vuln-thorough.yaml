@@ -18,14 +18,17 @@ params:
     default: "1h"
   - name: vigoliumScanningMaxDuration
     default: "45m"
+  # number of targets scanned at once; --db-isolate lets them share one --db safely
   - name: vigoliumParallel
-    default: "1"
+    default: "5"
   - name: vigoliumConcurrency
     default: "{{ threads * 5 }}"
   - name: vigoliumMaxPerHost
     default: "50"
   - name: vigoliumStrategy
     default: "balanced"
+  # spidering stays on here: this fragment runs on a single URL with no separate
+  # recon-spider module in front of it
   - name: vigoliumSkipPhases
     default: "known-issue-scan"
   - name: extraVigoliumScan
@@ -129,8 +132,10 @@ steps:
     log: "Generate Vigolium vulnerability reports from the shared db"
     pre_condition: 'file_exists("{{vigoliumVulnDBFile}}")'
     commands:
-      - "vigolium export --silent --db {{vigoliumVulnDBFile}} --only findings --omit-response --format html -o {{vigoliumVulnHTMLReport}}"
-      - "vigolium export --silent --db {{vigoliumVulnDBFile}} --omit-response --format jsonl -o {{vigoliumVulnJsonlFile}}"
+      # -S reads the standalone db without writing to it; --exclude takes singular
+      # record-type names (module/http_record/scan) and is the filter that actually works
+      - "vigolium export -S --silent --db {{vigoliumVulnDBFile}} --exclude module,http_record,scan --omit-response --format html -o {{vigoliumVulnHTMLReport}}"
+      - "vigolium export -S --silent --db {{vigoliumVulnDBFile}} --omit-response --format jsonl -o {{vigoliumVulnJsonlFile}}"
 
   - name: normalize-vigolium-vuln-findings
     type: bash
@@ -146,6 +151,14 @@ steps:
     functions:
       - jsonl_filter("{{vigoliumVulnNormalizedJsonlFile}}", "{{vigoliumVulnCleanJsonlFile}}", "module_id,module_name,severity,confidence,hostname,url,matched_at,extracted_results")
       - sort_unix("{{vigoliumVulnCleanJsonlFile}}")
+
+  - name: generate-vigolium-vuln-md-report
+    type: function
+    log: "Generating Vigolium vulnerability markdown report"
+    pre_condition: 'file_length("{{vigoliumVulnCleanJsonlFile}}") > 0'
+    functions:
+      - 'convert_jsonl_to_markdown("{{vigoliumVulnCleanJsonlFile}}", "{{vigoliumVulnMarkdownReport}}")'
+      - 'send_telegram_file("{{vigoliumVulnMarkdownReport}}", "Vigolium Thorough Vulnerability Scan Results")'
 
   - name: count-vigolium-vulnerabilities
     type: function

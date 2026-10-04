@@ -4,8 +4,8 @@
 
 kind: module
 name: do-scan-content
-description: Bruteforce directories and files on a single target
-tags: directory, bruteforce, content-discovery
+description: Bruteforce directories and files on a single target with Vigolium (ffuf as fallback)
+tags: directory, bruteforce, content-discovery, vigolium
 
 # -----------------------------------------------------------------------------
 # PARAMS SECTION
@@ -50,6 +50,8 @@ params:
   # shared vigolium database that every target in the foreach accumulates into
   - name: deparosDBDir
     default: "{{Output}}/content-discovery/deparos-dbs"
+  - name: deparosDBFile
+    default: "{{Output}}/content-discovery/deparos-dbs/vgnm_{{TargetSpace}}.sqlite"
 
   # output reports (a single vigolium export turns the shared db into the HTML report + raw JSONL)
   - name: deparosHTMLReport
@@ -95,6 +97,7 @@ params:
 # -----------------------------------------------------------------------------
 dependencies:
   commands:
+    - vigolium
     - ffuf
     - jq
 
@@ -139,18 +142,22 @@ steps:
     step:
       name: vigolium-single-target
       type: bash
-      command: "timeout -k 1m {{deparosTimeout}} vigolium scan --only discover --db-isolate --soft-fail --silent -H \"{{vigoliumDefaultUA}}\" --omit-response --db {{deparosDBDir}}/vgnm_{{TargetSpace}}.sqlite --concurrency {{deparosThreads}} --max-per-host {{deparosMaxPerHost}} --scanning-max-duration {{deparosMaxtime}} --fuzz-wordlist {{contentDiscoverWordlist}} -t '[[line]]'"
+      command: "timeout -k 1m {{deparosTimeout}} vigolium scan --only discover --db-isolate --soft-fail --silent -H \"{{vigoliumDefaultUA}}\" --omit-response --db {{deparosDBFile}} --concurrency {{deparosThreads}} --max-per-host {{deparosMaxPerHost}} --discover-max-time {{deparosMaxtime}} --scanning-max-duration {{deparosMaxtime}} --discovery-wordlist {{contentDiscoverWordlist}} -t '[[line]]'"
       # with custom wordlists
+      on_error:
+        - action: continue # keep discovering on the remaining targets if one fails
 
   - name: "generate-deparos-reports"
     type: bash
     log: "Generate vigolium HTML report and JSONL export from the shared db"
-    pre_condition: 'file_exists("{{deparosDBDir}}/vgnm_{{TargetSpace}}.sqlite")'
+    pre_condition: 'file_exists("{{deparosDBFile}}")'
     commands:
-      - "vigolium export --silent --db {{deparosDBDir}}/vgnm_{{TargetSpace}}.sqlite --only http --omit-response --format html -o {{deparosHTMLReport}}"
-      - "vigolium export --silent --db {{deparosDBDir}}/vgnm_{{TargetSpace}}.sqlite --only http --omit-response --format jsonl -o {{contentDiscoveryRawJsonlFile}}"
+      # -S reads the standalone db without writing to it; --exclude takes singular
+      # record-type names (module/finding/scan) and is the filter that actually works
+      - "vigolium export -S --silent --db {{deparosDBFile}} --exclude module,finding,scan --omit-response --format html -o {{deparosHTMLReport}}"
+      - "vigolium export -S --silent --db {{deparosDBFile}} --exclude module,finding,scan --omit-response --format jsonl -o {{contentDiscoveryRawJsonlFile}}"
       # just to save space, remove the vigolium db after report generation
-      # - "rm -rf {{deparosDBDir}}/vgnm_{{TargetSpace}}.sqlite"
+      # - "rm -rf {{deparosDBFile}}"
 
   - name: "normalize-deparos-records"
     type: bash
@@ -182,11 +189,11 @@ steps:
       - action: continue # in case of error, continue the workflow
 
 
-  ### Fallback ffuf method if the deparos method having error ###
+  ### Fallback ffuf method, only when the deparos method produced nothing ###
   - name: directory-bruteforce-with-ffuf
     type: foreach
     log: "Running directory bruteforce with ffuf"
-    pre_condition: 'file_exists("{{httpFile}}")'
+    pre_condition: 'file_exists("{{httpFile}}") && file_length("{{contentDiscoveryJsonlFile}}") < 1'
     input: "{{httpFile}}"
     variable: line
     threads: "{{ffufParallel}}"
@@ -201,7 +208,8 @@ steps:
   - name: process-ffuf-results
     type: function
     log: "Processing and beautifying scan results"
-    pre_condition: 'dir_length("{{Output}}/content-discovery/") > 0'
+    # same gate as the ffuf step above: only runs when ffuf actually ran
+    pre_condition: 'dir_length("{{Output}}/content-discovery/") > 0 && file_length("{{contentDiscoveryJsonlFile}}") < 1'
     functions:
       - exec_cmd("cat {{Output}}/content-discovery/ffuf-raw-*.json | jq -r '.url' > {{contentDiscoverUrlsFile}}")
       # clean up raw json files

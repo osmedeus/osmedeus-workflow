@@ -22,16 +22,19 @@ params:
     default: "1h"
   - name: vigoliumScanningMaxDuration
     default: "45m"
+  # number of targets scanned at once; --db-isolate lets them share one --db safely
   - name: vigoliumParallel
-    default: "1"
+    default: "5"
   - name: vigoliumConcurrency
     default: "{{ threads * 5 }}"
   - name: vigoliumMaxPerHost
     default: "50"
   - name: vigoliumStrategy
     default: "balanced"
+  # known-issue-scan is already covered by the nuclei module (scan-vuln),
+  # spidering by the recon-spider module, so both are skipped here
   - name: vigoliumSkipPhases
-    default: "known-issue-scan"
+    default: "known-issue-scan,spidering"
   - name: extraVigoliumScan
     default: " "
 
@@ -135,8 +138,10 @@ steps:
     log: "Generate Vigolium vulnerability reports from the shared db"
     pre_condition: 'file_exists("{{vigoliumVulnDBFile}}")'
     commands:
-      - "vigolium export --silent --db {{vigoliumVulnDBFile}} --only findings --omit-response --format html -o {{vigoliumVulnHTMLReport}}"
-      - "vigolium export --silent --db {{vigoliumVulnDBFile}} --omit-response --format jsonl -o {{vigoliumVulnJsonlFile}}"
+      # -S reads the standalone db without writing to it; --exclude takes singular
+      # record-type names (module/http_record/scan) and is the filter that actually works
+      - "vigolium export -S --silent --db {{vigoliumVulnDBFile}} --exclude module,http_record,scan --omit-response --format html -o {{vigoliumVulnHTMLReport}}"
+      - "vigolium export -S --silent --db {{vigoliumVulnDBFile}} --omit-response --format jsonl -o {{vigoliumVulnJsonlFile}}"
 
   - name: normalize-vigolium-vuln-findings
     type: bash
