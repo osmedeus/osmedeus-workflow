@@ -15,6 +15,10 @@ params:
 
   - name: httpFingerprintJsonFile
     default: "{{Output}}/fingerprint/http-fingerprint-{{TargetSpace}}.jsonl"
+
+  # vigolium appends .jsonl to -o under --format jsonl, so this name already ends in it
+  - name: vigoliumProbeJsonFile
+    default: "{{Output}}/fingerprint/vigolium-probe-{{TargetSpace}}.jsonl"
   - name: httpInterestingFilteredJsonFile
     default: "{{Output}}/fingerprint/http-interesting-filtered-{{TargetSpace}}.jsonl"
 
@@ -29,6 +33,8 @@ params:
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
+  - name: vigoliumDefaultUA
+    default: "User-Agent: Mozilla/5.0 (compatible; Vigolium OSS +https://github.com/vigolium/vigolium)"
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
@@ -48,8 +54,8 @@ reports:
     type: jsonl
     description: HTTP fingerprinting data
 
-  - name: httpInterestingMarkdownFile
-    default: "{{Output}}/fingerprint/http-interesting-{{TargetSpace}}.md"
+  - name: http-interesting-markdown
+    path: "{{httpInterestingMarkdownFile}}"
     type: markdown
     description: HTTP Fingerprinting Results with Interesting HTTP Responses
 
@@ -84,6 +90,22 @@ steps:
     # pre_condition: 'file_exists("{{httpFile}}")'
     commands:
       - 'cat {{httpFile}} | pd-httpx -H "{{defaultUA}}" -timeout {{httpTimeout}} -t {{httpThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain >> {{httpFingerprintJsonFile}}'
+    on_error:
+      - action: continue # let the vigolium backup below take over
+
+  # Backup fingerprint: vigolium's probe phase, a different prober so it does not
+  # share the primary's failure mode. vigolium emits {"type":"http_record","data":{…}},
+  # so .data is mapped to the same flat schema pd-httpx -json produces.
+  - name: http-fingerprint-fallback-vigolium
+    type: bash
+    log: "Fingerprinting HTTP hosts with vigolium (backup for pd-httpx)"
+    pre_condition: 'file_length("{{httpFingerprintJsonFile}}") < 1'
+    commands:
+      - 'vigolium run probe -T {{httpFile}} -S --silent --soft-fail -H "{{vigoliumDefaultUA}}" --concurrency {{httpThreads}} --omit-response --format jsonl -o {{vigoliumProbeJsonFile}}'
+      - "jq -c 'select(.type == \"http_record\") | .data | {url, status_code, host: .hostname, port, scheme, method, title: .response_title, words: .response_words, content_length: .response_content_length, content_type: .response_content_type, webserver: .response_server}' {{vigoliumProbeJsonFile}} >> {{httpFingerprintJsonFile}}"
+      - "rm -f {{vigoliumProbeJsonFile}}"
+    on_error:
+      - action: continue # in case of error, continue the workflow
 
   - name: beautify-interesting-http-results
     type: function

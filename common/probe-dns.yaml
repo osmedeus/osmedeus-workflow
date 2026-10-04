@@ -50,6 +50,9 @@ params:
     default: "{{ threads * 50 }}"
   - name: dnsThreads
     default: "{{ threads * 25 }}"
+  # lower concurrency for the small trusted resolver pool to avoid rate limiting
+  - name: trustedDnsThreads
+    default: "{{ threads * 10 }}"
   - name: permLimit
     default: "8000"
   - name: wildcardLimit
@@ -61,6 +64,8 @@ params:
   # mics params
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
+  - name: vigoliumDefaultUA
+    default: "User-Agent: Mozilla/5.0 (compatible; Vigolium OSS +https://github.com/vigolium/vigolium)"
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
@@ -71,6 +76,7 @@ dependencies:
     - pd-httpx
     - dnsx
     - jq
+    - vigolium
 
   variables:
     - name: Target
@@ -113,10 +119,12 @@ steps:
     log: "Resolving DNS with dnsx"
     pre_condition: 'file_exists("{{finalSubdomainFile}}")'
     commands:
-      - 'dnsx -silent -json -l {{finalSubdomainFile}} -a -cname -resp -silent -r {{resolvers}} -t {{dnsThreads}} | grep "NOERROR" >> {{dnsJsonFile}}'
+      # trusted resolvers only: many servers in the public resolver list answer with root-server
+      # referrals, which dnsx reports as A records (root/gTLD server IPs) for hosts that don't exist
+      - 'dnsx -silent -json -l {{finalSubdomainFile}} -a -cname -resp -r {{trustedResolvers}} -t {{trustedDnsThreads}} | grep "NOERROR" >> {{dnsJsonFile}} || true'
       - "cat {{dnsJsonFile}} | jq -r '(.host) as $h | (.a // [])[] | \"\\($h) A \\(.)\"' >> {{dnsFile}}"
       - "cat {{dnsJsonFile}} | jq -r '(.host) as $h | (.cname // [])[] | \"\\($h) CNAME \\(.)\"' >> {{dnsFile}}"
-      - 'cat {{dnsFile}} | awk "{print $1}" | sort -u > {{Output}}/probing/nonwild-{{TargetSpace}}.txt'
+      - 'cut -d " " -f1 {{dnsFile}} | sort -u > {{Output}}/probing/nonwild-{{TargetSpace}}.txt'
 
   # ---------------------------------------------------------------------------
   # DNS bruteforce (optional)
@@ -126,10 +134,11 @@ steps:
     log: "Running DNS bruteforce with dnsx"
     pre_condition: "{{enableDnsBruteFocing}} && !{{TargetIsWildcard}}"
     commands:
-      # - 'cat {{dnsBruteForceWordlist}} | sed "s/$/.{{Target}}/" > {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
-      # - 'dnsx -silent -json -d {{Target}} -w {{dnsBruteForceWordlist}} '
-      - "dnsx -silent -json -auto-wildcard -d {{Target}} -w {{dnsBruteForceWordlist}} -a -resp -silent -r {{resolvers}} -t {{dnsThreads*2}} -o {{Output}}/probing/subbrute-{{TargetSpace}}.txt"
-      # - 'rm -rf {{Output}}/probing/brute-input-{{TargetSpace}}.txt'
+      # fast pass over the public resolver pool, then re-resolve the hits with trusted resolvers
+      # to drop referral and poisoned answers from unreliable public resolvers
+      - "dnsx -silent -d {{Target}} -w {{dnsBruteForceWordlist}} -a -r {{resolvers}} -t {{dnsThreads*2}} | sort -u > {{Output}}/probing/subbrute-raw-{{TargetSpace}}.txt"
+      - 'dnsx -silent -json -l {{Output}}/probing/subbrute-raw-{{TargetSpace}}.txt -a -cname -resp -r {{trustedResolvers}} -t {{trustedDnsThreads}} | grep "NOERROR" > {{Output}}/probing/subbrute-{{TargetSpace}}.txt || true'
+      - "rm -f {{Output}}/probing/subbrute-raw-{{TargetSpace}}.txt"
     on_error:
       - action: continue # expected error as sometimes we don't want to do permutation
 
@@ -150,23 +159,29 @@ steps:
     on_error:
       - action: continue # expected error as sometimes we don't want to do permutation
 
-  - name: merge-existing-dns
-    type: function
-    log: "Merging existing dns"
-    pre_condition: 'file_length("{{Output}}/probing/permutations-{{TargetSpace}}.txt") > 0 && file_length("{{Output}}/probing/subbrute-{{TargetSpace}}.txt") > 0'
-    functions:
-      - 'exec_cmd("cat {{Output}}/probing/subbrute-{{TargetSpace}}.txt {{Output}}/probing/permutations-{{TargetSpace}}.txt  >> {{dnsFile}}")'
-      - 'exec_cmd("{{dnsFile}}")'
-
-  - name: clean-dnsx-results
+  # bruteforce results are dnsx json, so fold them into the json + "host TYPE value" dns files
+  - name: merge-bruteforce-dns
     type: bash
-    log: "Cleaning dnsx results"
-    pre_condition: 'file_exists("{{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt") && file_length("{{dnsFile}}") < 1'
+    log: "Merging DNS bruteforce results"
+    pre_condition: 'file_length("{{Output}}/probing/subbrute-{{TargetSpace}}.txt") > 0'
     commands:
-      - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '(.host) as $h | (.a // [])[] | \"\\($h) A \\(.)\"' >> {{dnsFile}}"
-      - "cat {{Output}}/probing/raw-dnsx-{{TargetSpace}}.txt | jq -r '(.host) as $h | (.cname // [])[] | \"\\($h) CNAME \\(.)\"' >> {{dnsFile}}"
+      - "cat {{Output}}/probing/subbrute-{{TargetSpace}}.txt >> {{dnsJsonFile}}"
+      - "cat {{Output}}/probing/subbrute-{{TargetSpace}}.txt | jq -r '(.host) as $h | ((.a // [])[] | \"\\($h) A \\(.)\"), ((.cname // [])[] | \"\\($h) CNAME \\(.)\")' >> {{dnsFile}}"
     on_error:
-      - action: continue # expected error as sometimes we don't want to do permutation
+      - action: continue
+
+  # puredns only writes hostnames, so re-resolve them to get the A/CNAME records
+  - name: merge-permutation-dns
+    type: bash
+    log: "Merging DNS permutation results"
+    pre_condition: 'file_length("{{Output}}/probing/permutations-{{TargetSpace}}.txt") > 0'
+    commands:
+      - 'dnsx -silent -json -l {{Output}}/probing/permutations-{{TargetSpace}}.txt -a -cname -resp -r {{trustedResolvers}} -t {{trustedDnsThreads}} | grep "NOERROR" > {{Output}}/probing/permutations-json-{{TargetSpace}}.txt || true'
+      - "cat {{Output}}/probing/permutations-json-{{TargetSpace}}.txt >> {{dnsJsonFile}}"
+      - "cat {{Output}}/probing/permutations-json-{{TargetSpace}}.txt | jq -r '(.host) as $h | ((.a // [])[] | \"\\($h) A \\(.)\"), ((.cname // [])[] | \"\\($h) CNAME \\(.)\")' >> {{dnsFile}}"
+      - "rm -f {{Output}}/probing/permutations-json-{{TargetSpace}}.txt"
+    on_error:
+      - action: continue
 
   # ---------------------------------------------------------------------------
   # HTTP probing
@@ -175,20 +190,24 @@ steps:
     type: bash
     log: "Probing HTTP endpoints"
     commands:
-      - 'cat {{dnsFile}} | awk -F ". " "{print $1}" | sort -u > {{httpFile}}-tmp'
+      - 'cut -d " " -f1 {{dnsFile}} | sort -u > {{httpFile}}-tmp'
       - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u | pd-httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}'
       - "rm -rf {{httpFile}}-tmp"
     on_error:
       - action: continue
 
-  - name: fallback-http-probe
+  # Backup probe: vigolium's probe phase, used only when pd-httpx yielded nothing.
+  # Deliberately a different prober, so it does not share the primary's failure mode.
+  - name: fallback-http-probe-vigolium
     type: bash
-    log: "As a fallback, use the http probe in case the binary folder is corrupted"
+    log: "As a fallback, probe with vigolium in case pd-httpx is missing or broken"
     pre_condition: 'file_length("{{httpFile}}") < 1'
     commands:
-      - 'cat {{dnsFile}} | awk -F ". " "{print $1}" | sort -u > {{httpFile}}-tmp'
-      - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u | pd-httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}'
-      - "rm -rf {{httpFile}}-tmp"
+      - 'cut -d " " -f1 {{dnsFile}} | sort -u > {{httpFile}}-tmp'
+      - 'cat {{httpFile}}-tmp {{finalSubdomainFile}} | sort -u > {{httpFile}}-probe-input'
+      - 'vigolium run probe -T {{httpFile}}-probe-input -S --silent --soft-fail -H "{{vigoliumDefaultUA}}" --concurrency {{httpThreads}} --omit-response --format jsonl -o {{httpFile}}-probe.jsonl'
+      - "cat {{httpFile}}-probe.jsonl | jq -r 'select(.type == \"http_record\") | .data.url // empty' | sort -u >> {{httpFile}}"
+      - "rm -rf {{httpFile}}-tmp {{httpFile}}-probe-input {{httpFile}}-probe.jsonl"
     on_error:
       - action: continue
 
@@ -212,7 +231,7 @@ steps:
     functions:
       - 'log_warn("HTTP File {{httpFile}} is too big and excess the limit {{wildcardLimit}}. Filtering it...")'
       - 'exec_cmd("rm -rf {{httpFile}}")'
-      - 'exec_cmd("cat {{dnsFile}} | grep ''{{Target}}'' | awk ''{print $1}'' | sed ''s/\\.$//g'' | sort -u | pd-httpx -H "{{defaultUA}}" -silent -t {{httpThreads}} >> {{httpFile}}")'
+      - 'exec_cmd("cat {{dnsFile}} | grep ''{{Target}}'' | awk ''{print $1}'' | sed ''s/\\.$//g'' | sort -u | pd-httpx -H ''{{defaultUA}}'' -silent -t {{httpThreads}} >> {{httpFile}}")'
     on_error:
       - action: continue
 

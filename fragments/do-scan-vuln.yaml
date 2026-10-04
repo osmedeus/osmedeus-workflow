@@ -84,6 +84,8 @@ steps:
     pre_condition: 'file_exists("{{httpFile}}")'
     commands:
       - "timeout -k 1m {{nucleiTimeout}} nuclei -H '{{defaultUA}}' -silent -c {{nucleiThreads}} -jsonl -severity '{{nucleiSeverity}}' -t {{nucleiTemplateConfig}} -l {{httpFile}} -irr -o {{nucleiOutputJsonl}} {{extraNuclei}} > /dev/null 2>&1"
+    on_error:
+      - action: continue # a timeout (exit 124) on a big target still leaves partial findings worth keeping
 
   - name: nuclei-report-processing
     type: function

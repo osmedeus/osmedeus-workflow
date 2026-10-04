@@ -22,20 +22,14 @@ params:
   - name: httpResponse
     default: "{{Output}}/http-response/"
 
-  - name: spiderTimeout
-    default: "2h"
-  - name: spiderThreads
-    default: "{{ threads }}"
   - name: spiderPrallel
     default: "{{ threads / 2 }}"
-  - name: spiderDepth
-    default: "3"
 
-  - name: crawlingTime
-    default: "30"
 
+  # must exceed spitolasCrawlingTime: this wraps vigolium, which stops itself at that budget.
+  # Equal values make `timeout` fire exactly when vigolium finishes and return 124.
   - name: spitolasTimeout
-    default: "5m"
+    default: "7m"
   - name: spitolasCrawlingTime
     default: "5m"
   - name: spitolasConcurrency
@@ -69,7 +63,6 @@ params:
 # -----------------------------------------------------------------------------
 dependencies:
   commands:
-    - katana
     - vigolium
     - pd-httpx
     - jq
@@ -108,25 +101,13 @@ steps:
       - 'create_folder("{{Output}}/links")'
       - 'create_folder("{{Output}}/secrets")'
 
-  # ---------------------------------------------------------------------------
-  # Web crawling with Katana
-  # ---------------------------------------------------------------------------
-  - name: web-crawling
-    type: foreach
-    log: "Crawling web pages with Katana"
-    pre_condition: 'file_exists("{{httpFile}}")'
-    input: "{{httpFile}}"
-    variable: line
-    threads: "{{spiderPrallel}}"
-    step:
-      name: katana-single-target
-      type: bash
-      command: 'timeout -k 1m {{spiderTimeout}} katana -silent -depth {{spiderDepth}} -c {{spiderThreads}} -jc -ct {{crawlingTime}} -u [[line]] | sort -u >> {{linkFile}}'
 
-
+  # ---------------------------------------------------------------------------
+  # Web crawling with vigolium (stateless spidering phase)
+  # ---------------------------------------------------------------------------
   - name: web-crawling-with-headless-browser
     type: foreach
-    log: "Crawling web pages with Spitolas (vigolium) Headless Browser"
+    log: "Crawling web pages with vigolium (stateless spidering)"
     pre_condition: 'file_exists("{{httpFile}}")'
     input: "{{httpFile}}"
     variable: line
@@ -137,12 +118,9 @@ steps:
       # stateless run writes each target's records straight to a per-iteration jsonl ([[_id_]] keeps parallel runs from clobbering each other)
       commands:
         - "timeout -k 1m {{spitolasTimeout}} vigolium scan --only spidering --soft-fail --silent -H \"{{vigoliumDefaultUA}}\" --concurrency {{spitolasConcurrency}} --max-per-host {{spitolasMaxPerHost}} --spider-max-time {{spitolasCrawlingTime}} --stateless --format jsonl --omit-response -o {{Output}}/links/spitolas-raw-[[_id_]].jsonl --target '[[line]]'"
-      on_error:
-        - action: continue # in case of error with Spitolas, we continue with the next target
+    on_error:
+      - action: continue # a failing target must not abort the module (iterations always all run)
 
-  # ---------------------------------------------------------------------------
-  # Advanced Web crawling with Katana
-  # ---------------------------------------------------------------------------
   - name: generate-crawling-data
     type: function
     log: "Merging and normalizing Spitolas (vigolium) spider output"
@@ -157,7 +135,7 @@ steps:
       - exec_cmd("rm -rf {{Output}}/links/spitolas-raw-*.jsonl")
       - sort_unix("{{linkFile}}")
     on_error:
-      - action: continue # in case of error with Spitolas, we continue with the next target
+      - action: continue # a failing target must not abort the module (iterations always all run)
 
   - name: unique-crawled-links
     type: function

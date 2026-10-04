@@ -1,5 +1,5 @@
 kind: module
-name: do-scan-vuln
+name: do-deep-vuln-scan
 description: Hunt vulnerabilities on a single target with Nuclei
 tags: vuln,nuclei,security,scanning
 
@@ -10,17 +10,17 @@ params:
   - name: httpFile
     default: "{{Output}}/probing/http-{{TargetSpace}}.txt"
 
-  - name: vigeniumJsonOutput
-    default: "{{Output}}/vulnscan/vigenium-{{TargetSpace}}.jsonl"
+  - name: vigoliumJsonOutput
+    default: "{{Output}}/vulnscan/vigolium-{{TargetSpace}}.jsonl"
 
-  - name: vigeniumPrallel
+  - name: vigoliumPrallel
     default: 5
 # -----------------------------------------------------------------------------
 # DEPENDENCIES SECTION
 # -----------------------------------------------------------------------------
 dependencies:
   commands:
-    - vigenium
+    - vigolium
 
   variables:
     - name: Target
@@ -31,10 +31,10 @@ dependencies:
 # REPORTS SECTION
 # -----------------------------------------------------------------------------
 reports:
-  - name: vigenium-jsonl
-    path: "{{vigeniumJsonOutput}}"
+  - name: vigolium-jsonl
+    path: "{{vigoliumJsonOutput}}"
     type: jsonl
-    description: vigenium deep vulnerability scan results in JSONL format
+    description: vigolium deep vulnerability scan results in JSONL format
 
 # -----------------------------------------------------------------------------
 # STEPS SECTION
@@ -50,17 +50,17 @@ steps:
       - 'create_folder("{{Output}}/vulnscan")'
 
   # # ---------------------------------------------------------------------------
-  # - name: vigenium-deep-vuln-scan
+  # - name: vigolium-deep-vuln-scan
   #   type: foreach
-  #   log: "Running vigenium deep vulnerability scan on discovered URLs"
+  #   log: "Running vigolium deep vulnerability scan on discovered URLs"
   #   pre_condition: 'file_exists("{{httpFile}}")'
   #   input: "{{httpFile}}"
   #   variable: line
-  #   threads: "{{vigeniumPrallel}}"
+  #   threads: "{{vigoliumPrallel}}"
   #   step:
-  #     name: vigenium-single-target
+  #     name: vigolium-single-target
   #     type: bash
-  #     command: 'vigenium scan -u [[line]] -o results.json'
+  #     command: 'vigolium scan -u [[line]] -o results.json'
 
 
   # ---------------------------------------------------------------------------

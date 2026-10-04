@@ -4,7 +4,7 @@
 
 kind: module
 name: scan-content
-description: Bruteforce directories and files with Vigolium (ffuf as fallback)
+description: Bruteforce directories and files with Vigolium (stateless retry as fallback)
 tags: directory, bruteforce, content-discovery, vigolium
 
 # -----------------------------------------------------------------------------
@@ -26,26 +26,16 @@ params:
     default: "40"
   - name: deparosMaxPerHost
     default: "40"
+  # must exceed deparosMaxtime (see spitolasTimeout note): equal values guarantee exit 124
   - name: deparosTimeout
-    default: "30m"
+    default: "35m"
 
-  ## ffuf params
-  - name: ffufTimeout
-    default: "30m"
-  - name: ffufParallel
-    default: "10"
-  - name: ffThreads
-    default: "25"
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
   - name: vigoliumDefaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Vigolium OSS +https://github.com/vigolium/vigolium)"
 
-  - name: contentDiscoverFile
-    default: "{{Output}}/content-discovery/ffuf-{{TargetSpace}}.jsonl"
-  - name: contentDiscoverFilteredFile
-    default: "{{Output}}/content-discovery/filtered-{{TargetSpace}}.jsonl"
 
   # shared vigolium database that every target in the foreach accumulates into
   - name: deparosDBDir
@@ -80,14 +70,11 @@ params:
     default: "{{Output}}/content-discovery/content-fingerprint-filtered-{{TargetSpace}}.jsonl"
 
   # wordlists
-  - name: shortFileWordlist
-    default: "{{Data}}/wordlists/content/file-short.txt"
-  - name: longFileWordlist
-    default: "{{Data}}/wordlists/content/file-long.txt"
-  - name: shortDirWordlist
-    default: "{{Data}}/wordlists/content/dir-short.txt"
-  - name: longDirWordlist
-    default: "{{Data}}/wordlists/content/dir-long.txt"
+  # A host that answers every path with the same status+length is a catch-all; more than
+  # this many identical host+status+length responses are dropped as noise, not content.
+  - name: catchAllThreshold
+    default: "5"
+
   - name: contentDiscoverWordlist
     default: "{{Data}}/wordlists/content/small.txt"
 
@@ -97,7 +84,6 @@ params:
 dependencies:
   commands:
     - vigolium
-    - ffuf
     - jq
 
   variables:
@@ -144,7 +130,7 @@ steps:
       - "skip()"
 
   # ---------------------------------------------------------------------------
-  # Directory bruteforce with ffuf
+  # Directory bruteforce with vigolium discovery
   # ---------------------------------------------------------------------------
   - name: directory-bruteforce
     type: foreach
@@ -158,8 +144,8 @@ steps:
       type: bash
       command: "timeout -k 1m {{deparosTimeout}} vigolium scan --only discover --db-isolate --soft-fail --silent -H \"{{vigoliumDefaultUA}}\" --omit-response --db {{deparosDBFile}} --concurrency {{deparosThreads}} --max-per-host {{deparosMaxPerHost}} --discover-max-time {{deparosMaxtime}} --scanning-max-duration {{deparosMaxtime}} --discovery-wordlist {{contentDiscoverWordlist}} -t '[[line]]'"
       # with custom wordlists
-      on_error:
-        - action: continue # keep discovering on the remaining targets if one fails
+    on_error:
+      - action: continue # keep discovering on the remaining targets if one fails
 
   - name: "generate-deparos-reports"
     type: bash
@@ -178,8 +164,14 @@ steps:
     log: "Normalizing vigolium content-discovery records into the flat schema"
     pre_condition: 'file_exists("{{contentDiscoveryRawJsonlFile}}")'
     commands:
-      # flatten the nested vigolium http_record objects into the flat fields the markdown/db steps expect
-      - "jq -c 'select(.type==\"http_record\") | .data | {url, status_code, title: .response_title, words: .response_words, content_length: .response_content_length, content_type: .response_content_type}' {{contentDiscoveryRawJsonlFile}} > {{contentDiscoveryJsonlFile}}"
+      # flatten the nested vigolium http_record objects into the flat fields the markdown/db steps expect,
+      # then drop catch-all noise: a host answering >catchAllThreshold paths with an identical
+      # status+content_length is a wildcard responder, not content discovery (netflix hosts that
+      # 301 every path produced 25 of 27 records this way)
+      # one slurped pass: the second jq already slurped, so merging costs no extra memory.
+      # `add` concatenates the kept groups; `flatten` would recurse into any future
+      # array-valued field. `// []` keeps an all-noise input from erroring on null.
+      - "jq -c -s 'map(select(.type==\"http_record\") | .data | {url, status_code, title: .response_title, words: .response_words, content_length: .response_content_length, content_type: .response_content_type}) | group_by([(.url | split(\"/\")[2]), .status_code, .content_length]) | map(select(length <= {{catchAllThreshold}})) | add // [] | .[]' {{contentDiscoveryRawJsonlFile}} > {{contentDiscoveryJsonlFile}}"
 
   - name: deparos-beautify-interesting-content-results
     type: function
@@ -202,32 +194,37 @@ steps:
     on_error:
       - action: continue # in case of error, continue the workflow
 
-  ### Fallback ffuf method, only when the deparos method produced nothing ###
-  - name: directory-bruteforce-with-ffuf
+  ### Fallback: a stateless vigolium discovery retry, only when the primary produced nothing.
+  ### Deliberately NOT the same command as the primary: it skips the shared sqlite db
+  ### entirely (--stateless, per-target jsonl), so it survives the db being the failure.
+  - name: directory-bruteforce-stateless-retry
     type: foreach
-    log: "Running directory bruteforce with ffuf"
+    log: "Retrying content discovery with vigolium (stateless, no shared db)"
     pre_condition: 'file_exists("{{httpFile}}") && file_length("{{contentDiscoveryJsonlFile}}") < 1'
     input: "{{httpFile}}"
     variable: line
-    threads: "{{ffufParallel}}"
+    threads: "{{deparosParallel}}"
     step:
-      name: ffuf-single-target
+      name: vigolium-stateless-single-target
       type: bash
-      command: 'timeout -k 1m {{ffufTimeout}} ffuf -s -t {{ffThreads}} -noninteractive -ac -acs advanced -timeout 15 -se -D -fc "429,404,400" -e "asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,js,json,jsp,jsp~,log,old,txt" -json -H "{{defaultUA}}" -ac -s -fc "429,404,400" -json -u "[[line]]/FUZZ" -w {{contentDiscoverWordlist}}:FUZZ > {{Output}}/content-discovery/ffuf-raw-[[_id_]].json 2>/dev/null'
+      command: "timeout -k 1m {{deparosTimeout}} vigolium scan --only discover --stateless --soft-fail --silent -H \"{{vigoliumDefaultUA}}\" --omit-response --concurrency {{deparosThreads}} --max-per-host {{deparosMaxPerHost}} --discover-max-time {{deparosMaxtime}} --scanning-max-duration {{deparosMaxtime}} --discovery-wordlist {{contentDiscoverWordlist}} --format jsonl -o {{Output}}/content-discovery/stateless-raw-[[_id_]].jsonl --target '[[line]]'"
+    on_error:
+      - action: continue # keep discovering on the remaining targets if one fails
 
   # ---------------------------------------------------------------------------
-  # Process and beautify results
+  # Process the stateless retry output
   # ---------------------------------------------------------------------------
-  - name: process-ffuf-results
+  - name: process-stateless-retry-results
     type: function
-    log: "Processing and beautifying scan results"
-    # same gate as the ffuf step above: only runs when ffuf actually ran
-    pre_condition: 'dir_length("{{Output}}/content-discovery/") > 0 && file_length("{{contentDiscoveryJsonlFile}}") < 1'
+    log: "Processing stateless vigolium discovery results"
+    # fires whenever the primary produced nothing, so it also covers a retry that found nothing
+    pre_condition: 'file_length("{{contentDiscoveryJsonlFile}}") < 1'
     functions:
-      - exec_cmd("cat {{Output}}/content-discovery/ffuf-raw-*.json | jq -r '.url' > {{contentDiscoverUrlsFile}}")
-      # clean up raw json files
-      - exec_cmd("rm -rf {{Output}}/content-discovery/ffuf-raw-*.json")
+      - exec_cmd("cat {{Output}}/content-discovery/stateless-raw-*.jsonl | jq -r 'select(.type == \"http_record\") | .data.url // empty' > {{contentDiscoverUrlsFile}} 2>/dev/null")
+      - exec_cmd("rm -rf {{Output}}/content-discovery/stateless-raw-*.jsonl")
       - sort_unix("{{contentDiscoverUrlsFile}}")
+    on_error:
+      - action: continue # the retry may legitimately have found nothing
 
   # ---------------------------------------------------------------------------
   # HTTP fingerprinting with pd-httpx

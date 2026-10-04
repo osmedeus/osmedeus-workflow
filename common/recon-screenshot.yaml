@@ -23,7 +23,9 @@ params:
     default: "{{Output}}/screenshots/http-fingerprint-{{TargetSpace}}.jsonl"
 
   - name: screenshotHTMLFile
-    default: "{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot-{{TargetSpace}}.html"
+    # httpx writes screenshots and their gallery under <store-response-dir>/screenshot/; the gallery
+    # links images relatively, so it has to stay in that folder
+    default: "{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot/screenshot-{{TargetSpace}}.html"
 
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
@@ -81,11 +83,11 @@ steps:
   - name: process-screenshots
     type: function
     log: "Processing screenshot results"
-    pre_condition: 'file_exists("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot.html")'
+    pre_condition: 'file_exists("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot/screenshot.html")'
     functions:
-      - 'move_file("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot.html", "{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot-{{TargetSpace}}.html")'
+      - 'move_file("{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot/screenshot.html", "{{screenshotHTMLFile}}")'
     exports:
-      total_screenshots: "dir_length('{{Output}}/screenshots/{{TargetSpace}}-screenshots/')"
+      total_screenshots: "file_length('{{Output}}/screenshots/{{TargetSpace}}-screenshots/screenshot/index_screenshot.txt')"
 
   # ---------------------------------------------------------------------------
   # Summary

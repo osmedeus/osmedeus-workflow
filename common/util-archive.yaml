@@ -125,5 +125,5 @@ steps:
     log: "Beautifying archive results"
     pre_condition: 'file_length("{{httpArchiveJsonFile}}") > 0'
     functions:
-      - jsonl_filter("{{httpArchiveJsonFile}}", "{{httpArchiveCleanJsonFile}}", "url,status,length,words,redirectlocation")
+      - jsonl_filter("{{httpArchiveJsonFile}}", "{{httpArchiveCleanJsonFile}}", "url,status_code,content_length,words,location")
       - 'convert_jsonl_to_markdown("{{httpArchiveCleanJsonFile}}", "{{httpArchiveCleanMarkdownFile}}")'

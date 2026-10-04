@@ -13,6 +13,11 @@ tags: portscan, rustscan, network, nmap
 params:
   - name: ipFile
     default: "{{Output}}/portscan/ip-file-{{TargetSpace}}.txt"
+  # ipFile is built from these: non-CDN IPs from enum-ipspace, else every IP probe-dns resolved
+  - name: nonCdnIPFile
+    default: "{{Output}}/ipspace/non-cdn-ip-{{TargetSpace}}.txt"
+  - name: resolvedIPFile
+    default: "{{Output}}/ipspace/{{TargetSpace}}-ip.txt"
 
   # pair of host:port
   - name: openPortsFile
@@ -38,6 +43,10 @@ params:
   - name: defaultUA
     default: "User-Agent: Mozilla/5.0 (compatible; Osmedeus/v5; +https://github.com/j3ssie/osmedeus)"
 
+  # TCP connect scan used to find open ports before probing them with pd-httpx
+  - name: naabuRate
+    default: "{{ threads * 100 }}"
+
   # disable this by default as it alert a lot of Cloud Provider
   - name: enableSYNScan
     type: bool
@@ -62,6 +71,8 @@ params:
 dependencies:
   commands:
     - pd-httpx
+    - naabu
+    - jq
 
   variables:
     - name: Target
@@ -102,6 +113,21 @@ steps:
       - create_folder("{{Output}}/synscan")
 
   # ---------------------------------------------------------------------------
+  # Build the IP list to scan (nothing upstream writes ipFile for domain targets)
+  # ---------------------------------------------------------------------------
+  - name: prepare-ip-file
+    type: bash
+    log: "Preparing IP list for port scanning"
+    pre_condition: '!file_exists("{{ipFile}}")'
+    commands:
+      # Only write ipFile when a source actually has content: `sort` on a missing file
+      # exits 2 and the redirect would still leave a truncated ipFile behind, which the
+      # steps below gate on. No IPs upstream means no file, so they skip cleanly.
+      - 'if [ -s {{nonCdnIPFile}} ]; then sort -u {{nonCdnIPFile}} > {{ipFile}}; elif [ -s {{resolvedIPFile}} ]; then sort -u {{resolvedIPFile}} > {{ipFile}}; else echo "no upstream IP list found, skipping port scan"; fi'
+    on_error:
+      - action: continue # no resolved IPs at all
+
+  # ---------------------------------------------------------------------------
   # Port scanning with rustscan + nmap
   # ---------------------------------------------------------------------------
   - name: port-scan-with-rustscan-and-nmap
@@ -132,7 +158,19 @@ steps:
       - nmap_to_jsonl("{{nmapOutput}}.xml", "{{nmapJsonlOutput}}")
       - db_import_port_assets("{{TargetSpace}}", "{{nmapJsonlOutput}}")
       # this is to join the host:ip and host:port for the http probing step, as pd-httpx need host:port as input
-      - exec_cmd("cat {{nmapJsonlOutput}} | jq -r '.host_ip as $ip | .open_ports[] | \"\($ip):\(. | split("/")[0])\"' >> {{openPortsFile}}")
+      - exec_cmd("cat {{nmapJsonlOutput}} | jq -r '.host_ip as $ip | .open_ports[] | \"\\($ip):\\(. | split(\"/\")[0])\"' >> {{openPortsFile}}")
+
+  # Probing every IP:port pair with pd-httpx waits the full HTTP timeout on each filtered
+  # port, so find the open ones first with a fast connect scan (no root or raw packets needed).
+  # The file is only written when naabu succeeds; otherwise http-probe-ports below is the fallback.
+  - name: discover-open-ports
+    type: bash
+    log: "Discovering open ports with naabu connect scan"
+    pre_condition: '!{{enableSYNScan}} && file_length("{{ipFile}}") > 0 && !file_exists("{{openPortsFile}}")'
+    commands:
+      - "naabu -list {{ipFile}} -p {{commonHttpPorts}},{{commonHttpsPort}} -scan-type c -rate {{naabuRate}} -retries 1 -silent -o {{openPortsFile}}.tmp > /dev/null 2>&1 && mv {{openPortsFile}}.tmp {{openPortsFile}}"
+    on_error:
+      - action: continue # naabu missing or failed, fall back to probing every port with pd-httpx
 
   - name: sort-open-ports-file
     type: function
@@ -148,7 +186,7 @@ steps:
     pre_condition: 'file_exists("{{openPortsFile}}")'
     commands:
       - cat {{openPortsFile}} | pd-httpx -H '{{defaultUA}}' -timeout {{httpTimeout}} -t {{httpThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain >> {{httpPortFingerprintJsonlFile}}
-      - cat {{httpPortFingerprintJsonlFile}} | jq -r '[.host_ip,.port] | join(\":\")' | sort -u >> {{openPortsFile}}
+      - cat {{httpPortFingerprintJsonlFile}} | jq -r '[.host_ip,.port] | join(":")' | sort -u >> {{openPortsFile}}
     on_error:
       - action: continue # expected error if no port found
 
@@ -161,7 +199,7 @@ steps:
     pre_condition: 'file_exists("{{ipFile}}") && !file_exists("{{openPortsFile}}")'
     commands:
       - cat {{ipFile}} | pd-httpx -H '{{defaultUA}}' -timeout {{httpTimeout}} -t {{httpThreads}} -no-fallback -no-color -silent -json -title -favicon -hash sha256 -jarm -tech-detect -status-code -cdn -tls-grab -ztls -vhost -follow-host-redirects -include-chain -ports 'http:{{commonHttpPorts}},https:{{commonHttpsPort}}' >> {{httpPortFingerprintJsonlFile}}
-      - cat {{httpPortFingerprintJsonlFile}} | jq -r '[.host_ip,.port] | join(\":\")' | sort -u >> {{openPortsFile}}
+      - cat {{httpPortFingerprintJsonlFile}} | jq -r '[.host_ip,.port] | join(":")' | sort -u >> {{openPortsFile}}
     on_error:
       - action: continue # expected error if no port found
 

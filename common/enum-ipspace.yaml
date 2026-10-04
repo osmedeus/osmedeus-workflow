@@ -50,7 +50,7 @@ reports:
     description: List of discovered IP addresses
 
   - name: non-cdn-ip-list
-    default: "{{nonCdnIPFile}}"
+    path: "{{nonCdnIPFile}}"
     type: text
     description: List of discovered non-cdn IP addresses
 
@@ -84,10 +84,10 @@ steps:
     log: "Processing cdn results from HTTP Data"
     pre_condition: 'file_exists("{{httpFingerprintJsonFile}}")'
     functions:
-      - exec_cmd("cat {{httpFingerprintJsonFile}}  | jq '[.cdn_name, .cdn_type, .host_ip] | join(\" - \")' >> {{rawIPSpace}}")
+      - exec_cmd("cat {{httpFingerprintJsonFile}}  | jq -r '[.cdn_name // \"none\", .cdn_type // \"none\", .host_ip // \"none\"] | join(\" - \")' >> {{rawIPSpace}}")
       - sort_unix("{{rawIPSpace}}")
-      # just simply grep out the cdn IP
-      - exec_cmd("cat {{rawIPSpace}} | grep -v '{{cdnTag}}' >> {{nonCdnIPFile}}")
+      # keep only IPs whose cdn_type is not one of cdnTag (cloud-hosted IPs are kept)
+      - exec_cmd("cat {{httpFingerprintJsonFile}} | jq -r 'select((.cdn_type // \"\") | test(\"^({{cdnTag}})$\") | not) | .host_ip // empty' >> {{nonCdnIPFile}}")
       - sort_unix("{{nonCdnIPFile}}")
 
   - name: process-ip-results
@@ -97,7 +97,7 @@ steps:
     functions:
       # grepping IP from DNS data
       - exec_cmd("cat {{dnsFile}}  | grep ' A ' | awk '{print $3}' | sort -u >> {{ipFile}}")
-      - exec_cmd("cat {{httpFingerprintJsonFile}}  | jq -r '.a[]' | sort -u >> {{ipFile}}")
+      - exec_cmd("cat {{httpFingerprintJsonFile}}  | jq -r '(.a // [])[]' | sort -u >> {{ipFile}}")
       - sort_unix("{{ipFile}}")
       # count total ips
       - 'db_total_ips("{{ipFile}}")'

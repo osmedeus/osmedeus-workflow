@@ -88,6 +88,9 @@ modules:
     path: common/probe-port.yaml
     depends_on:
       - recon-http-fp
+      # probe-port scans the IP list enum-ipspace writes, so the ordering must be
+      # declared rather than left to module declaration order
+      - enum-ipspace
 
   # ===========================================================================
   # Phase 9: Content Discovery
